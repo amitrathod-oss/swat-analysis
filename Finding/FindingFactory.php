@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Finding;
+namespace Sigma\HealthCheck\Finding;
 
 use DateTimeInterface;
 

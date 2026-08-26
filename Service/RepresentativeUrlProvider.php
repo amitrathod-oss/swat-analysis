@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Service;
+namespace Sigma\HealthCheck\Service;
 
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Model\StoreManagerInterface;
 

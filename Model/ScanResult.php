@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Model;
+namespace Sigma\HealthCheck\Model;
 
-use Asiamarket\HealthCheck\Finding\Finding;
+use Sigma\HealthCheck\Finding\Finding;
 use DateTimeImmutable;
 use DateTimeInterface;
 

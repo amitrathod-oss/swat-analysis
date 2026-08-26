@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Test\Unit\Rule;
+namespace Sigma\HealthCheck\Test\Unit\Rule;
 
-use Asiamarket\HealthCheck\Finding\FindingFactory;
-use Asiamarket\HealthCheck\Rule\RuleEngine;
+use Sigma\HealthCheck\Finding\FindingFactory;
+use Sigma\HealthCheck\Rule\RuleEngine;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 

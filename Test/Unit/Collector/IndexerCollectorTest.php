@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Test\Unit\Collector;
+namespace Sigma\HealthCheck\Test\Unit\Collector;
 
-use Asiamarket\HealthCheck\Collector\IndexerCollector;
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Collector\IndexerCollector;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
 use Magento\Framework\Indexer\ConfigInterface;
 use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Framework\Indexer\IndexerRegistry;

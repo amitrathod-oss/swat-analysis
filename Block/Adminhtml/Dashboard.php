@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Block\Adminhtml;
+namespace Sigma\HealthCheck\Block\Adminhtml;
 
 use Magento\Backend\Block\Template;
 use Magento\Framework\App\Filesystem\DirectoryList;

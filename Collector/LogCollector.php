@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Collector;
+namespace Sigma\HealthCheck\Collector;
 
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
-use Asiamarket\HealthCheck\Log\ExceptionFingerprint;
-use Asiamarket\HealthCheck\Security\SecretSanitizer;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Log\ExceptionFingerprint;
+use Sigma\HealthCheck\Security\SecretSanitizer;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;
 

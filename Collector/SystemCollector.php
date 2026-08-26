@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Collector;
+namespace Sigma\HealthCheck\Collector;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
 

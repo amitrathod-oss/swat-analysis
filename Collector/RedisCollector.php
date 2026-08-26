@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Collector;
+namespace Sigma\HealthCheck\Collector;
 
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
-use Asiamarket\HealthCheck\Service\RedisClientFactory;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Service\RedisClientFactory;
 use Magento\Framework\App\DeploymentConfig;
 
 class RedisCollector implements CollectorInterface

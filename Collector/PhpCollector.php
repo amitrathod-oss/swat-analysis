@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Collector;
+namespace Sigma\HealthCheck\Collector;
 
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
 
 class PhpCollector implements CollectorInterface
 {

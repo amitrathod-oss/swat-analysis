@@ -4,48 +4,48 @@
     <type name="Magento\Framework\Console\CommandList">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="asiamarketHealthCheckScan" xsi:type="object">Asiamarket\HealthCheck\Console\Command\ScanCommand</item>
+                <item name="sigmaHealthCheckScan" xsi:type="object">Sigma\HealthCheck\Console\Command\ScanCommand</item>
             </argument>
         </arguments>
     </type>
-    <type name="Asiamarket\HealthCheck\Model\ScanRunner">
+    <type name="Sigma\HealthCheck\Model\ScanRunner">
         <arguments>
             <argument name="collectors" xsi:type="array">
-                <item name="magento" xsi:type="object">Asiamarket\HealthCheck\Collector\MagentoCollector</item>
-                <item name="database" xsi:type="object">Asiamarket\HealthCheck\Collector\DatabaseCollector</item>
-                <item name="database_advanced" xsi:type="object">Asiamarket\HealthCheck\Collector\DatabaseAdvancedCollector</item>
-                <item name="cron" xsi:type="object">Asiamarket\HealthCheck\Collector\CronCollector</item>
-                <item name="indexer" xsi:type="object">Asiamarket\HealthCheck\Collector\IndexerCollector</item>
-                <item name="redis" xsi:type="object">Asiamarket\HealthCheck\Collector\RedisCollector</item>
-                <item name="opensearch" xsi:type="object">Asiamarket\HealthCheck\Collector\OpenSearchCollector</item>
-                <item name="composer" xsi:type="object">Asiamarket\HealthCheck\Collector\ComposerCollector</item>
-                <item name="logs" xsi:type="object">Asiamarket\HealthCheck\Collector\LogCollector</item>
-                <item name="fpc" xsi:type="object">Asiamarket\HealthCheck\Collector\FpcCollector</item>
-                <item name="patches" xsi:type="object">Asiamarket\HealthCheck\Collector\PatchCollector</item>
-                <item name="system" xsi:type="object">Asiamarket\HealthCheck\Collector\SystemCollector</item>
-                <item name="php" xsi:type="object">Asiamarket\HealthCheck\Collector\PhpCollector</item>
-                <item name="http" xsi:type="object">Asiamarket\HealthCheck\Collector\HttpCollector</item>
-                <item name="security_headers" xsi:type="object">Asiamarket\HealthCheck\Collector\SecurityHeadersCollector</item>
-                <item name="extensions" xsi:type="object">Asiamarket\HealthCheck\Collector\ExtensionCollector</item>
-                <item name="security" xsi:type="object">Asiamarket\HealthCheck\Collector\SecurityCollector</item>
-                <item name="integrations" xsi:type="object">Asiamarket\HealthCheck\Collector\IntegrationCollector</item>
-                <item name="store" xsi:type="object">Asiamarket\HealthCheck\Collector\StoreInfoCollector</item>
+                <item name="magento" xsi:type="object">Sigma\HealthCheck\Collector\MagentoCollector</item>
+                <item name="database" xsi:type="object">Sigma\HealthCheck\Collector\DatabaseCollector</item>
+                <item name="database_advanced" xsi:type="object">Sigma\HealthCheck\Collector\DatabaseAdvancedCollector</item>
+                <item name="cron" xsi:type="object">Sigma\HealthCheck\Collector\CronCollector</item>
+                <item name="indexer" xsi:type="object">Sigma\HealthCheck\Collector\IndexerCollector</item>
+                <item name="redis" xsi:type="object">Sigma\HealthCheck\Collector\RedisCollector</item>
+                <item name="opensearch" xsi:type="object">Sigma\HealthCheck\Collector\OpenSearchCollector</item>
+                <item name="composer" xsi:type="object">Sigma\HealthCheck\Collector\ComposerCollector</item>
+                <item name="logs" xsi:type="object">Sigma\HealthCheck\Collector\LogCollector</item>
+                <item name="fpc" xsi:type="object">Sigma\HealthCheck\Collector\FpcCollector</item>
+                <item name="patches" xsi:type="object">Sigma\HealthCheck\Collector\PatchCollector</item>
+                <item name="system" xsi:type="object">Sigma\HealthCheck\Collector\SystemCollector</item>
+                <item name="php" xsi:type="object">Sigma\HealthCheck\Collector\PhpCollector</item>
+                <item name="http" xsi:type="object">Sigma\HealthCheck\Collector\HttpCollector</item>
+                <item name="security_headers" xsi:type="object">Sigma\HealthCheck\Collector\SecurityHeadersCollector</item>
+                <item name="extensions" xsi:type="object">Sigma\HealthCheck\Collector\ExtensionCollector</item>
+                <item name="security" xsi:type="object">Sigma\HealthCheck\Collector\SecurityCollector</item>
+                <item name="integrations" xsi:type="object">Sigma\HealthCheck\Collector\IntegrationCollector</item>
+                <item name="store" xsi:type="object">Sigma\HealthCheck\Collector\StoreInfoCollector</item>
             </argument>
         </arguments>
     </type>
-    <type name="Asiamarket\HealthCheck\Report\ReportDataBuilder">
+    <type name="Sigma\HealthCheck\Report\ReportDataBuilder">
         <arguments>
-            <argument name="historyManager" xsi:type="object">Asiamarket\HealthCheck\Report\HistoryManager</argument>
+            <argument name="historyManager" xsi:type="object">Sigma\HealthCheck\Report\HistoryManager</argument>
         </arguments>
     </type>
-    <type name="Asiamarket\HealthCheck\Report\JsonReportGenerator">
+    <type name="Sigma\HealthCheck\Report\JsonReportGenerator">
         <arguments>
-            <argument name="historyManager" xsi:type="object">Asiamarket\HealthCheck\Report\HistoryManager</argument>
+            <argument name="historyManager" xsi:type="object">Sigma\HealthCheck\Report\HistoryManager</argument>
         </arguments>
     </type>
     <type name="Magento\Catalog\Ui\Component\Listing\Columns\Thumbnail">
-        <plugin name="asiamarket_catalog_thumbnail_null_alt"
-                type="Asiamarket\HealthCheck\Plugin\Catalog\Ui\Component\Listing\Columns\NormalizeThumbnailAlt"
+        <plugin name="sigma_catalog_thumbnail_null_alt"
+                type="Sigma\HealthCheck\Plugin\Catalog\Ui\Component\Listing\Columns\NormalizeThumbnailAlt"
                 sortOrder="10"/>
     </type>
 </config>

@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Test\Unit\Report;
+namespace Sigma\HealthCheck\Test\Unit\Report;
 
-use Asiamarket\HealthCheck\Model\ScanResult;
-use Asiamarket\HealthCheck\Report\JsonReportGenerator;
-use Asiamarket\HealthCheck\Report\ReportDataBuilder;
+use Sigma\HealthCheck\Model\ScanResult;
+use Sigma\HealthCheck\Report\JsonReportGenerator;
+use Sigma\HealthCheck\Report\ReportDataBuilder;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;

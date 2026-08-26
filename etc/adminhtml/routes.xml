@@ -3,7 +3,7 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
     <router id="admin">
         <route id="healthcheck" frontName="healthcheck">
-            <module name="Asiamarket_HealthCheck" before="Magento_Backend"/>
+            <module name="Sigma_HealthCheck" before="Magento_Backend"/>
         </route>
     </router>
 </config>

@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Rule;
+namespace Sigma\HealthCheck\Rule;
 
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Module\Dir\Reader as ModuleDirReader;
 use Symfony\Component\Yaml\Yaml;
 
 class RuleLoader
 {
-    private const MODULE_NAME = 'Asiamarket_HealthCheck';
+    private const MODULE_NAME = 'Sigma_HealthCheck';
 
     private ModuleDirReader $moduleDirReader;
     private File $fileDriver;

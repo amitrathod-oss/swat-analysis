@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Test\Unit\Report;
+namespace Sigma\HealthCheck\Test\Unit\Report;
 
-use Asiamarket\HealthCheck\Finding\FindingFactory;
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
-use Asiamarket\HealthCheck\Model\ScanResult;
-use Asiamarket\HealthCheck\Report\HealthScoreCalculator;
-use Asiamarket\HealthCheck\Report\ReportDataBuilder;
-use Asiamarket\HealthCheck\Security\SecretSanitizer;
+use Sigma\HealthCheck\Finding\FindingFactory;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Model\ScanResult;
+use Sigma\HealthCheck\Report\HealthScoreCalculator;
+use Sigma\HealthCheck\Report\ReportDataBuilder;
+use Sigma\HealthCheck\Security\SecretSanitizer;
 use PHPUnit\Framework\TestCase;
 
 class ReportDataBuilderTest extends TestCase

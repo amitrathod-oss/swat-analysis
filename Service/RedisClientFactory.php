@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Service;
+namespace Sigma\HealthCheck\Service;
 
 class RedisClientFactory
 {

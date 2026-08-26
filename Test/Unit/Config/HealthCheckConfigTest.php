@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Test\Unit\Config;
+namespace Sigma\HealthCheck\Test\Unit\Config;
 
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Module\Dir\Reader as ModuleDirReader;
@@ -17,7 +17,7 @@ class HealthCheckConfigTest extends TestCase
         $moduleDirReader = $this->createMock(ModuleDirReader::class);
         $fileDriver = $this->createMock(File::class);
         $configPath = '/tmp/HealthCheck/etc/healthcheck.yaml';
-        $moduleDirReader->method('getModuleDir')->with('etc', 'Asiamarket_HealthCheck')->willReturn('/tmp/HealthCheck/etc');
+        $moduleDirReader->method('getModuleDir')->with('etc', 'Sigma_HealthCheck')->willReturn('/tmp/HealthCheck/etc');
         $fileDriver->method('isExists')->with($configPath)->willReturn(true);
         $fileDriver->method('fileGetContents')->with($configPath)->willReturn(<<<'YAML'
 thresholds:

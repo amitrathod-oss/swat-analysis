@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Test\Unit\Model;
+namespace Sigma\HealthCheck\Test\Unit\Model;
 
-use Asiamarket\HealthCheck\Collector\CollectorInterface;
-use Asiamarket\HealthCheck\Finding\FindingFactory;
-use Asiamarket\HealthCheck\Model\ScanRunner;
-use Asiamarket\HealthCheck\Rule\RuleEngine;
-use Asiamarket\HealthCheck\Rule\RuleLoader;
-use Asiamarket\HealthCheck\Security\SecretSanitizer;
+use Sigma\HealthCheck\Collector\CollectorInterface;
+use Sigma\HealthCheck\Finding\FindingFactory;
+use Sigma\HealthCheck\Model\ScanRunner;
+use Sigma\HealthCheck\Rule\RuleEngine;
+use Sigma\HealthCheck\Rule\RuleLoader;
+use Sigma\HealthCheck\Security\SecretSanitizer;
 use PHPUnit\Framework\TestCase;
 
 class ScanRunnerTest extends TestCase

@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Collector;
+namespace Sigma\HealthCheck\Collector;
 
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
-use Asiamarket\HealthCheck\Service\ComposerCommandRunner;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Service\ComposerCommandRunner;
 use Magento\Framework\App\Filesystem\DirectoryList;
 
 class ComposerCollector implements CollectorInterface

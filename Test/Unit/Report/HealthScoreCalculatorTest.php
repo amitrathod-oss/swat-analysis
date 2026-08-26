@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Test\Unit\Report;
+namespace Sigma\HealthCheck\Test\Unit\Report;
 
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
-use Asiamarket\HealthCheck\Report\HealthScoreCalculator;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Report\HealthScoreCalculator;
 use PHPUnit\Framework\TestCase;
 
 class HealthScoreCalculatorTest extends TestCase

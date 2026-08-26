@@ -1,5 +1,5 @@
 <?php
-/** @var \Asiamarket\HealthCheck\Block\Adminhtml\Dashboard $block */
+/** @var \Sigma\HealthCheck\Block\Adminhtml\Dashboard $block */
 $report = $block->getReport();
 $summary = is_array($report['summary'] ?? null) ? $report['summary'] : [];
 $counts = is_array($report['severity_counts'] ?? null) ? $report['severity_counts'] : [];

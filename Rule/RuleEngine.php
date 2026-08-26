@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Rule;
+namespace Sigma\HealthCheck\Rule;
 
-use Asiamarket\HealthCheck\Finding\Finding;
-use Asiamarket\HealthCheck\Finding\FindingFactory;
+use Sigma\HealthCheck\Finding\Finding;
+use Sigma\HealthCheck\Finding\FindingFactory;
 use DateTimeInterface;
 
 class RuleEngine

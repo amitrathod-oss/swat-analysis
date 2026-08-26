@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Model;
+namespace Sigma\HealthCheck\Model;
 
-use Asiamarket\HealthCheck\Collector\CollectorInterface;
-use Asiamarket\HealthCheck\Finding\FindingFactory;
-use Asiamarket\HealthCheck\Rule\RuleEngine;
-use Asiamarket\HealthCheck\Rule\RuleLoader;
-use Asiamarket\HealthCheck\Security\SecretSanitizer;
+use Sigma\HealthCheck\Collector\CollectorInterface;
+use Sigma\HealthCheck\Finding\FindingFactory;
+use Sigma\HealthCheck\Rule\RuleEngine;
+use Sigma\HealthCheck\Rule\RuleLoader;
+use Sigma\HealthCheck\Security\SecretSanitizer;
 
 class ScanRunner
 {

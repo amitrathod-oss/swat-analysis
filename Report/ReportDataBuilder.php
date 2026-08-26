@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Report;
+namespace Sigma\HealthCheck\Report;
 
-use Asiamarket\HealthCheck\Model\ScanResult;
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
-use Asiamarket\HealthCheck\Security\SecretSanitizer;
+use Sigma\HealthCheck\Model\ScanResult;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Security\SecretSanitizer;
 
 class ReportDataBuilder
 {
@@ -62,7 +62,7 @@ class ReportDataBuilder
             'scan_id' => $report['scan_id'] ?? null,
             'generated_at' => $report['completed_at'] ?? null,
             'read_only' => true,
-            'analyzer' => 'Asiamarket HealthCheck',
+            'analyzer' => 'Sigma HealthCheck',
             'scan_scope' => $this->scanScope($scanResult),
         ];
         $context = $scanResult->getContext();
@@ -90,7 +90,7 @@ class ReportDataBuilder
             'scan_scope' => $this->scanScope($scanResult),
         ];
         $report['scan_metadata'] = [
-            'analyzer' => 'Asiamarket HealthCheck',
+            'analyzer' => 'Sigma HealthCheck',
             'score_disclaimer' => self::SCORE_DISCLAIMER,
             'score_algorithm' => 'Deduplicate identical evidence and cap the total penalty contributed by each rule; informational findings have no penalty.',
             'report_generated_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),

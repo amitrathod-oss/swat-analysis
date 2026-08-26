@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Console\Command;
+namespace Sigma\HealthCheck\Console\Command;
 
-use Asiamarket\HealthCheck\Model\ScanRunner;
-use Asiamarket\HealthCheck\Report\HtmlReportGenerator;
-use Asiamarket\HealthCheck\Report\JsonReportGenerator;
-use Asiamarket\HealthCheck\Report\PdfReportGenerator;
+use Sigma\HealthCheck\Model\ScanRunner;
+use Sigma\HealthCheck\Report\HtmlReportGenerator;
+use Sigma\HealthCheck\Report\JsonReportGenerator;
+use Sigma\HealthCheck\Report\PdfReportGenerator;
 use Magento\Framework\Console\Cli;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Security;
+namespace Sigma\HealthCheck\Security;
 
 class SecretSanitizer
 {

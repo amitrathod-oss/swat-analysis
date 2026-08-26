@@ -1,4 +1,4 @@
-# Asiamarket Magento Health Check
+# Sigma Magento Health Check
 
 Read-only Magento Open Source health analyzer distributed as a Composer module.
 It collects local Magento, PHP, Composer, MySQL, Redis, OpenSearch, filesystem,
@@ -31,13 +31,13 @@ The current development branch is `swat-report`, so Composer must use the
 
 ```bash
 composer config repositories.swat-analysis vcs https://github.com/amitrathod-oss/swat-analysis.git
-composer require asiamarket/module-health-check:dev-swat-report
+composer require sigma/module-health-check:dev-swat-report
 ```
 
 Composer downloads the package and Magento's Composer installer places it at:
 
 ```text
-app/code/Asiamarket/HealthCheck
+app/code/Sigma/HealthCheck
 ```
 
 ### Enable and register the module
@@ -45,7 +45,7 @@ app/code/Asiamarket/HealthCheck
 After Composer finishes, run:
 
 ```bash
-php bin/magento module:enable Asiamarket_HealthCheck
+php bin/magento module:enable Sigma_HealthCheck
 php bin/magento setup:upgrade
 ```
 
@@ -65,7 +65,7 @@ Once a stable tag such as `1.0.0` is published, use:
 
 ```bash
 composer config repositories.swat-analysis vcs https://github.com/amitrathod-oss/swat-analysis.git
-composer require asiamarket/module-health-check:^1.0
+composer require sigma/module-health-check:^1.0
 ```
 
 For a private repository, configure GitHub SSH authentication or a GitHub Personal
@@ -76,7 +76,7 @@ Access Token. Never put a token or password directly in a command-line URL.
 Check that Magento sees the module and command:
 
 ```bash
-php bin/magento module:status Asiamarket_HealthCheck
+php bin/magento module:status Sigma_HealthCheck
 php bin/magento list --raw | grep '^health:scan$'
 ```
 
@@ -165,7 +165,7 @@ System menu.
 The default read-only configuration is:
 
 ```text
-app/code/Asiamarket/HealthCheck/etc/healthcheck.yaml
+app/code/Sigma/HealthCheck/etc/healthcheck.yaml
 ```
 
 The file contains scan windows, thresholds, required PHP extensions, HTTP/FPC
@@ -249,7 +249,7 @@ itself is read-only.
 Update the branch version:
 
 ```bash
-composer update asiamarket/module-health-check
+composer update sigma/module-health-check
 php bin/magento setup:upgrade
 php bin/magento setup:di:compile
 ```
@@ -257,7 +257,7 @@ php bin/magento setup:di:compile
 Update to a tagged release when available:
 
 ```bash
-composer require asiamarket/module-health-check:^1.0
+composer require sigma/module-health-check:^1.0
 ```
 
 ## Troubleshooting
@@ -268,8 +268,8 @@ Confirm the VCS repository and branch version:
 
 ```bash
 composer config repositories.swat-analysis vcs https://github.com/amitrathod-oss/swat-analysis.git
-composer show asiamarket/module-health-check --all
-composer require asiamarket/module-health-check:dev-swat-report
+composer show sigma/module-health-check --all
+composer require sigma/module-health-check:dev-swat-report
 ```
 
 ### `health:scan` is not defined
@@ -277,8 +277,8 @@ composer require asiamarket/module-health-check:dev-swat-report
 Run:
 
 ```bash
-php bin/magento module:status Asiamarket_HealthCheck
-php bin/magento module:enable Asiamarket_HealthCheck
+php bin/magento module:status Sigma_HealthCheck
+php bin/magento module:enable Sigma_HealthCheck
 php bin/magento setup:upgrade
 php bin/magento setup:di:compile
 ```

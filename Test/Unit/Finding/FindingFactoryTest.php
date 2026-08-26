@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Test\Unit\Finding;
+namespace Sigma\HealthCheck\Test\Unit\Finding;
 
-use Asiamarket\HealthCheck\Finding\FindingFactory;
+use Sigma\HealthCheck\Finding\FindingFactory;
 use PHPUnit\Framework\TestCase;
 
 class FindingFactoryTest extends TestCase

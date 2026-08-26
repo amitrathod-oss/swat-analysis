@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Controller\Adminhtml\Dashboard;
+namespace Sigma\HealthCheck\Controller\Adminhtml\Dashboard;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
@@ -12,7 +12,7 @@ use Magento\Framework\Filesystem\Directory\ReadInterface;
 
 class Download extends Action
 {
-    public const ADMIN_RESOURCE = 'Asiamarket_HealthCheck::dashboard';
+    public const ADMIN_RESOURCE = 'Sigma_HealthCheck::dashboard';
     private const PDF_PATH = 'health-reports/latest.pdf';
     private FileFactory $fileFactory;
     private ReadInterface $varDirectory;

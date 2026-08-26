@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Report;
+namespace Sigma\HealthCheck\Report;
 
-use Asiamarket\HealthCheck\Config\HealthCheckConfig;
+use Sigma\HealthCheck\Config\HealthCheckConfig;
 
 class HealthScoreCalculator
 {

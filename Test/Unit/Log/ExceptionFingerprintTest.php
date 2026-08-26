@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Asiamarket\HealthCheck\Test\Unit\Log;
+namespace Sigma\HealthCheck\Test\Unit\Log;
 
-use Asiamarket\HealthCheck\Log\ExceptionFingerprint;
-use Asiamarket\HealthCheck\Security\SecretSanitizer;
+use Sigma\HealthCheck\Log\ExceptionFingerprint;
+use Sigma\HealthCheck\Security\SecretSanitizer;
 use PHPUnit\Framework\TestCase;
 
 class ExceptionFingerprintTest extends TestCase

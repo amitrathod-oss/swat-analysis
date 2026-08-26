@@ -1,5 +1,5 @@
 {
-    "name": "asiamarket/module-health-check",
+    "name": "sigma/module-health-check",
     "description": "Read-only Magento Open Source health analyzer",
     "type": "magento2-module",
     "version": "1.0.0",
@@ -19,15 +19,15 @@
             "registration.php"
         ],
         "psr-4": {
-            "Asiamarket\\HealthCheck\\": ""
+            "Sigma\\HealthCheck\\": ""
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Asiamarket\\HealthCheck\\Test\\": "Test/Unit/"
+            "Sigma\\HealthCheck\\Test\\": "Test/Unit/"
         }
     },
     "support": {
-        "source": "https://github.com/Sigma-Infolutions/swat-analysis"
+        "source": "https://github.com/amitrathod-oss/swat-analysis"
     }
 }
