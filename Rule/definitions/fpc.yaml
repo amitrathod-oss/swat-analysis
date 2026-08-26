@@ -1,0 +1,14 @@
+rules:
+  - id: FPC-001
+    title: Full-page cache hit rate is low
+    issue_type: Performance
+    risk_level: Elevated
+    metric: fpc.hit_rate_percent
+    operator: less_than
+    threshold: "{{ thresholds.fpc_min_hit_rate_percent }}"
+    tool_used: Magento Health Analyzer
+    data_source: Configured HTTP response cache headers
+    finding_description: The configured sample URLs produced a cache hit rate below the configured threshold.
+    expected_result: Configured sample URLs should produce a cache hit rate at or above the configured threshold.
+    site_impact: Low full-page cache effectiveness can increase response time and web-server load.
+    recommendation: Review cache headers, cache configuration, and page cacheability before making any configuration change.

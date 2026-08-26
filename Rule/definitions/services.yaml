@@ -1,0 +1,98 @@
+rules:
+  - id: REDIS-001
+    title: Redis or Valkey unavailable
+    issue_type: Availability
+    risk_level: High
+    metric: collector_status.redis.status
+    operator: equals
+    threshold: unavailable
+    tool_used: Magento Health Analyzer
+    data_source: Magento deployment configuration and Redis/Valkey INFO
+    finding_description: Magento is configured to use Redis or Valkey, but the service could not be queried.
+    expected_result: The configured Redis or Valkey service should accept a read-only connection.
+    site_impact: Sessions, cache, or full-page cache can become unreliable or slow when the configured service is unavailable.
+    recommendation: Verify the configured host, port, credentials, network path, and service health. Do not change configuration from this scan.
+
+  - id: REDIS-002
+    title: Redis or Valkey key evictions detected
+    issue_type: Performance
+    risk_level: High
+    metric: redis.evicted_keys
+    operator: greater_than
+    threshold: 0
+    tool_used: Magento Health Analyzer
+    data_source: Redis/Valkey INFO stats
+    finding_description: Redis or Valkey has evicted one or more keys.
+    expected_result: Evicted key count should remain zero for the monitored service.
+    site_impact: Key eviction can reduce cache effectiveness and can affect session-backed workloads.
+    recommendation: Investigate Redis memory sizing, maxmemory policy, and cache key growth before making any configuration change.
+
+  - id: REDIS-003
+    title: Redis or Valkey memory utilization is high
+    issue_type: Performance
+    risk_level: Elevated
+    metric: redis.memory_utilization_percent
+    operator: greater_than_or_equal
+    threshold: "{{ thresholds.redis_memory_percent }}"
+    tool_used: Magento Health Analyzer
+    data_source: Redis/Valkey INFO memory
+    finding_description: Redis or Valkey memory utilization meets or exceeds the configured threshold.
+    expected_result: Memory utilization should remain below the configured threshold.
+    site_impact: High utilization increases the risk of evictions and cache instability.
+    recommendation: Review memory capacity, key growth, and eviction policy before making any configuration change.
+
+  - id: SEARCH-001
+    title: Search cluster status is red
+    issue_type: Availability
+    risk_level: Severe
+    metric: opensearch.cluster_status
+    operator: equals
+    threshold: red
+    tool_used: Magento Health Analyzer
+    data_source: OpenSearch cluster health API
+    finding_description: The configured search cluster reports red health.
+    expected_result: Search cluster health should be green.
+    site_impact: Search indexes may be unavailable, which can affect storefront search and catalog administration.
+    recommendation: Investigate unassigned primary shards, node availability, and cluster logs before taking corrective action.
+
+  - id: SEARCH-002
+    title: Search cluster status is yellow
+    issue_type: Reliability
+    risk_level: Elevated
+    metric: opensearch.cluster_status
+    operator: equals
+    threshold: yellow
+    tool_used: Magento Health Analyzer
+    data_source: OpenSearch cluster health API
+    finding_description: The configured search cluster reports yellow health.
+    expected_result: Search cluster health should be green.
+    site_impact: Replica shards are not fully allocated, reducing resilience and potentially affecting performance.
+    recommendation: Review shard allocation, node capacity, and cluster logs before taking corrective action.
+
+  - id: SEARCH-003
+    title: Search cluster has unassigned shards
+    issue_type: Reliability
+    risk_level: High
+    metric: opensearch.unassigned_shards
+    operator: greater_than
+    threshold: 0
+    tool_used: Magento Health Analyzer
+    data_source: OpenSearch cluster health API
+    finding_description: One or more search shards are unassigned.
+    expected_result: Unassigned shard count should be zero.
+    site_impact: Unassigned shards can reduce search availability and redundancy.
+    recommendation: Investigate allocation explanations and node capacity before taking corrective action.
+
+  - id: SEARCH-004
+    title: Search service unavailable
+    issue_type: Availability
+    risk_level: High
+    metric: collector_status.opensearch.status
+    operator: equals
+    threshold: unavailable
+    tool_used: Magento Health Analyzer
+    data_source: Magento search configuration and OpenSearch API
+    finding_description: Magento has search service configuration, but the service could not be queried.
+    expected_result: The configured search service should accept read-only health requests.
+    site_impact: Storefront search and catalog indexing may be degraded or unavailable.
+    recommendation: Verify the configured host, port, credentials, network path, and service health. Do not change configuration from this scan.

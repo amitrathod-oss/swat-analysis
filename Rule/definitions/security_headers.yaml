@@ -1,0 +1,27 @@
+rules:
+  - id: SEC-003
+    title: Required security response header is missing
+    category: Security
+    domain: Security
+    issue_type: Security Headers
+    risk_level: Elevated
+    metric: security_headers.missing_headers
+    operator: count_greater_than
+    threshold: 0
+    expected_result: Configured security response headers should be present on the representative HTTPS response.
+    finding_description: One or more configured security headers were not present.
+    site_impact: Browser protections may be weaker than intended.
+    recommendation: Review the web-server and application header policy with the security owner.
+  - id: SEC-004
+    title: Representative URL is not HTTPS
+    category: Security
+    domain: Security
+    issue_type: TLS Configuration
+    risk_level: High
+    metric: security_headers.tls
+    operator: equals
+    threshold: not_https
+    expected_result: Public representative URLs should use HTTPS.
+    finding_description: The configured representative URL does not use HTTPS.
+    site_impact: Transport security and customer confidentiality may be at risk.
+    recommendation: Configure and verify TLS at the edge before treating the environment as production-ready.

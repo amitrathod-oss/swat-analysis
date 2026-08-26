@@ -1,0 +1,46 @@
+<?php
+declare(strict_types=1);
+
+namespace Asiamarket\HealthCheck\Test\Unit\Report;
+
+use Asiamarket\HealthCheck\Model\ScanResult;
+use Asiamarket\HealthCheck\Report\HtmlReportGenerator;
+use Asiamarket\HealthCheck\Report\ReportDataBuilder;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Filesystem;
+use Magento\Framework\Filesystem\Directory\WriteInterface;
+use PHPUnit\Framework\TestCase;
+
+class HtmlReportGeneratorTest extends TestCase
+{
+    public function testGenerateRendersRequiredSectionsAndEscapesFindingText(): void
+    {
+        $varDirectory = $this->createMock(WriteInterface::class);
+        $filesystem = $this->createMock(Filesystem::class);
+        $reportDataBuilder = $this->createMock(ReportDataBuilder::class);
+        $filesystem->method('getDirectoryWrite')->with(DirectoryList::VAR_DIR)->willReturn($varDirectory);
+        $reportDataBuilder->method('build')->willReturn([
+            'application' => ['platform' => 'Magento Open Source', 'version' => '2.4.7'],
+            'summary' => ['findings_total' => 1, 'scan_error_count' => 0, 'collector_statuses' => ['success' => 1]],
+            'scan_metadata' => ['score_disclaimer' => 'Custom score', 'score_algorithm' => 'Fixed deductions'],
+            'health_score' => 90,
+            'health_score_details' => [],
+            'severity_counts' => ['high' => 1],
+            'findings' => [[
+                'rule_id' => 'TEST-001',
+                'title' => '<script>alert(1)</script>',
+                'risk_level' => 'High',
+                'evidence' => [],
+            ]],
+            'collectors' => [],
+        ]);
+
+        $html = (new HtmlReportGenerator($filesystem, $reportDataBuilder))->generate(new ScanResult('scan-id'));
+
+        self::assertStringContainsString('A. Introduction', $html);
+        self::assertStringContainsString('D. Findings', $html);
+        self::assertStringContainsString('G. Scan Metadata', $html);
+        self::assertStringContainsString('&lt;script&gt;', $html);
+        self::assertStringNotContainsString('<script>alert', $html);
+    }
+}

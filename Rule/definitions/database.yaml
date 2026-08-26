@@ -1,0 +1,49 @@
+rules:
+  - id: DB-001
+    title: Large MySQL Table
+    issue_type: Performance
+    risk_level: Elevated
+    tool_used: MySQL
+    data_source: information_schema.tables
+    metric: database.tables.*.total_size_mb
+    operator: greater_than
+    threshold: "{{ thresholds.large_table_mb }}"
+    expected_result: Database tables should remain below the configured size threshold.
+    site_impact: Oversized tables can increase storage, maintenance, and query overhead.
+    recommendation: Investigate table growth, retention strategy, and the source of historical data.
+  - id: PERF-ATTR-001
+    title: Attribute Has Excessive Option Count
+    issue_type: Performance
+    risk_level: Elevated
+    tool_used: MySQL
+    data_source: Magento EAV tables
+    metric: database.attribute_options.*.option_count
+    operator: greater_than
+    threshold: "{{ thresholds.attribute_options }}"
+    expected_result: Attribute option counts should remain below the configured threshold.
+    site_impact: Large option sets can increase EAV query and admin maintenance overhead.
+    recommendation: Review option growth and split or retire options where business requirements allow.
+  - id: DB-002
+    title: High InnoDB Buffer Pool Utilization
+    issue_type: Performance
+    risk_level: Elevated
+    tool_used: MySQL
+    data_source: MySQL InnoDB status
+    metric: database.buffer_pool.utilization_percent
+    operator: greater_than
+    threshold: "{{ thresholds.innodb_buffer_pool_percent }}"
+    expected_result: InnoDB buffer pool utilization should remain below the configured threshold.
+    site_impact: High utilization can increase disk I/O and degrade query performance under load.
+    recommendation: Review database workload, indexing strategy, slow queries, and memory allocation.
+  - id: DB-003
+    title: MySQL Triggers Detected
+    issue_type: Operations
+    risk_level: Info
+    tool_used: MySQL
+    data_source: information_schema.triggers
+    metric: database.trigger_count
+    operator: greater_than
+    threshold: 0
+    expected_result: Custom triggers should be documented and reviewed for operational overhead.
+    site_impact: Triggers can add hidden write-time work and complicate debugging.
+    recommendation: Review each trigger's ownership, purpose, and performance impact; do not remove triggers automatically.

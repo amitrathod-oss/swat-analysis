@@ -1,0 +1,38 @@
+rules:
+  - id: PHP-001
+    title: PHP memory limit is low for Magento
+    category: Application
+    domain: Application
+    issue_type: PHP Configuration
+    risk_level: Elevated
+    metric: php.memory_limit_review_required
+    operator: is_true
+    expected_result: PHP memory_limit should be configured to a Magento-appropriate value and not disabled or too low.
+    finding_description: The PHP memory limit requires review.
+    site_impact: Low PHP memory can cause incomplete requests, imports, admin errors, and checkout failures.
+    recommendation: Compare the configured limit with the workload and Magento operating requirements before changing it.
+  - id: PHP-003
+    title: Required PHP extension is missing
+    category: Application
+    domain: Application
+    issue_type: PHP Runtime
+    risk_level: High
+    metric: php.missing_required_extensions
+    operator: count_greater_than
+    threshold: 0
+    expected_result: All PHP extensions required by Magento Open Source should be loaded.
+    finding_description: One or more PHP extensions required by Magento Open Source are missing.
+    site_impact: Missing PHP extensions can cause installation, request, import, checkout, or integration failures.
+    recommendation: Install or enable the missing PHP extensions using the normal infrastructure change process.
+  - id: PHP-002
+    title: OPcache is unavailable
+    category: Performance
+    domain: Performance
+    issue_type: PHP Runtime
+    risk_level: Elevated
+    metric: php.opcache
+    operator: not_exists
+    expected_result: OPcache status should be measurable in production.
+    finding_description: OPcache status was not available to the analyzer.
+    site_impact: PHP scripts may be repeatedly compiled, increasing request latency.
+    recommendation: Verify OPcache configuration through the PHP service owner.

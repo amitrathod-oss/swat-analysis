@@ -1,0 +1,28 @@
+rules:
+  - id: SEC-001
+    title: Composer audit reports vulnerable packages
+    issue_type: Security
+    risk_level: High
+    metric: composer.vulnerability_count
+    operator: greater_than
+    threshold: 0
+    tool_used: Composer audit
+    data_source: Local composer audit advisory output
+    finding_description: Composer audit reports one or more vulnerable installed packages.
+    expected_result: Composer audit should report no known vulnerable installed packages.
+    site_impact: Known package vulnerabilities can expose the application to security risk.
+    recommendation: Review the Composer advisory details and plan dependency updates through the normal change-management process.
+
+  - id: SEC-002
+    title: Composer reports abandoned packages
+    issue_type: Security
+    risk_level: Info
+    metric: composer.abandoned_package_count
+    operator: greater_than
+    threshold: 0
+    tool_used: Composer audit
+    data_source: Local composer audit abandoned-package output
+    finding_description: Composer audit reports one or more abandoned installed packages.
+    expected_result: Installed packages should be actively maintained or have an approved replacement plan.
+    site_impact: Abandoned dependencies may stop receiving compatibility and security updates.
+    recommendation: Review affected packages and their supported replacements before making dependency changes.

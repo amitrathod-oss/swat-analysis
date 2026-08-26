@@ -1,0 +1,33 @@
+{
+    "name": "asiamarket/module-health-check",
+    "description": "Read-only Magento Open Source health analyzer",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": [
+        "proprietary"
+    ],
+    "require": {
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
+        "magento/framework": ">=103.0.0 <104.0.0",
+        "mpdf/mpdf": "^8.3",
+        "symfony/console": "^6.4 || ^7.0",
+        "symfony/process": "^6.4 || ^7.0",
+        "symfony/yaml": "^6.4 || ^7.0"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Asiamarket\\HealthCheck\\": ""
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Asiamarket\\HealthCheck\\Test\\": "Test/Unit/"
+        }
+    },
+    "support": {
+        "source": "https://github.com/Sigma-Infolutions/swat-analysis"
+    }
+}

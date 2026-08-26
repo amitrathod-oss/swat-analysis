@@ -1,0 +1,39 @@
+rules:
+  - id: SEC-005
+    title: Sensitive project path is present in the web root
+    category: Security
+    domain: Security
+    issue_type: Sensitive File Exposure
+    risk_level: Elevated
+    metric: security.sensitive_path_count
+    operator: greater_than
+    threshold: 0
+    expected_result: Sensitive development or credential paths should not be exposed from the web root.
+    finding_description: A sensitive project path was detected on disk.
+    site_impact: Exposed source-control or environment files can disclose implementation details or credentials.
+    recommendation: Review web-server document-root rules and deployment packaging; this analyzer does not delete files.
+  - id: SEC-006
+    title: Sensitive configuration file is world writable
+    category: Security
+    domain: Security
+    issue_type: File Permissions
+    risk_level: High
+    metric: security.permissions.*.world_writable
+    operator: is_true
+    expected_result: Magento environment and configuration files should not be world writable.
+    finding_description: A sensitive configuration file has world-write permission.
+    site_impact: Untrusted processes may alter credentials or application configuration.
+    recommendation: Have the deployment owner review ownership and permissions through the normal release process.
+  - id: SEC-007
+    title: TLS certificate is nearing expiry
+    category: Security
+    domain: Security
+    issue_type: TLS Certificate
+    risk_level: Elevated
+    metric: security.tls.days_to_expiry
+    operator: less_than
+    threshold: 30
+    expected_result: The representative HTTPS certificate should have at least 30 days remaining.
+    finding_description: The representative TLS certificate is nearing expiry.
+    site_impact: Certificate expiry can make the storefront unavailable or untrusted.
+    recommendation: Confirm certificate renewal ownership and schedule before expiry.

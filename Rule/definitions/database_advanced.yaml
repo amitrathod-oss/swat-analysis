@@ -1,0 +1,40 @@
+rules:
+  - id: DB-004
+    title: Long-running database query observed
+    category: Database
+    domain: Database
+    issue_type: Database Runtime
+    risk_level: High
+    metric: database_advanced.long_running_queries.count
+    operator: greater_than
+    threshold: 0
+    expected_result: No non-idle query should exceed the configured observation threshold at scan time.
+    finding_description: One or more long-running database queries were observed.
+    site_impact: Long-running queries can consume connections and delay storefront or administrative requests.
+    recommendation: Correlate the observation with database monitoring and query history before taking action.
+  - id: DB-005
+    title: InnoDB deadlock indicator is non-zero
+    category: Database
+    domain: Database
+    issue_type: Database Reliability
+    risk_level: High
+    metric: database_advanced.deadlocks
+    operator: greater_than
+    threshold: 0
+    expected_result: No new InnoDB deadlocks should be observed in the database status counters.
+    finding_description: The database reports one or more InnoDB deadlocks.
+    site_impact: Deadlocks can roll back customer or administrative transactions.
+    recommendation: Correlate with database logs and transaction traces; do not reset counters from this tool.
+  - id: DB-006
+    title: Catalog category depth is high
+    category: Performance
+    domain: Performance
+    issue_type: Catalog Complexity
+    risk_level: Elevated
+    metric: database_advanced.catalog.max_category_depth
+    operator: greater_than
+    threshold: 8
+    expected_result: Category nesting should remain within an operationally manageable depth.
+    finding_description: A deep category path was observed.
+    site_impact: Deep catalogs can increase navigation, indexing, and URL-rewrite workload.
+    recommendation: Review catalog structure and indexing impact with the merchandising team.

@@ -1,0 +1,43 @@
+rules:
+  - id: SYS-001
+    title: Disk utilization is high
+    category: Infrastructure
+    domain: Availability
+    issue_type: Infrastructure Capacity
+    risk_level: High
+    metric: system.disk.used_percent
+    operator: greater_than
+    threshold: 90
+    expected_result: Disk utilization should remain below 90 percent.
+    finding_description: The Magento root filesystem is close to capacity.
+    site_impact: Low disk capacity can cause failed deployments, logs, sessions, and database operations.
+    root_cause: Files, logs, media, or database data are consuming available storage.
+    recommendation: Review disk consumers and capacity planning; do not delete data automatically.
+    scoring_penalty: 10
+  - id: SYS-002
+    title: System memory utilization is high
+    category: Infrastructure
+    domain: Availability
+    issue_type: Infrastructure Capacity
+    risk_level: Elevated
+    metric: system.memory.used_percent
+    operator: greater_than
+    threshold: 90
+    expected_result: System memory utilization should remain below 90 percent.
+    finding_description: Available system memory is low at scan time.
+    site_impact: Memory pressure can cause swapping, slow requests, or service termination.
+    root_cause: Workload demand exceeds available memory or services retain excessive memory.
+    recommendation: Correlate with service memory metrics and capacity history before changing limits.
+    scoring_penalty: 5
+  - id: SYS-003
+    title: Disk or system metric is unavailable
+    category: Infrastructure
+    domain: Availability
+    issue_type: Observability Gap
+    risk_level: Info
+    metric: system.disk.total_bytes
+    operator: not_exists
+    expected_result: Disk capacity should be measurable.
+    finding_description: The runtime did not expose a disk-capacity measurement.
+    site_impact: Capacity risk cannot be assessed from this scan.
+    recommendation: Run the analyzer with permission to read filesystem capacity metadata.

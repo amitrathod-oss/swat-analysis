@@ -1,0 +1,37 @@
+rules:
+  - id: IDX-001
+    title: Indexer Requires Reindex
+    issue_type: Availability
+    risk_level: High
+    tool_used: Magento Indexer
+    data_source: indexer_state
+    metric: indexer.indexers.*.status
+    operator: equals
+    threshold: invalid
+    expected_result: All indexers should be valid.
+    site_impact: Invalid indexers can cause stale storefront search, prices, inventory, or catalog data.
+    recommendation: Review the affected indexer and business impact, then schedule a reindex through normal operational procedures.
+  - id: IDX-002
+    title: Indexer Is Still Processing
+    issue_type: Availability
+    risk_level: Elevated
+    tool_used: Magento Indexer
+    data_source: indexer_state
+    metric: indexer.indexers.*.status
+    operator: equals
+    threshold: working
+    expected_result: Indexers should not remain in processing state unexpectedly.
+    site_impact: A stuck indexer can delay catalog and inventory updates.
+    recommendation: Check runtime, locks, and related cron activity before deciding on corrective action.
+  - id: IDX-003
+    title: Indexer Expected to Run on Schedule Uses Realtime Mode
+    issue_type: Performance
+    risk_level: Medium
+    tool_used: Magento Indexer
+    data_source: indexer configuration
+    metric: indexer.unexpected_realtime_count
+    operator: greater_than
+    threshold: 0
+    expected_result: Indexers listed in indexers.expected_schedule should use schedule mode.
+    site_impact: Unexpected realtime indexing can increase write-time workload.
+    recommendation: Confirm the intended mode for the named indexers before changing their configuration.

@@ -1,0 +1,42 @@
+rules:
+  - id: LOG-001
+    title: Repeated application exception detected
+    issue_type: Reliability
+    risk_level: Elevated
+    metric: logs.exceptions.*.count
+    operator: greater_than
+    threshold: "{{ thresholds.repeated_exception_count }}"
+    tool_used: Magento Health Analyzer
+    data_source: Recent Magento exception and system logs
+    finding_description: The same application exception occurred repeatedly within the configured log window.
+    expected_result: Repeated exception count should remain at or below the configured threshold.
+    site_impact: Repeated exceptions can indicate broken customer flows, failed background work, or degraded performance.
+    recommendation: Use the sanitized evidence and source module to investigate the underlying exception. Do not delete or modify logs from this scan.
+
+  - id: LOG-002
+    title: Repeated OpenSearch exception detected
+    issue_type: Reliability
+    risk_level: High
+    metric: logs.repeated_opensearch_exception_count
+    operator: greater_than
+    threshold: 0
+    tool_used: Magento Health Analyzer
+    data_source: Recent Magento exception and system logs
+    finding_description: Repeated OpenSearch-related exceptions were found in Magento logs.
+    expected_result: Repeated OpenSearch-related exception count should be zero.
+    site_impact: Search failures may affect catalog operations and storefront search.
+    recommendation: Correlate the sanitized log evidence with search cluster health before taking corrective action.
+
+  - id: LOG-003
+    title: PHP warning in custom module detected
+    issue_type: Code Quality
+    risk_level: Elevated
+    metric: logs.custom_module_warning_count
+    operator: greater_than
+    threshold: 0
+    tool_used: Magento Health Analyzer
+    data_source: Recent Magento exception and system logs
+    finding_description: A warning associated with code under app/code was found in the configured log window.
+    expected_result: Custom modules should not emit PHP warnings in normal operation.
+    site_impact: Warnings can signal unstable code paths and may hide more serious runtime failures.
+    recommendation: Review the sanitized log evidence, reproduce safely, and fix the custom module through the normal development workflow.

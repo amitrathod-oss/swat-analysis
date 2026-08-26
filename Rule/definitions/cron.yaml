@@ -1,0 +1,49 @@
+rules:
+  - id: CRON-001
+    title: Too Many Failed Cron Jobs
+    issue_type: Availability
+    risk_level: High
+    tool_used: Magento Cron
+    data_source: cron_schedule
+    metric: cron.status_counts.error
+    operator: greater_than
+    threshold: "{{ thresholds.cron_failed_jobs }}"
+    expected_result: Failed jobs should remain below the configured threshold in the scan window.
+    site_impact: Failed jobs can prevent imports, emails, feeds, and other asynchronous work from completing.
+    recommendation: Review the grouped failed job codes and sanitized error samples before taking corrective action.
+  - id: CRON-002
+    title: Too Many Missed Cron Jobs
+    issue_type: Availability
+    risk_level: Elevated
+    tool_used: Magento Cron
+    data_source: cron_schedule
+    metric: cron.status_counts.missed
+    operator: greater_than
+    threshold: "{{ thresholds.cron_missed_jobs }}"
+    expected_result: Missed jobs should remain below the configured threshold in the scan window.
+    site_impact: Missed jobs can delay scheduled business processes.
+    recommendation: Check cron execution frequency, server capacity, and the affected job codes.
+  - id: CRON-003
+    title: Stale Running Cron Job
+    issue_type: Availability
+    risk_level: Elevated
+    tool_used: Magento Cron
+    data_source: cron_schedule
+    metric: cron.stale_running_count
+    operator: greater_than
+    threshold: 0
+    expected_result: No jobs should remain in running status longer than the configured stale interval.
+    site_impact: Stale jobs can block subsequent scheduling and hide failed background work.
+    recommendation: Investigate the affected jobs and their runtime dependencies; do not reset jobs automatically.
+  - id: CRON-004
+    title: Excessive Pending Cron Backlog
+    issue_type: Performance
+    risk_level: Medium
+    tool_used: Magento Cron
+    data_source: cron_schedule
+    metric: cron.status_counts.pending
+    operator: greater_than
+    threshold: "{{ thresholds.cron_pending_jobs }}"
+    expected_result: Pending jobs should remain below the configured threshold in the scan window.
+    site_impact: A growing backlog can delay asynchronous application work.
+    recommendation: Review scheduler capacity and the job types contributing to the backlog.

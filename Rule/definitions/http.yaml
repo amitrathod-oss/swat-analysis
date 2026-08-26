@@ -1,0 +1,27 @@
+rules:
+  - id: HTTP-001
+    title: Representative HTTP page sample is incomplete
+    category: Performance
+    domain: Performance
+    issue_type: HTTP Coverage
+    risk_level: Info
+    metric: http.missing_page_types
+    operator: count_greater_than
+    threshold: 0
+    expected_result: Home, CMS, category, product, and search page types should be configured where applicable.
+    finding_description: One or more representative page types were not supplied for HTTP validation.
+    site_impact: Cacheability, status, headers, and timing for the missing page types remain unvalidated.
+    recommendation: Supply safe, representative URLs for each page type and rerun the scan.
+  - id: HTTP-002
+    title: Representative HTTP response returned an error
+    category: Availability
+    domain: Availability
+    issue_type: HTTP Availability
+    risk_level: High
+    metric: http.results.*.outcome
+    operator: equals
+    threshold: error
+    expected_result: Representative public URLs should return successful responses.
+    finding_description: A configured representative URL returned an HTTP error.
+    site_impact: Customers may be unable to reach a storefront page.
+    recommendation: Investigate the URL, web server, routing, and application logs without changing production data from this tool.

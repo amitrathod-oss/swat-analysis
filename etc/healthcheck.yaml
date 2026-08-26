@@ -1,0 +1,124 @@
+scan:
+  cron_window_hours: 24
+  cron_stale_running_minutes: 60
+  database_row_limit: 500
+  cron_error_sample_limit: 20
+  log_window_hours: 24
+  log_max_bytes_per_file: 1048576
+  command_timeout_seconds: 30
+  http_timeout_seconds: 10
+  search_max_indices: 100
+  long_query_seconds: 10
+  system_disk_warn_percent: 80
+  system_disk_critical_percent: 90
+  system_memory_warn_percent: 80
+  system_memory_critical_percent: 90
+
+thresholds:
+  large_table_mb: 1024
+  attribute_options: 100
+  innodb_buffer_pool_percent: 80
+  cron_failed_jobs: 10
+  cron_missed_jobs: 10
+  cron_pending_jobs: 100
+  redis_memory_percent: 80
+  fpc_min_hit_rate_percent: 50
+  repeated_exception_count: 1
+
+indexers:
+  expected_schedule: []
+
+fpc:
+  urls:
+    # {base_url} is resolved from --base-url or Magento's active store URL.
+    # Add real category/product/CMS paths for environments where those page types
+    # need representative cache/header checks.
+    home: '{base_url}/'
+  cache_headers:
+    - X-Magento-Cache-Debug
+    - X-Magento-Debug
+    - X-Cache
+    - X-Cache-Hits
+    - Cache-Control
+
+http:
+  urls:
+    home: '{base_url}/'
+  required_page_types:
+    - home
+    - cms
+    - category
+    - product
+    - search
+
+security:
+  required_headers:
+    - Strict-Transport-Security
+    - X-Content-Type-Options
+    - X-Frame-Options
+    - Referrer-Policy
+
+php:
+  required_extensions:
+    - bcmath
+    - ctype
+    - curl
+    - dom
+    - fileinfo
+    - filter
+    - ftp
+    - gd
+    - hash
+    - iconv
+    - intl
+    - json
+    - libxml
+    - mbstring
+    - openssl
+    - pcre
+    - pdo_mysql
+    - reflection
+    - simplexml
+    - soap
+    - sockets
+    - sodium
+    - spl
+    - tokenizer
+    - xmlwriter
+    - xsl
+    - zip
+    - zlib
+
+opensearch:
+  scheme: http
+
+score:
+  starting_score: 100
+  deductions:
+    severe: 20
+    high: 10
+    elevated: 5
+    medium: 2
+    low: 1
+    info: 0
+
+report:
+  # Leave blank to use the active Magento store name in generated reports.
+  customer_name: ''
+  engagement_type: Magento Open Source Health Check Report
+  # Leave blank to use the active store base URL in generated reports.
+  merchant_domain: ''
+  project_team: Magento Operations
+  timezone: UTC
+
+integrations:
+  newrelic:
+    enabled: false
+  datadog:
+    enabled: false
+  lighthouse:
+    enabled: false
+  adobe_security_scan:
+    enabled: false
+  uct:
+    enabled: false

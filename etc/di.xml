@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="asiamarketHealthCheckScan" xsi:type="object">Asiamarket\HealthCheck\Console\Command\ScanCommand</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Asiamarket\HealthCheck\Model\ScanRunner">
+        <arguments>
+            <argument name="collectors" xsi:type="array">
+                <item name="magento" xsi:type="object">Asiamarket\HealthCheck\Collector\MagentoCollector</item>
+                <item name="database" xsi:type="object">Asiamarket\HealthCheck\Collector\DatabaseCollector</item>
+                <item name="database_advanced" xsi:type="object">Asiamarket\HealthCheck\Collector\DatabaseAdvancedCollector</item>
+                <item name="cron" xsi:type="object">Asiamarket\HealthCheck\Collector\CronCollector</item>
+                <item name="indexer" xsi:type="object">Asiamarket\HealthCheck\Collector\IndexerCollector</item>
+                <item name="redis" xsi:type="object">Asiamarket\HealthCheck\Collector\RedisCollector</item>
+                <item name="opensearch" xsi:type="object">Asiamarket\HealthCheck\Collector\OpenSearchCollector</item>
+                <item name="composer" xsi:type="object">Asiamarket\HealthCheck\Collector\ComposerCollector</item>
+                <item name="logs" xsi:type="object">Asiamarket\HealthCheck\Collector\LogCollector</item>
+                <item name="fpc" xsi:type="object">Asiamarket\HealthCheck\Collector\FpcCollector</item>
+                <item name="patches" xsi:type="object">Asiamarket\HealthCheck\Collector\PatchCollector</item>
+                <item name="system" xsi:type="object">Asiamarket\HealthCheck\Collector\SystemCollector</item>
+                <item name="php" xsi:type="object">Asiamarket\HealthCheck\Collector\PhpCollector</item>
+                <item name="http" xsi:type="object">Asiamarket\HealthCheck\Collector\HttpCollector</item>
+                <item name="security_headers" xsi:type="object">Asiamarket\HealthCheck\Collector\SecurityHeadersCollector</item>
+                <item name="extensions" xsi:type="object">Asiamarket\HealthCheck\Collector\ExtensionCollector</item>
+                <item name="security" xsi:type="object">Asiamarket\HealthCheck\Collector\SecurityCollector</item>
+                <item name="integrations" xsi:type="object">Asiamarket\HealthCheck\Collector\IntegrationCollector</item>
+                <item name="store" xsi:type="object">Asiamarket\HealthCheck\Collector\StoreInfoCollector</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Asiamarket\HealthCheck\Report\ReportDataBuilder">
+        <arguments>
+            <argument name="historyManager" xsi:type="object">Asiamarket\HealthCheck\Report\HistoryManager</argument>
+        </arguments>
+    </type>
+    <type name="Asiamarket\HealthCheck\Report\JsonReportGenerator">
+        <arguments>
+            <argument name="historyManager" xsi:type="object">Asiamarket\HealthCheck\Report\HistoryManager</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Catalog\Ui\Component\Listing\Columns\Thumbnail">
+        <plugin name="asiamarket_catalog_thumbnail_null_alt"
+                type="Asiamarket\HealthCheck\Plugin\Catalog\Ui\Component\Listing\Columns\NormalizeThumbnailAlt"
+                sortOrder="10"/>
+    </type>
+</config>
