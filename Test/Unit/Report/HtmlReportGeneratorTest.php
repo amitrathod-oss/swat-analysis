@@ -39,7 +39,8 @@ class HtmlReportGeneratorTest extends TestCase
 
         self::assertStringContainsString('A. Introduction', $html);
         self::assertStringContainsString('D. Findings', $html);
-        self::assertStringContainsString('G. Scan Metadata', $html);
+        self::assertStringContainsString('H. Scan Details', $html);
+        self::assertStringNotContainsString('not Adobe', $html);
         self::assertStringContainsString('&lt;script&gt;', $html);
         self::assertStringNotContainsString('<script>alert', $html);
     }

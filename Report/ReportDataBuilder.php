@@ -9,8 +9,6 @@ use Mha\HealthCheck\Security\SecretSanitizer;
 
 class ReportDataBuilder
 {
-    private const SCORE_DISCLAIMER = 'This is a custom Magento Open Source health score and is not Adobe\'s SWAT Health Index.';
-
     private HealthScoreCalculator $healthScoreCalculator;
     private SecretSanitizer $secretSanitizer;
     private HealthCheckConfig $config;
@@ -91,7 +89,6 @@ class ReportDataBuilder
         ];
         $report['scan_metadata'] = [
             'analyzer' => 'Mha HealthCheck',
-            'score_disclaimer' => self::SCORE_DISCLAIMER,
             'score_algorithm' => 'Deduplicate identical evidence and cap the total penalty contributed by each rule; informational findings have no penalty.',
             'report_generated_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
         ];

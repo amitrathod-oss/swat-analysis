@@ -67,42 +67,35 @@ class HtmlReportGenerator
             . $this->cover($customer, $profile, $report)
             . $this->contents($findings)
             . $this->dashboard($report, $application, $summary, $score)
-            . '<section class="page-break"><h2>A. Introduction</h2><p>This report presents findings from a read-only technical assessment of the configured Magento environment. '
-            . 'It helps the project team prioritize security, performance, reliability, and operational work.</p>'
+            . '<section class="page-break"><h2>A. Report Overview</h2><p>This report shows the latest health results for your Magento store and highlights items that may need attention.</p>'
             . $this->keyValueTable([
                 'Customer' => $customer,
-                'Custom Magento Health Score' => $score . ' out of 100',
-                'Engagement Type' => $profile['engagement_type'] ?? null,
-                'Date Range' => $this->dateOnly((string)($report['started_at'] ?? '')) . ' - '
-                    . $this->dateOnly((string)($report['completed_at'] ?? '')),
-                'Project Team' => $profile['project_team'] ?? null,
-                'Merchant Domain(s)' => $profile['merchant_domain'] ?? null,
-                'Platform' => $application['platform'] ?? null,
+                'Health Score' => $score . ' out of 100',
+                'Report Type' => $profile['engagement_type'] ?? null,
+                'Website' => $profile['merchant_domain'] ?? null,
                 'Magento Version' => $application['version'] ?? null,
-                'Magento Edition' => $application['edition'] ?? null,
-                'Deployment Mode' => $this->getCollectorMetric($report, 'magento', 'deployment_mode'),
                 'PHP Version' => $this->getCollectorMetric($report, 'magento', 'php_version'),
-                'Time Zone' => $profile['timezone'] ?? 'UTC',
-            ]) . '<p class="disclaimer">' . $this->escape((string)($metadata['score_disclaimer'] ?? '')) . '</p></section>'
+                'Scan Date' => $this->dateOnly((string)($report['completed_at'] ?? '')),
+            ]) . '</section>'
             . '<section class="page-break"><h2>B. Executive Summary</h2><p>The scan completed with '
             . $this->escape((string)($summary['findings_total'] ?? 0)) . ' findings and '
             . $this->escape((string)($summary['scan_error_count'] ?? 0)) . ' scan errors.</p><div class="score">'
-            . $score . '<span> / 100</span></div><p>' . $this->escape((string)($metadata['score_algorithm'] ?? ''))
+            . $score . '<span> / 100</span></div><p>The score reflects the number and importance of items found during this scan.</p>'
             . '</p><h3>C. Risk Level Guide</h3>' . $this->riskGuide($report['severity_counts'] ?? []) . '</section>'
             . '<section id="findings"><h2>D. Findings</h2>' . $this->renderDetailedFindings($findings) . '</section>'
             . '<section class="page-break"><h2>I. Domain Scorecard</h2>' . $this->renderDomainScorecard($report) . '</section>'
             . '<section class="page-break"><h2>E. Exceptions</h2>' . $this->renderExceptions($report) . '</section>'
             . '<section class="page-break"><h2>F. Patches</h2>' . $this->renderPatches($report) . '</section>'
-            . '<section class="page-break"><h2>G. Environment / Service Inventory</h2>' . $this->renderCollectors($report)
+            . '<section class="page-break"><h2>G. Store &amp; System Checks</h2>' . $this->renderCollectors($report)
             . $this->renderStoreInventory($report) . $this->renderExtensionInventory($report)
             . $this->renderExternalSources($report) . '</section>'
-            . '<section><h2>H. Scan Metadata</h2>' . $this->definitionList([
+            . '<section><h2>H. Scan Details</h2>' . $this->definitionList([
                 'Scan ID' => $report['scan_id'] ?? null,
                 'Started at' => $report['started_at'] ?? null,
                 'Completed at' => $report['completed_at'] ?? null,
                 'Duration (seconds)' => $report['duration_seconds'] ?? null,
                 'Report generated at' => $metadata['report_generated_at'] ?? null,
-                'Analyzer' => $metadata['analyzer'] ?? null,
+                'Checks included' => $summary['collector_statuses'] ?? null,
             ])
             . '</main></body></html>';
     }
@@ -126,17 +119,16 @@ class HtmlReportGenerator
     private function contents(array $findings): string
     {
         $html = '<section class="toc page-break"><p class="eyebrow">Report navigation</p><h2>Table of Contents</h2><ul>'
-            . '<li>Dashboard</li><li>A. Introduction</li><li>B. Executive Summary</li><li>C. Risk Level Guide</li>'
+            . '<li>Dashboard</li><li>A. Report Overview</li><li>B. Executive Summary</li><li>C. Risk Level Guide</li>'
             . '<li>D. Findings (' . count($findings) . ')</li>'
-            . '<li>E. Exceptions</li><li>F. Patches</li><li>G. Environment / Service Inventory</li>'
-            . '<li>H. Scan Metadata</li><li>I. Domain Scorecard</li></ul></section>';
+            . '<li>E. Exceptions</li><li>F. Patches</li><li>G. Store &amp; System Checks</li>'
+            . '<li>H. Scan Details</li><li>I. Domain Scorecard</li></ul></section>';
 
         return $html;
     }
 
     /**
-     * Render an Adobe Commerce-style dashboard using this scan's measured data.
-     * This is a custom Magento Open Source summary, not Adobe SWAT data.
+     * Render a customer-friendly dashboard using this scan's measured data.
      *
      * @param array<string, mixed> $report
      * @param array<string, mixed> $application
@@ -164,8 +156,8 @@ class HtmlReportGenerator
         ];
 
         $html = '<section class="dashboard page-break"><div class="dashboard-header"><div><p class="eyebrow">Magento Open Source</p>'
-            . '<h2>Health Dashboard</h2><p>Read-only scan summary for ' . $this->escape((string)($report['completed_at'] ?? '')) . '</p></div>'
-            . '<div class="dashboard-score"><span>Custom health score</span><strong>' . $score . '<small>/100</small></strong></div></div><div class="dashboard-cards">';
+            . '<h2>Health Dashboard</h2><p>Latest health results for ' . $this->escape((string)($report['completed_at'] ?? '')) . '</p></div>'
+            . '<div class="dashboard-score"><span>Health score</span><strong>' . $score . '<small>/100</small></strong></div></div><div class="dashboard-cards">';
         foreach ($cards as $card) {
             $html .= '<article class="dashboard-card ' . $this->escape($card['tone']) . '"><span>' . $this->escape($card['label'])
                 . '</span><strong>' . $this->escape($card['value']) . '</strong></article>';
@@ -174,11 +166,8 @@ class HtmlReportGenerator
             . $this->riskGuide($counts) . '</div><div><h3>Application information</h3>'
             . $this->keyValueTable([
                 'Magento version' => $application['version'] ?? null,
-                'Magento edition' => $application['edition'] ?? null,
                 'PHP version' => $magento['php_version'] ?? null,
-                'Deployment mode' => $magento['deployment_mode'] ?? null,
                 'Enabled modules' => $magento['enabled_module_count'] ?? null,
-                'Custom modules' => $magento['custom_module_count'] ?? null,
                 'Database version' => $database['version'] ?? null,
                 'Search version' => $search['version'] ?? null,
                 'Redis version' => $redis['version'] ?? null,
@@ -190,8 +179,8 @@ class HtmlReportGenerator
                 'Redis memory utilization' => $this->formatMetric($redis['memory_utilization_percent'] ?? null, '%'),
                 'Search cluster status' => $search['cluster_status'] ?? null,
                 'Unassigned search shards' => $search['unassigned_shards'] ?? null,
-                'Collector statuses' => $summary['collector_statuses'] ?? [],
-            ]) . '</div></div><p class="disclaimer">This dashboard is a custom Magento Open Source health summary and is not Adobe\'s SWAT Health Index.</p></section>';
+                'Checks completed' => count($report['collectors'] ?? []),
+            ]) . '</div></div></section>';
 
         return $html;
     }
@@ -343,7 +332,7 @@ class HtmlReportGenerator
     {
         $domains = $report['health_score_details']['domain_scores'] ?? [];
         $history = $report['history'] ?? [];
-        $html = '<p>Domain scores are custom analyzer scores calculated from measured findings. They are not Adobe SWAT scores.</p>';
+        $html = '<p>This summary shows the health result for each area checked.</p>';
         if (!is_array($domains) || $domains === []) {
             $html .= '<p>No domain scores were calculated.</p>';
         } else {
@@ -397,16 +386,15 @@ class HtmlReportGenerator
         if (!is_array($patches) || $patches === []) {
             $qpt = $report['collectors']['patches']['metrics']['quality_patches_tool'] ?? [];
             $qptStatus = is_array($qpt) ? ($qpt['status'] ?? 'not_available') : 'not_available';
-            return '<p>No Composer patches were configured in composer.json.</p><p><strong>Quality Patches Tool:</strong> '
+            return '<p>No installed fixes were found.</p><p><strong>Fix checker:</strong> '
                 . $this->escape((string)$qptStatus)
-                . '. Adobe QPT recommendation data is not queried by this local analyzer.</p>';
+                . '.</p>';
         }
 
         $qpt = $report['collectors']['patches']['metrics']['quality_patches_tool'] ?? [];
         $qptStatus = is_array($qpt) ? ($qpt['status'] ?? 'not_available') : 'not_available';
-        $html = '<p>Patches are read from Composer <code>extra.patches</code>. The analyzer reports source-file presence and application verification status; it does not apply or change patches.</p>'
-            . '<p><strong>Quality Patches Tool:</strong> ' . $this->escape((string)$qptStatus)
-            . '. Adobe QPT recommendation data is not queried by this local analyzer.</p>'
+        $html = '<p>This section lists installed fixes and whether their application could be confirmed.</p>'
+            . '<p><strong>Fix checker:</strong> ' . $this->escape((string)$qptStatus) . '</p>'
             . '<div class="table-wrap"><table><thead><tr><th>Patch ID</th><th>Description</th><th>Package</th><th>Category</th><th>Status</th><th>Recommended</th></tr></thead><tbody>';
         foreach ($patches as $patch) {
             if (!is_array($patch)) {
@@ -444,7 +432,7 @@ class HtmlReportGenerator
     private function renderCollectors(array $report): string
     {
         $collectors = is_array($report['collectors'] ?? null) ? $report['collectors'] : [];
-        $html = '<div class="table-wrap"><table><thead><tr><th>Collector</th><th>Status</th><th>Message</th><th>Metrics</th></tr></thead><tbody>';
+        $html = '<div class="table-wrap"><table><thead><tr><th>Check</th><th>Status</th><th>Message</th><th>Measured Results</th></tr></thead><tbody>';
         foreach ($collectors as $code => $collector) {
             if (!is_array($collector)) {
                 continue;
@@ -452,7 +440,7 @@ class HtmlReportGenerator
             $html .= '<tr><td>' . $this->escape($this->collectorLabel((string)$code)) . '</td><td>'
                 . $this->escape((string)($collector['status'] ?? '')) . '</td><td>'
                 . $this->escape((string)($collector['message'] ?? '')) . '</td><td>'
-                . $this->renderValue($this->summarizeMetrics($collector['metrics'] ?? [])) . '</td></tr>';
+                . $this->renderMetricList($this->summarizeMetrics($collector['metrics'] ?? [])) . '</td></tr>';
         }
 
         return $html . '</tbody></table></div>';
@@ -462,7 +450,7 @@ class HtmlReportGenerator
     {
         $labels = [
             'database' => 'Database',
-            'database_advanced' => 'Database Advanced',
+            'database_advanced' => 'Advanced Database Checks',
             'security_headers' => 'Security Headers',
             'opensearch' => 'OpenSearch',
             'fpc' => 'Full Page Cache',
@@ -471,6 +459,101 @@ class HtmlReportGenerator
         ];
 
         return $labels[$code] ?? ucwords(str_replace('_', ' ', $code));
+    }
+
+    private function metricLabel(string $key): string
+    {
+        $labels = [
+            'php_version' => 'PHP version',
+            'enabled_module_count' => 'Installed modules',
+            'custom_module_count' => 'Custom modules',
+            'deployment_mode' => 'Store mode',
+            'operating_system' => 'Operating system',
+            'web_server' => 'Web server',
+            'cache_types' => 'Cache types',
+            'status_counts' => 'Job status totals',
+            'stale_running_count' => 'Stale running jobs',
+            'top_failing_job_codes' => 'Jobs with failures',
+            'recent_errors' => 'Recent errors',
+            'total_size_mb' => 'Total size (MB)',
+            'tables' => 'Tables measured',
+            'attribute_options' => 'Attribute options',
+            'buffer_pool' => 'Database buffer pool',
+            'trigger_count' => 'Database triggers',
+            'triggers' => 'Triggers',
+            'table_groups' => 'Table groups',
+            'long_running_queries' => 'Long-running queries',
+            'deadlocks' => 'Deadlocks',
+            'row_lock_waits' => 'Row lock waits',
+            'tested_urls' => 'URLs tested',
+            'tested_page_types' => 'Page types tested',
+            'hit_rate_percent' => 'Cache hit rate',
+            'missing_headers' => 'Missing headers',
+            'vulnerability_count' => 'Security advisories',
+            'abandoned_package_count' => 'Abandoned packages',
+        ];
+
+        return $labels[$key] ?? ucfirst(str_replace('_', ' ', $key));
+    }
+
+    /** @param mixed $value */
+    private function metricValue($value): string
+    {
+        if ($value === null || $value === '') {
+            return 'Not available';
+        }
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+        return (string)$value;
+    }
+
+    /** @param mixed $value */
+    private function nestedMetricValue($value): string
+    {
+        if (!is_array($value)) {
+            return $this->metricValue($value);
+        }
+        if ($value === []) {
+            return 'None';
+        }
+
+        $parts = [];
+        foreach ($value as $key => $item) {
+            if (is_scalar($item) || $item === null) {
+                $parts[] = $this->metricLabel((string)$key) . ': ' . $this->metricValue($item);
+            } else {
+                $parts[] = $this->metricLabel((string)$key) . ': ' . count($item) . ' items';
+            }
+            if (count($parts) >= 5) {
+                break;
+            }
+        }
+
+        if ($parts === []) {
+            return count($value) . ' items';
+        }
+        if (count($value) > count($parts)) {
+            $parts[] = '+' . (count($value) - count($parts)) . ' more';
+        }
+
+        return implode('; ', $parts);
+    }
+
+    /** @param array<string, scalar> $metrics */
+    private function renderMetricList(array $metrics): string
+    {
+        if ($metrics === []) {
+            return 'No measured results available.';
+        }
+
+        $html = '<ul class="metric-list">';
+        foreach ($metrics as $label => $value) {
+            $html .= '<li><strong>' . $this->escape((string)$label) . ':</strong> '
+                . $this->escape((string)$value) . '</li>';
+        }
+
+        return $html . '</ul>';
     }
 
     /** @param array<string, mixed> $report */
@@ -546,7 +629,7 @@ class HtmlReportGenerator
      * Keep the inventory readable in the printed report. Full rule evidence is rendered with each finding.
      *
      * @param mixed $metrics
-     * @return array<string, scalar>
+     * @return array<string, string>
      */
     private function summarizeMetrics($metrics): array
     {
@@ -557,11 +640,11 @@ class HtmlReportGenerator
         $summary = [];
         foreach ($metrics as $key => $value) {
             if (is_scalar($value) || $value === null) {
-                $summary[(string)$key] = $value ?? 'N/A';
+                $summary[$this->metricLabel((string)$key)] = $this->metricValue($value);
                 continue;
             }
             if (is_array($value)) {
-                $summary[(string)$key] = count($value) . ' entries';
+                $summary[$this->metricLabel((string)$key)] = $this->nestedMetricValue($value);
             }
         }
 
@@ -622,6 +705,6 @@ class HtmlReportGenerator
 
     private function styles(): string
     {
-        return '@page{size:letter;margin:.7in}body{margin:0;background:#ececec;color:#353535;font:15px/1.45 Arial,sans-serif}main{max-width:8.5in;margin:20px auto;background:#fff;box-shadow:0 1px 8px #aaa}section{padding:.7in;box-sizing:border-box}footer{position:fixed;bottom:0;left:0;right:0;padding:8px 7%;border-top:1px solid #ddd;color:#777;background:#fff;font:10px Georgia,serif;z-index:2}footer span{float:right}.page-break{break-after:page}.cover{position:relative;min-height:9.6in}.brand{position:absolute;right:.7in;top:.55in;color:#1d4e89;font-weight:bold;letter-spacing:.08em;font-size:13px}.brand span{display:block;color:#f28c28;text-align:right;font-size:9px}.cover-copy{padding-top:2.7in}.eyebrow{color:#f28c28;font-weight:bold;letter-spacing:.09em;text-transform:uppercase;font-size:12px}.cover h1{font:54px/1.02 Georgia,serif;margin:0;color:#252525}.cover-line{width:100px;border-top:4px solid #f28c28;margin:30px 0}.customer{font:24px Georgia,serif;margin-bottom:4px}.report-date{margin-top:42px;color:#666}.cover-note{position:absolute;bottom:.8in;color:#777;font-style:italic}.toc{min-height:9.6in}.toc h2,h2{font:28px Georgia,serif;color:#f28c28;margin:0 0 22px}.toc ul{list-style:none;padding:0;margin:0;line-height:2.05;font-size:16px}.toc .sub-item{margin-left:28px;font-size:14px;color:#555}h3{font:22px Georgia,serif;margin:28px 0 14px;color:#333}h4{font-size:15px;margin:22px 0 6px;color:#444}p{margin:0 0 14px}.disclaimer{margin-top:14px;padding:12px;border-left:4px solid #f28c28;background:#fff6eb}.score{font:48px Georgia,serif;color:#1d4e89;margin:14px 0}.score span{font-size:20px;color:#666}table{border-collapse:collapse;width:100%;margin:10px 0 18px;break-inside:avoid}th,td{border:1px solid #999;padding:9px;vertical-align:top;text-align:left}th{background:#f5f4f9;text-transform:uppercase;font-size:12px}td:first-child{font-weight:bold}.key-value td:first-child{width:42%}.risk-severe{color:#aa1f1f}.risk-high{color:#bd5a00}.risk-elevated{color:#896b00}.finding,.exception{border-top:2px solid #ddd;padding:18px 0 26px;break-inside:avoid}.finding:first-of-type{border-top:0;padding-top:0}.finding h3{color:#1d4e89}.finding h4{color:#f28c28}.table-wrap{overflow:auto}.dashboard-header{display:flex;justify-content:space-between;gap:24px;border-bottom:1px solid #ddd;padding-bottom:16px}.dashboard-header h2{margin-bottom:5px}.dashboard-score{background:#f5f8fb;border-left:5px solid #1d4e89;padding:12px 18px;min-width:120px}.dashboard-score span{display:block;font-size:11px;text-transform:uppercase;color:#666}.dashboard-score strong{display:block;font:34px Georgia,serif;color:#1d4e89}.dashboard-score small{font:16px Arial;color:#666}.dashboard-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.dashboard-card{border-top:4px solid #1d4e89;background:#f7f7f7;padding:14px}.dashboard-card span{display:block;color:#666;font-size:12px}.dashboard-card strong{display:block;font:28px Georgia,serif;margin-top:8px}.dashboard-card.orange{border-color:#f28c28}.dashboard-card.red{border-color:#c94c4c}.dashboard-card.purple{border-color:#625ed4}.dashboard-card.teal{border-color:#3db5b5}.dashboard-card.yellow{border-color:#e0b400}.dashboard-columns{display:grid;grid-template-columns:1fr 1fr;gap:24px}.dashboard-columns>div{min-width:0}.recommendation-list{padding-left:20px}.recommendation-list li{margin:8px 0}.recommendation-list span{font-weight:bold;margin-right:4px}dl{display:grid;grid-template-columns:minmax(160px,260px) 1fr;gap:8px 16px;margin:0}dt{font-weight:bold}dd{margin:0;min-width:0}pre{white-space:pre-wrap;word-break:break-word;margin:0;font:11px/1.35 monospace;max-width:100%}@media print{body{background:#fff}main{max-width:none;margin:0;box-shadow:none}}@media screen and (max-width:720px){main{margin:0;box-shadow:none}section{padding:28px 18px}.cover{min-height:680px}.cover-copy{padding-top:180px}.cover h1{font-size:42px}.key-value td:first-child{width:35%}.dashboard-columns{grid-template-columns:1fr}.dashboard-cards{grid-template-columns:repeat(2,1fr)}}';
+        return '@page{size:letter;margin:.7in}body{margin:0;background:#ececec;color:#353535;font:15px/1.45 Arial,sans-serif}main{max-width:8.5in;margin:20px auto;background:#fff;box-shadow:0 1px 8px #aaa}section{padding:.7in;box-sizing:border-box}footer{position:fixed;bottom:0;left:0;right:0;padding:8px 7%;border-top:1px solid #ddd;color:#777;background:#fff;font:10px Georgia,serif;z-index:2}footer span{float:right}.page-break{break-after:page}.cover{position:relative;min-height:9.6in}.brand{position:absolute;right:.7in;top:.55in;color:#1d4e89;font-weight:bold;letter-spacing:.08em;font-size:13px}.brand span{display:block;color:#f28c28;text-align:right;font-size:9px}.cover-copy{padding-top:2.7in}.eyebrow{color:#f28c28;font-weight:bold;letter-spacing:.09em;text-transform:uppercase;font-size:12px}.cover h1{font:54px/1.02 Georgia,serif;margin:0;color:#252525}.cover-line{width:100px;border-top:4px solid #f28c28;margin:30px 0}.customer{font:24px Georgia,serif;margin-bottom:4px}.report-date{margin-top:42px;color:#666}.cover-note{position:absolute;bottom:.8in;color:#777;font-style:italic}.toc{min-height:9.6in}.toc h2,h2{font:28px Georgia,serif;color:#f28c28;margin:0 0 22px}.toc ul{list-style:none;padding:0;margin:0;line-height:2.05;font-size:16px}.toc .sub-item{margin-left:28px;font-size:14px;color:#555}h3{font:22px Georgia,serif;margin:28px 0 14px;color:#333}h4{font-size:15px;margin:22px 0 6px;color:#444}p{margin:0 0 14px}.score{font:48px Georgia,serif;color:#1d4e89;margin:14px 0}.score span{font-size:20px;color:#666}table{border-collapse:collapse;width:100%;margin:10px 0 18px;break-inside:avoid}th,td{border:1px solid #999;padding:9px;vertical-align:top;text-align:left}th{background:#f5f4f9;text-transform:uppercase;font-size:12px}td:first-child{font-weight:bold}.key-value td:first-child{width:42%}.risk-severe{color:#aa1f1f}.risk-high{color:#bd5a00}.risk-elevated{color:#896b00}.finding,.exception{border-top:2px solid #ddd;padding:18px 0 26px;break-inside:avoid}.finding:first-of-type{border-top:0;padding-top:0}.finding h3{color:#1d4e89}.finding h4{color:#f28c28}.table-wrap{overflow:auto}.metric-list{margin:0;padding-left:18px}.metric-list li{margin:2px 0}.metric-list strong{font-weight:bold}.dashboard-header{display:flex;justify-content:space-between;gap:24px;border-bottom:1px solid #ddd;padding-bottom:16px}.dashboard-header h2{margin-bottom:5px}.dashboard-score{background:#f5f8fb;border-left:5px solid #1d4e89;padding:12px 18px;min-width:120px}.dashboard-score span{display:block;font-size:11px;text-transform:uppercase;color:#666}.dashboard-score strong{display:block;font:34px Georgia,serif;color:#1d4e89}.dashboard-score small{font:16px Arial;color:#666}.dashboard-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.dashboard-card{border-top:4px solid #1d4e89;background:#f7f7f7;padding:14px}.dashboard-card span{display:block;color:#666;font-size:12px}.dashboard-card strong{display:block;font:28px Georgia,serif;margin-top:8px}.dashboard-card.orange{border-color:#f28c28}.dashboard-card.red{border-color:#c94c4c}.dashboard-card.purple{border-color:#625ed4}.dashboard-card.teal{border-color:#3db5b5}.dashboard-card.yellow{border-color:#e0b400}.dashboard-columns{display:grid;grid-template-columns:1fr 1fr;gap:24px}.dashboard-columns>div{min-width:0}.recommendation-list{padding-left:20px}.recommendation-list li{margin:8px 0}.recommendation-list span{font-weight:bold;margin-right:4px}dl{display:grid;grid-template-columns:minmax(160px,260px) 1fr;gap:8px 16px;margin:0}dt{font-weight:bold}dd{margin:0;min-width:0}pre{white-space:pre-wrap;word-break:break-word;margin:0;font:11px/1.35 monospace;max-width:100%}@media print{body{background:#fff}main{max-width:none;margin:0;box-shadow:none}}@media screen and (max-width:720px){main{margin:0;box-shadow:none}section{padding:28px 18px}.cover{min-height:680px}.cover-copy{padding-top:180px}.cover h1{font-size:42px}.key-value td:first-child{width:35%}.dashboard-columns{grid-template-columns:1fr}.dashboard-cards{grid-template-columns:repeat(2,1fr)}}';
     }
 }

@@ -66,7 +66,7 @@ class PdfReportGenerator
             . 'table{border-collapse:collapse;width:100%;margin:8px 0 14px}th,td{border:1px solid #c5ced6;padding:5px;text-align:left;vertical-align:top}'
             . 'th{background:#edf1f4;color:#425466;font-size:8pt;text-transform:uppercase}td{font-size:9pt}td:first-child{font-weight:bold}'
             . '.finding{border-top:1px solid #ccd6df;padding:12px 0}.finding h3{color:#173f66}.finding h4{color:#e8751a}'
-            . '.recommendation-list{padding-left:18px}.disclaimer{padding:8px;background:#fff6eb;border-left:3px solid #e8751a}'
+            . '.recommendation-list,.metric-list{padding-left:18px}.metric-list{margin:0}.metric-list li{margin:2px 0}'
             . 'dl{margin:0}dt{font-weight:bold}dd{margin:0 0 6px}pre{white-space:pre-wrap;word-break:break-word;font-size:8pt;margin:0}';
     }
 

@@ -45,7 +45,7 @@ class ReportDataBuilderTest extends TestCase
         self::assertSame('2.4.7', $report['application']['version']);
         self::assertSame(1, $report['summary']['findings_total']);
         self::assertSame('[REDACTED]', $report['collectors']['magento']['metrics']['database_password']);
-        self::assertStringContainsString('not Adobe', $report['scan_metadata']['score_disclaimer']);
+        self::assertArrayNotHasKey('score_disclaimer', $report['scan_metadata']);
         self::assertSame('Test value', $report['report_profile']['customer_name']);
     }
 }
