@@ -12,6 +12,7 @@ use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\ReadInterface;
+use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Result\Page;
 use Magento\Framework\View\Result\PageFactory;
 
@@ -24,6 +25,7 @@ class Index extends Action
     private JsonReportGenerator $jsonReportGenerator;
     private PdfReportGenerator $pdfReportGenerator;
     private HealthCheckConfig $config;
+    private SerializerInterface $serializer;
 
     public function __construct(
         Context $context,
@@ -32,7 +34,8 @@ class Index extends Action
         ScanRunner $scanRunner,
         JsonReportGenerator $jsonReportGenerator,
         PdfReportGenerator $pdfReportGenerator,
-        HealthCheckConfig $config
+        HealthCheckConfig $config,
+        SerializerInterface $serializer
     ) {
         parent::__construct($context);
         $this->pageFactory = $pageFactory;
@@ -41,6 +44,7 @@ class Index extends Action
         $this->jsonReportGenerator = $jsonReportGenerator;
         $this->pdfReportGenerator = $pdfReportGenerator;
         $this->config = $config;
+        $this->serializer = $serializer;
     }
 
     public function execute(): Page
@@ -59,7 +63,7 @@ class Index extends Action
         if (!$forceScan && $autoScan !== true) {
             return;
         }
-        if (!$forceScan && $this->varDirectory->isExist('health-reports/latest.json')) {
+        if (!$forceScan && $this->hasCurrentReport()) {
             return;
         }
 
@@ -82,6 +86,21 @@ class Index extends Action
                 'The health report could not be generated automatically. Run php bin/magento health:scan --format=json from the Magento project root.'
             );
             $this->messageManager->addErrorMessage(__((string)$message));
+        }
+    }
+
+    private function hasCurrentReport(): bool
+    {
+        $path = 'health-reports/latest.json';
+        if (!$this->varDirectory->isExist($path)) {
+            return false;
+        }
+
+        try {
+            $report = $this->serializer->unserialize($this->varDirectory->readFile($path));
+            return is_array($report) && ($report['metadata']['analyzer'] ?? null) === 'Mha HealthCheck';
+        } catch (\Throwable $exception) {
+            return false;
         }
     }
 }
