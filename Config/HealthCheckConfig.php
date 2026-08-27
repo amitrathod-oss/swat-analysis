@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Config;
+namespace Mha\HealthCheck\Config;
 
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Module\Dir\Reader as ModuleDirReader;
@@ -12,7 +12,7 @@ use Symfony\Component\Yaml\Yaml;
 
 class HealthCheckConfig
 {
-    private const MODULE_NAME = 'Sigma_HealthCheck';
+    private const MODULE_NAME = 'Mha_HealthCheck';
     private const CONFIG_FILE = 'healthcheck.yaml';
 
     private ModuleDirReader $moduleDirReader;

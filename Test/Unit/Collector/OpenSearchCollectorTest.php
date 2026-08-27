@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Test\Unit\Collector;
+namespace Mha\HealthCheck\Test\Unit\Collector;
 
-use Sigma\HealthCheck\Collector\OpenSearchCollector;
-use Sigma\HealthCheck\Config\HealthCheckConfig;
+use Mha\HealthCheck\Collector\OpenSearchCollector;
+use Mha\HealthCheck\Config\HealthCheckConfig;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\HTTP\Client\CurlFactory;
 use PHPUnit\Framework\TestCase;

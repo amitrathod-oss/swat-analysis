@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Service;
+namespace Mha\HealthCheck\Service;
 
 use Symfony\Component\Process\Process;
 

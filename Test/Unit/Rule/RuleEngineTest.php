@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Test\Unit\Rule;
+namespace Mha\HealthCheck\Test\Unit\Rule;
 
-use Sigma\HealthCheck\Finding\FindingFactory;
-use Sigma\HealthCheck\Rule\RuleEngine;
+use Mha\HealthCheck\Finding\FindingFactory;
+use Mha\HealthCheck\Rule\RuleEngine;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 

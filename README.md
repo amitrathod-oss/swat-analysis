@@ -1,4 +1,4 @@
-# Sigma Magento Health Check
+# Mha Magento Health Check
 
 Read-only Magento Open Source health analyzer distributed as a Composer module.
 It collects local Magento, PHP, Composer, MySQL, Redis, OpenSearch, filesystem,
@@ -19,6 +19,9 @@ not Adobe's SWAT Health Index.
 The module can run when Redis, OpenSearch, or other optional services are unavailable;
 those services are reported as unavailable rather than treated as healthy.
 
+This package is independent of any project-specific vendor module. Its Magento module
+name is `Mha_HealthCheck` and its Composer package name is `mha/module-health-check`.
+
 ## Install with Composer
 
 Run the commands from the root of the Magento project where the module should be
@@ -31,13 +34,13 @@ The current development branch is `swat-report`, so Composer must use the
 
 ```bash
 composer config repositories.swat-analysis vcs https://github.com/amitrathod-oss/swat-analysis.git
-composer require sigma/module-health-check:dev-swat-report
+composer require mha/module-health-check:dev-swat-report
 ```
 
 Composer downloads the package and Magento's Composer installer places it at:
 
 ```text
-app/code/Sigma/HealthCheck
+app/code/Mha/HealthCheck
 ```
 
 ### Enable and register the module
@@ -45,7 +48,7 @@ app/code/Sigma/HealthCheck
 After Composer finishes, run:
 
 ```bash
-php bin/magento module:enable Sigma_HealthCheck
+php bin/magento module:enable Mha_HealthCheck
 php bin/magento setup:upgrade
 ```
 
@@ -65,18 +68,30 @@ Once a stable tag such as `1.0.0` is published, use:
 
 ```bash
 composer config repositories.swat-analysis vcs https://github.com/amitrathod-oss/swat-analysis.git
-composer require sigma/module-health-check:^1.0
+composer require mha/module-health-check:^1.0
 ```
 
 For a private repository, configure GitHub SSH authentication or a GitHub Personal
 Access Token. Never put a token or password directly in a command-line URL.
+
+### Migrate from an earlier package name
+
+If an earlier installation used `sigma/module-health-check` or another vendor name,
+remove that old package through Composer before installing this package. The module
+identifier changed, so Magento treats `Mha_HealthCheck` as a separate module:
+
+```bash
+composer remove sigma/module-health-check
+composer require mha/module-health-check:dev-swat-report
+php bin/magento setup:upgrade
+```
 
 ## Verify the installation
 
 Check that Magento sees the module and command:
 
 ```bash
-php bin/magento module:status Sigma_HealthCheck
+php bin/magento module:status Mha_HealthCheck
 php bin/magento list --raw | grep '^health:scan$'
 ```
 
@@ -142,8 +157,16 @@ After enabling the module, sign in to Magento Admin and open:
 System > Health Check Dashboard
 ```
 
-The dashboard reads `var/health-reports/latest.json`. Run a scan first if the page
-reports that no scan is available.
+The dashboard automatically generates a JSON and PDF report the first time it is opened when no report exists. Use the Run New Scan button to refresh it after an administrator action. If automatic generation fails, run `php bin/magento health:scan --format=json` from the Magento project root. The scan is performed by Magento PHP; `ddev exec` is not required and is intentionally not part of the module instructions.
+
+### Representative URLs
+
+Representative URLs are a small, real storefront sample used for read-only HTTP,
+security-header, and full-page-cache checks. The analyzer starts with the active
+store home and search URLs, then discovers one published category, product, and CMS
+page from Magento's URL data when available. Values under `http.urls` or `fpc.urls`
+in `etc/healthcheck.yaml` override those samples. The report shows both the count and
+the page types tested; it does not claim that every storefront URL was checked.
 
 The dashboard includes:
 
@@ -165,7 +188,7 @@ System menu.
 The default read-only configuration is:
 
 ```text
-app/code/Sigma/HealthCheck/etc/healthcheck.yaml
+app/code/Mha/HealthCheck/etc/healthcheck.yaml
 ```
 
 The file contains scan windows, thresholds, required PHP extensions, HTTP/FPC
@@ -249,7 +272,7 @@ itself is read-only.
 Update the branch version:
 
 ```bash
-composer update sigma/module-health-check
+composer update mha/module-health-check
 php bin/magento setup:upgrade
 php bin/magento setup:di:compile
 ```
@@ -257,7 +280,7 @@ php bin/magento setup:di:compile
 Update to a tagged release when available:
 
 ```bash
-composer require sigma/module-health-check:^1.0
+composer require mha/module-health-check:^1.0
 ```
 
 ## Troubleshooting
@@ -268,8 +291,8 @@ Confirm the VCS repository and branch version:
 
 ```bash
 composer config repositories.swat-analysis vcs https://github.com/amitrathod-oss/swat-analysis.git
-composer show sigma/module-health-check --all
-composer require sigma/module-health-check:dev-swat-report
+composer show mha/module-health-check --all
+composer require mha/module-health-check:dev-swat-report
 ```
 
 ### `health:scan` is not defined
@@ -277,8 +300,8 @@ composer require sigma/module-health-check:dev-swat-report
 Run:
 
 ```bash
-php bin/magento module:status Sigma_HealthCheck
-php bin/magento module:enable Sigma_HealthCheck
+php bin/magento module:status Mha_HealthCheck
+php bin/magento module:enable Mha_HealthCheck
 php bin/magento setup:upgrade
 php bin/magento setup:di:compile
 ```

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Collector;
+namespace Mha\HealthCheck\Collector;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;

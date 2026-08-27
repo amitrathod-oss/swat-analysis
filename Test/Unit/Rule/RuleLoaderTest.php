@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Test\Unit\Rule;
+namespace Mha\HealthCheck\Test\Unit\Rule;
 
-use Sigma\HealthCheck\Config\HealthCheckConfig;
-use Sigma\HealthCheck\Rule\RuleLoader;
+use Mha\HealthCheck\Config\HealthCheckConfig;
+use Mha\HealthCheck\Rule\RuleLoader;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Module\Dir\Reader as ModuleDirReader;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +21,7 @@ class RuleLoaderTest extends TestCase
 
         $moduleDirReader->expects(self::once())
             ->method('getModuleDir')
-            ->with('', 'Sigma_HealthCheck')
+            ->with('', 'Mha_HealthCheck')
             ->willReturn('/tmp/HealthCheck');
         $fileDriver->method('isDirectory')->with($definitionDirectory)->willReturn(true);
         $fileDriver->method('readDirectory')->with($definitionDirectory)->willReturn([$definitionFile]);

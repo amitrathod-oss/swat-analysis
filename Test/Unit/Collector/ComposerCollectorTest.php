@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Test\Unit\Collector;
+namespace Mha\HealthCheck\Test\Unit\Collector;
 
-use Sigma\HealthCheck\Collector\ComposerCollector;
-use Sigma\HealthCheck\Config\HealthCheckConfig;
-use Sigma\HealthCheck\Service\ComposerCommandRunner;
+use Mha\HealthCheck\Collector\ComposerCollector;
+use Mha\HealthCheck\Config\HealthCheckConfig;
+use Mha\HealthCheck\Service\ComposerCommandRunner;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use PHPUnit\Framework\TestCase;
 

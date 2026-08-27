@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Collector;
+namespace Mha\HealthCheck\Collector;
 
-use Sigma\HealthCheck\Config\HealthCheckConfig;
-use Sigma\HealthCheck\Service\RepresentativeUrlProvider;
+use Mha\HealthCheck\Config\HealthCheckConfig;
+use Mha\HealthCheck\Service\RepresentativeUrlProvider;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\HTTP\Client\CurlFactory;
 
@@ -51,6 +51,7 @@ class HttpCollector implements CollectorInterface
         $cacheable = array_filter($measured, static fn(array $result): bool => $result['cacheable'] === true);
         return ['metrics' => [
             'tested_urls' => count($results),
+            'tested_page_types' => array_keys($results),
             'successful_responses' => count($measured),
             'cacheable_responses' => count($cacheable),
             'cacheable_rate_percent' => $measured === [] ? null : round(count($cacheable) / count($measured) * 100, 2),

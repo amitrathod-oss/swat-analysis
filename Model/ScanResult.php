@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Model;
+namespace Mha\HealthCheck\Model;
 
-use Sigma\HealthCheck\Finding\Finding;
+use Mha\HealthCheck\Finding\Finding;
 use DateTimeImmutable;
 use DateTimeInterface;
 

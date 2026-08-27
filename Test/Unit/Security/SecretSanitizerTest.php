@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Test\Unit\Security;
+namespace Mha\HealthCheck\Test\Unit\Security;
 
-use Sigma\HealthCheck\Security\SecretSanitizer;
+use Mha\HealthCheck\Security\SecretSanitizer;
 use PHPUnit\Framework\TestCase;
 
 class SecretSanitizerTest extends TestCase

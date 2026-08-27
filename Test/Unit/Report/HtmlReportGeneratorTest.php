@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Test\Unit\Report;
+namespace Mha\HealthCheck\Test\Unit\Report;
 
-use Sigma\HealthCheck\Model\ScanResult;
-use Sigma\HealthCheck\Report\HtmlReportGenerator;
-use Sigma\HealthCheck\Report\ReportDataBuilder;
+use Mha\HealthCheck\Model\ScanResult;
+use Mha\HealthCheck\Report\HtmlReportGenerator;
+use Mha\HealthCheck\Report\ReportDataBuilder;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;

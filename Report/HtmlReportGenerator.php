@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Report;
+namespace Mha\HealthCheck\Report;
 
-use Sigma\HealthCheck\Model\ScanResult;
+use Mha\HealthCheck\Model\ScanResult;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;
@@ -63,7 +63,7 @@ class HtmlReportGenerator
         return '<!doctype html><html lang="en"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width, initial-scale=1">'
             . '<title>' . $this->escape($customer) . ' — Magento Health Check Report</title><style>'
-            . $this->styles() . '</style></head><body><footer>Sigma HealthCheck <span>Internal health assessment</span></footer><main>'
+            . $this->styles() . '</style></head><body><footer>Mha HealthCheck <span>Internal health assessment</span></footer><main>'
             . $this->cover($customer, $profile, $report)
             . $this->contents($findings)
             . $this->dashboard($report, $application, $summary, $score)
@@ -113,7 +113,7 @@ class HtmlReportGenerator
      */
     private function cover(string $customer, array $profile, array $report): string
     {
-        return '<section class="cover page-break"><div class="brand">SIGMA<span>HEALTHCHECK</span></div><div class="cover-copy">'
+        return '<section class="cover page-break"><div class="brand">MHA<span>HEALTHCHECK</span></div><div class="cover-copy">'
             . '<p class="eyebrow">Magento Open Source</p><h1>Health Check<br>Report</h1><div class="cover-line"></div><p class="customer">'
             . $this->escape($customer) . '</p><p>' . $this->escape((string)($profile['engagement_type'] ?? ''))
             . '</p><p class="report-date">' . $this->escape($this->dateOnly((string)($report['completed_at'] ?? '')))

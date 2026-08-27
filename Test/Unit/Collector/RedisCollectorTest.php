@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Test\Unit\Collector;
+namespace Mha\HealthCheck\Test\Unit\Collector;
 
-use Sigma\HealthCheck\Collector\RedisCollector;
-use Sigma\HealthCheck\Config\HealthCheckConfig;
-use Sigma\HealthCheck\Service\RedisClientFactory;
+use Mha\HealthCheck\Collector\RedisCollector;
+use Mha\HealthCheck\Config\HealthCheckConfig;
+use Mha\HealthCheck\Service\RedisClientFactory;
 use Magento\Framework\App\DeploymentConfig;
 use PHPUnit\Framework\TestCase;
 

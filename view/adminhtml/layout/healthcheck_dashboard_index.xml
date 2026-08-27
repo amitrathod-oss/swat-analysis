@@ -3,9 +3,9 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="content">
-            <block class="Sigma\HealthCheck\Block\Adminhtml\Dashboard"
-                   name="sigma.healthcheck.dashboard"
-                   template="Sigma_HealthCheck::dashboard.phtml"/>
+            <block class="Mha\HealthCheck\Block\Adminhtml\Dashboard"
+                   name="mha.healthcheck.dashboard"
+                   template="Mha_HealthCheck::dashboard.phtml"/>
         </referenceContainer>
     </body>
 </page>

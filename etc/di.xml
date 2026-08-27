@@ -4,48 +4,48 @@
     <type name="Magento\Framework\Console\CommandList">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="sigmaHealthCheckScan" xsi:type="object">Sigma\HealthCheck\Console\Command\ScanCommand</item>
+                <item name="mhaHealthCheckScan" xsi:type="object">Mha\HealthCheck\Console\Command\ScanCommand</item>
             </argument>
         </arguments>
     </type>
-    <type name="Sigma\HealthCheck\Model\ScanRunner">
+    <type name="Mha\HealthCheck\Model\ScanRunner">
         <arguments>
             <argument name="collectors" xsi:type="array">
-                <item name="magento" xsi:type="object">Sigma\HealthCheck\Collector\MagentoCollector</item>
-                <item name="database" xsi:type="object">Sigma\HealthCheck\Collector\DatabaseCollector</item>
-                <item name="database_advanced" xsi:type="object">Sigma\HealthCheck\Collector\DatabaseAdvancedCollector</item>
-                <item name="cron" xsi:type="object">Sigma\HealthCheck\Collector\CronCollector</item>
-                <item name="indexer" xsi:type="object">Sigma\HealthCheck\Collector\IndexerCollector</item>
-                <item name="redis" xsi:type="object">Sigma\HealthCheck\Collector\RedisCollector</item>
-                <item name="opensearch" xsi:type="object">Sigma\HealthCheck\Collector\OpenSearchCollector</item>
-                <item name="composer" xsi:type="object">Sigma\HealthCheck\Collector\ComposerCollector</item>
-                <item name="logs" xsi:type="object">Sigma\HealthCheck\Collector\LogCollector</item>
-                <item name="fpc" xsi:type="object">Sigma\HealthCheck\Collector\FpcCollector</item>
-                <item name="patches" xsi:type="object">Sigma\HealthCheck\Collector\PatchCollector</item>
-                <item name="system" xsi:type="object">Sigma\HealthCheck\Collector\SystemCollector</item>
-                <item name="php" xsi:type="object">Sigma\HealthCheck\Collector\PhpCollector</item>
-                <item name="http" xsi:type="object">Sigma\HealthCheck\Collector\HttpCollector</item>
-                <item name="security_headers" xsi:type="object">Sigma\HealthCheck\Collector\SecurityHeadersCollector</item>
-                <item name="extensions" xsi:type="object">Sigma\HealthCheck\Collector\ExtensionCollector</item>
-                <item name="security" xsi:type="object">Sigma\HealthCheck\Collector\SecurityCollector</item>
-                <item name="integrations" xsi:type="object">Sigma\HealthCheck\Collector\IntegrationCollector</item>
-                <item name="store" xsi:type="object">Sigma\HealthCheck\Collector\StoreInfoCollector</item>
+                <item name="magento" xsi:type="object">Mha\HealthCheck\Collector\MagentoCollector</item>
+                <item name="database" xsi:type="object">Mha\HealthCheck\Collector\DatabaseCollector</item>
+                <item name="database_advanced" xsi:type="object">Mha\HealthCheck\Collector\DatabaseAdvancedCollector</item>
+                <item name="cron" xsi:type="object">Mha\HealthCheck\Collector\CronCollector</item>
+                <item name="indexer" xsi:type="object">Mha\HealthCheck\Collector\IndexerCollector</item>
+                <item name="redis" xsi:type="object">Mha\HealthCheck\Collector\RedisCollector</item>
+                <item name="opensearch" xsi:type="object">Mha\HealthCheck\Collector\OpenSearchCollector</item>
+                <item name="composer" xsi:type="object">Mha\HealthCheck\Collector\ComposerCollector</item>
+                <item name="logs" xsi:type="object">Mha\HealthCheck\Collector\LogCollector</item>
+                <item name="fpc" xsi:type="object">Mha\HealthCheck\Collector\FpcCollector</item>
+                <item name="patches" xsi:type="object">Mha\HealthCheck\Collector\PatchCollector</item>
+                <item name="system" xsi:type="object">Mha\HealthCheck\Collector\SystemCollector</item>
+                <item name="php" xsi:type="object">Mha\HealthCheck\Collector\PhpCollector</item>
+                <item name="http" xsi:type="object">Mha\HealthCheck\Collector\HttpCollector</item>
+                <item name="security_headers" xsi:type="object">Mha\HealthCheck\Collector\SecurityHeadersCollector</item>
+                <item name="extensions" xsi:type="object">Mha\HealthCheck\Collector\ExtensionCollector</item>
+                <item name="security" xsi:type="object">Mha\HealthCheck\Collector\SecurityCollector</item>
+                <item name="integrations" xsi:type="object">Mha\HealthCheck\Collector\IntegrationCollector</item>
+                <item name="store" xsi:type="object">Mha\HealthCheck\Collector\StoreInfoCollector</item>
             </argument>
         </arguments>
     </type>
-    <type name="Sigma\HealthCheck\Report\ReportDataBuilder">
+    <type name="Mha\HealthCheck\Report\ReportDataBuilder">
         <arguments>
-            <argument name="historyManager" xsi:type="object">Sigma\HealthCheck\Report\HistoryManager</argument>
+            <argument name="historyManager" xsi:type="object">Mha\HealthCheck\Report\HistoryManager</argument>
         </arguments>
     </type>
-    <type name="Sigma\HealthCheck\Report\JsonReportGenerator">
+    <type name="Mha\HealthCheck\Report\JsonReportGenerator">
         <arguments>
-            <argument name="historyManager" xsi:type="object">Sigma\HealthCheck\Report\HistoryManager</argument>
+            <argument name="historyManager" xsi:type="object">Mha\HealthCheck\Report\HistoryManager</argument>
         </arguments>
     </type>
     <type name="Magento\Catalog\Ui\Component\Listing\Columns\Thumbnail">
-        <plugin name="sigma_catalog_thumbnail_null_alt"
-                type="Sigma\HealthCheck\Plugin\Catalog\Ui\Component\Listing\Columns\NormalizeThumbnailAlt"
+        <plugin name="mha_catalog_thumbnail_null_alt"
+                type="Mha\HealthCheck\Plugin\Catalog\Ui\Component\Listing\Columns\NormalizeThumbnailAlt"
                 sortOrder="10"/>
     </type>
 </config>

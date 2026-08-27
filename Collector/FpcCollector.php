@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Collector;
+namespace Mha\HealthCheck\Collector;
 
-use Sigma\HealthCheck\Config\HealthCheckConfig;
-use Sigma\HealthCheck\Service\RepresentativeUrlProvider;
+use Mha\HealthCheck\Config\HealthCheckConfig;
+use Mha\HealthCheck\Service\RepresentativeUrlProvider;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\HTTP\Client\CurlFactory;

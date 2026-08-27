@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Report;
+namespace Mha\HealthCheck\Report;
 
-use Sigma\HealthCheck\Model\ScanResult;
+use Mha\HealthCheck\Model\ScanResult;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;

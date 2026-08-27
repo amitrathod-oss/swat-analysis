@@ -4,7 +4,7 @@
     <acl>
         <resources>
             <resource id="Magento_Backend::admin">
-                <resource id="Sigma_HealthCheck::dashboard" title="Health Check Dashboard" sortOrder="90"/>
+                <resource id="Mha_HealthCheck::dashboard" title="Health Check Dashboard" sortOrder="90"/>
             </resource>
         </resources>
     </acl>

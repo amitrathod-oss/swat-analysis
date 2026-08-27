@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Plugin\Catalog\Ui\Component\Listing\Columns;
+namespace Mha\HealthCheck\Plugin\Catalog\Ui\Component\Listing\Columns;
 
 use Magento\Catalog\Ui\Component\Listing\Columns\Thumbnail as Subject;
 

@@ -2,12 +2,12 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
     <menu>
-        <add id="Sigma_HealthCheck::dashboard"
+        <add id="Mha_HealthCheck::dashboard"
              title="Health Check Dashboard"
-             module="Sigma_HealthCheck"
+             module="Mha_HealthCheck"
              sortOrder="90"
              parent="Magento_Backend::system"
              action="healthcheck/dashboard/index"
-             resource="Sigma_HealthCheck::dashboard"/>
+             resource="Mha_HealthCheck::dashboard"/>
     </menu>
 </config>

@@ -92,6 +92,10 @@ php:
 opensearch:
   scheme: http
 
+dashboard:
+  auto_scan_on_open: true
+  scan_error_message: 'The health report could not be generated automatically. Run php bin/magento health:scan --format=json from the Magento project root, then refresh this page.'
+
 score:
   starting_score: 100
   deductions:

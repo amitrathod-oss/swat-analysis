@@ -1,5 +1,5 @@
 {
-    "name": "sigma/module-health-check",
+    "name": "mha/module-health-check",
     "description": "Read-only Magento Open Source health analyzer",
     "type": "magento2-module",
     "version": "1.0.0",
@@ -19,12 +19,12 @@
             "registration.php"
         ],
         "psr-4": {
-            "Sigma\\HealthCheck\\": ""
+            "Mha\\HealthCheck\\": ""
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Sigma\\HealthCheck\\Test\\": "Test/Unit/"
+            "Mha\\HealthCheck\\Test\\": "Test/Unit/"
         }
     },
     "support": {

@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Log;
+namespace Mha\HealthCheck\Log;
 
-use Sigma\HealthCheck\Security\SecretSanitizer;
+use Mha\HealthCheck\Security\SecretSanitizer;
 
 class ExceptionFingerprint
 {

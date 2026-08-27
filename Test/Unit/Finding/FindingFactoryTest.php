@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Test\Unit\Finding;
+namespace Mha\HealthCheck\Test\Unit\Finding;
 
-use Sigma\HealthCheck\Finding\FindingFactory;
+use Mha\HealthCheck\Finding\FindingFactory;
 use PHPUnit\Framework\TestCase;
 
 class FindingFactoryTest extends TestCase

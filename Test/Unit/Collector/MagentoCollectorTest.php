@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Sigma\HealthCheck\Test\Unit\Collector;
+namespace Mha\HealthCheck\Test\Unit\Collector;
 
-use Sigma\HealthCheck\Collector\MagentoCollector;
+use Mha\HealthCheck\Collector\MagentoCollector;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\App\State;
@@ -27,10 +27,10 @@ class MagentoCollectorTest extends TestCase
         $metadata->method('getVersion')->willReturn('2.4.7-p8');
         $metadata->method('getEdition')->willReturn('Community');
         $appState->method('getMode')->willReturn('developer');
-        $moduleList->method('getNames')->willReturn(['Magento_Catalog', 'Sigma_HealthCheck']);
+        $moduleList->method('getNames')->willReturn(['Magento_Catalog', 'Mha_HealthCheck']);
         $registrar->method('getPaths')->with(ComponentRegistrar::MODULE)->willReturn([
             'Magento_Catalog' => '/var/www/html/app/code/Magento/Catalog',
-            'Sigma_HealthCheck' => '/var/www/html/app/code/Sigma/HealthCheck',
+            'Mha_HealthCheck' => '/var/www/html/app/code/Mha/HealthCheck',
         ]);
         $directoryList->method('getPath')->with(DirectoryList::ROOT)->willReturn('/var/www/html');
         $cacheTypeList->method('getTypes')->willReturn([
