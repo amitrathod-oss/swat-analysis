@@ -59,4 +59,19 @@ class Dashboard extends Template
     {
         return 'risk-' . strtolower((string)($finding['risk_level'] ?? 'info'));
     }
+
+    public function getCollectorLabel(string $code): string
+    {
+        $labels = [
+            'database' => 'Database',
+            'database_advanced' => 'Database Advanced',
+            'security_headers' => 'Security Headers',
+            'opensearch' => 'OpenSearch',
+            'fpc' => 'Full Page Cache',
+            'php' => 'PHP',
+            'http' => 'HTTP',
+        ];
+
+        return $labels[$code] ?? ucwords(str_replace('_', ' ', $code));
+    }
 }

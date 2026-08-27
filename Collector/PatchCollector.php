@@ -52,6 +52,8 @@ class PatchCollector implements CollectorInterface
             }
             $root = rtrim($this->directoryList->getRoot(), '/');
             $patches = [];
+            $notAppliedCount = 0;
+            $notVerifiedCount = 0;
             foreach ($configured as $package => $packagePatches) {
                 if (!is_array($packagePatches)) {
                     continue;
@@ -63,18 +65,25 @@ class PatchCollector implements CollectorInterface
                     $relativePath = ltrim($path, '/');
                     $absolutePath = $root . '/' . $relativePath;
                     $exists = $this->fileDriver->isExists($absolutePath);
+                    $applicationStatus = $exists ? 'not_verified' : 'not_applied';
+                    if ($exists) {
+                        $notVerifiedCount++;
+                    } else {
+                        $notAppliedCount++;
+                    }
                     $patches[] = [
                         'patch_id' => $this->patchId($path),
                         'package' => (string)$package,
                         'description' => (string)$description,
                         'category' => $this->category($path),
-                        'status' => $exists ? 'Configured' : 'Missing source file',
+                        'status' => $exists ? 'Configured; application not verified' : 'Not applied; source file missing',
+                        'application_status' => $applicationStatus,
                         'recommended' => 'Review',
                         'origin' => 'Composer extra.patches',
                         'path' => $relativePath,
                         'details' => $exists
-                            ? 'Patch source file is present in the project.'
-                            : 'Patch is configured but its source file was not found.' ,
+                            ? 'Patch source file is present, but source presence does not prove that the patch was applied. Use the configured patch manager to verify application.'
+                            : 'Patch is configured but its source file was not found, so it cannot be applied.' ,
                     ];
                 }
             }
@@ -83,6 +92,10 @@ class PatchCollector implements CollectorInterface
                 'metrics' => [
                     'patch_count' => count($patches),
                     'configured_patch_count' => count($patches),
+                    'not_applied_count' => $notAppliedCount,
+                    'not_verified_count' => $notVerifiedCount,
+                    'applied_count' => null,
+                    'application_verification' => 'not_verifiable_without_patch_manager',
                     'quality_patches_tool' => $this->qualityPatchesStatus(),
                     'patches' => $patches,
                 ],

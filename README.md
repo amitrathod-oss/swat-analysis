@@ -175,7 +175,8 @@ The dashboard includes:
 - Sanitized application exceptions
 - Magento module and Composer package inventory with versions
 - Store, PHP, database, Redis, OpenSearch, filesystem, and HTTP information
-- Configured Composer patches and local source-file status
+- Paginated extension inventory with Composer package and version information
+- Configured Composer patches, missing-source detection, and application verification status
 - PDF download
 - Collector status and scan errors
 - Explicit status for unavailable external integrations
@@ -229,7 +230,7 @@ Local collectors include:
 - TLS certificate availability and expiry where the certificate can be verified
 - Required security headers
 - Sanitized and fingerprinted `var/log` exceptions within the configured window
-- Composer patch declarations and local patch-file presence
+- Composer patch declarations, missing-source detection, and application verification status
 - Magento store codes, names, URLs, currencies, and time zones
 
 ## External data limitations
@@ -266,6 +267,11 @@ The analyzer:
 
 Installing or enabling a Magento module is a normal deployment change, but the scan
 itself is read-only.
+
+Patch status is deliberately conservative: `not_applied` means the configured source
+file is missing; `not_verified` means the source exists but this analyzer cannot prove
+that a Composer or Quality Patches tool applied it. The analyzer never claims a patch
+is applied based only on the presence of its source file.
 
 ## Updating the module
 

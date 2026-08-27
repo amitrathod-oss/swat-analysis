@@ -404,7 +404,7 @@ class HtmlReportGenerator
 
         $qpt = $report['collectors']['patches']['metrics']['quality_patches_tool'] ?? [];
         $qptStatus = is_array($qpt) ? ($qpt['status'] ?? 'not_available') : 'not_available';
-        $html = '<p>Patches are read from Composer <code>extra.patches</code>. The analyzer verifies metadata and local source-file presence; it does not apply or change patches.</p>'
+        $html = '<p>Patches are read from Composer <code>extra.patches</code>. The analyzer reports source-file presence and application verification status; it does not apply or change patches.</p>'
             . '<p><strong>Quality Patches Tool:</strong> ' . $this->escape((string)$qptStatus)
             . '. Adobe QPT recommendation data is not queried by this local analyzer.</p>'
             . '<div class="table-wrap"><table><thead><tr><th>Patch ID</th><th>Description</th><th>Package</th><th>Category</th><th>Status</th><th>Recommended</th></tr></thead><tbody>';
@@ -420,7 +420,10 @@ class HtmlReportGenerator
                 . $this->escape((string)($patch['recommended'] ?? '')) . '</td></tr>';
         }
 
-        $html .= '</tbody></table></div><h3>Selected patch details</h3><div class="table-wrap"><table><thead><tr><th>Patch ID</th><th>Origin</th><th>Path</th><th>Details</th></tr></thead><tbody>';
+        $html .= '</tbody></table></div><p><strong>Not applied:</strong> ' . $this->escape((string)($report['collectors']['patches']['metrics']['not_applied_count'] ?? 0))
+            . ' &nbsp; <strong>Not verified:</strong> ' . $this->escape((string)($report['collectors']['patches']['metrics']['not_verified_count'] ?? 0))
+            . ' &nbsp; <strong>Applied confirmed:</strong> ' . $this->escape((string)($report['collectors']['patches']['metrics']['applied_count'] ?? 'N/A'))
+            . '</p><h3>Selected patch details</h3><div class="table-wrap"><table><thead><tr><th>Patch ID</th><th>Origin</th><th>Path</th><th>Application status</th><th>Details</th></tr></thead><tbody>';
         foreach ($patches as $patch) {
             if (!is_array($patch)) {
                 continue;
@@ -428,6 +431,7 @@ class HtmlReportGenerator
             $html .= '<tr><td>' . $this->escape((string)($patch['patch_id'] ?? '')) . '</td><td>'
                 . $this->escape((string)($patch['origin'] ?? '')) . '</td><td>'
                 . $this->escape((string)($patch['path'] ?? '')) . '</td><td>'
+                . $this->escape((string)($patch['application_status'] ?? 'not_verified')) . '</td><td>'
                 . $this->escape((string)($patch['details'] ?? '')) . '</td></tr>';
         }
 
@@ -445,13 +449,28 @@ class HtmlReportGenerator
             if (!is_array($collector)) {
                 continue;
             }
-            $html .= '<tr><td>' . $this->escape((string)$code) . '</td><td>'
+            $html .= '<tr><td>' . $this->escape($this->collectorLabel((string)$code)) . '</td><td>'
                 . $this->escape((string)($collector['status'] ?? '')) . '</td><td>'
                 . $this->escape((string)($collector['message'] ?? '')) . '</td><td>'
                 . $this->renderValue($this->summarizeMetrics($collector['metrics'] ?? [])) . '</td></tr>';
         }
 
         return $html . '</tbody></table></div>';
+    }
+
+    private function collectorLabel(string $code): string
+    {
+        $labels = [
+            'database' => 'Database',
+            'database_advanced' => 'Database Advanced',
+            'security_headers' => 'Security Headers',
+            'opensearch' => 'OpenSearch',
+            'fpc' => 'Full Page Cache',
+            'php' => 'PHP',
+            'http' => 'HTTP',
+        ];
+
+        return $labels[$code] ?? ucwords(str_replace('_', ' ', $code));
     }
 
     /** @param array<string, mixed> $report */
