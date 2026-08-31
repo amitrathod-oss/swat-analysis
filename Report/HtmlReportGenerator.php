@@ -67,29 +67,14 @@ class HtmlReportGenerator
             . $this->cover($customer, $profile, $report)
             . $this->contents($findings)
             . $this->dashboard($report, $application, $summary, $score)
-            . '<section class="page-break"><h2>A. Report Overview</h2><p>This report shows the latest health results for your Magento store and highlights items that may need attention.</p>'
-            . $this->keyValueTable([
-                'Customer' => $customer,
-                'Health Score' => $score . ' out of 100',
-                'Report Type' => $profile['engagement_type'] ?? null,
-                'Website' => $profile['merchant_domain'] ?? null,
-                'Magento Version' => $application['version'] ?? null,
-                'PHP Version' => $this->getCollectorMetric($report, 'magento', 'php_version'),
-                'Scan Date' => $this->dateOnly((string)($report['completed_at'] ?? '')),
-            ]) . '</section>'
-            . '<section class="page-break"><h2>B. Executive Summary</h2><p>The scan completed with '
-            . $this->escape((string)($summary['findings_total'] ?? 0)) . ' findings and '
-            . $this->escape((string)($summary['scan_error_count'] ?? 0)) . ' scan errors.</p><div class="score">'
-            . $score . '<span> / 100</span></div><p>The score reflects the number and importance of items found during this scan.</p>'
-            . '</p><h3>C. Risk Level Guide</h3>' . $this->riskGuide($report['severity_counts'] ?? []) . '</section>'
-            . '<section id="findings"><h2>D. Findings</h2>' . $this->renderDetailedFindings($findings) . '</section>'
-            . '<section class="page-break"><h2>I. Domain Scorecard</h2>' . $this->renderDomainScorecard($report) . '</section>'
-            . '<section class="page-break"><h2>E. Exceptions</h2>' . $this->renderExceptions($report) . '</section>'
-            . '<section class="page-break"><h2>F. Patches</h2>' . $this->renderPatches($report) . '</section>'
-            . '<section class="page-break"><h2>G. Store &amp; System Checks</h2>' . $this->renderCollectors($report)
+            . '<section id="findings"><h2>A. Findings</h2>' . $this->renderDetailedFindings($findings) . '</section>'
+            . '<section class="page-break"><h2>B. Domain Scorecard</h2>' . $this->renderDomainScorecard($report) . '</section>'
+            . '<section class="page-break"><h2>C. Exceptions</h2>' . $this->renderExceptions($report) . '</section>'
+            . '<section class="page-break"><h2>D. Patches</h2>' . $this->renderPatches($report) . '</section>'
+            . '<section class="page-break"><h2>E. Store &amp; System Checks</h2>' . $this->renderCollectors($report)
             . $this->renderStoreInventory($report) . $this->renderExtensionInventory($report)
             . $this->renderExternalSources($report) . '</section>'
-            . '<section><h2>H. Scan Details</h2>' . $this->definitionList([
+            . '<section><h2>F. Scan Details</h2>' . $this->definitionList([
                 'Scan ID' => $report['scan_id'] ?? null,
                 'Started at' => $report['started_at'] ?? null,
                 'Completed at' => $report['completed_at'] ?? null,
@@ -110,7 +95,7 @@ class HtmlReportGenerator
             . '<p class="eyebrow">Magento Open Source</p><h1>Health Check<br>Report</h1><div class="cover-line"></div><p class="customer">'
             . $this->escape($customer) . '</p><p>' . $this->escape((string)($profile['engagement_type'] ?? ''))
             . '</p><p class="report-date">' . $this->escape($this->dateOnly((string)($report['completed_at'] ?? '')))
-            . '</p></div><p class="cover-note">Independent, read-only technical assessment</p></section>';
+            . '</p></div></section>';
     }
 
     /**
@@ -119,10 +104,9 @@ class HtmlReportGenerator
     private function contents(array $findings): string
     {
         $html = '<section class="toc page-break"><p class="eyebrow">Report navigation</p><h2>Table of Contents</h2><ul>'
-            . '<li>Dashboard</li><li>A. Report Overview</li><li>B. Executive Summary</li><li>C. Risk Level Guide</li>'
-            . '<li>D. Findings (' . count($findings) . ')</li>'
-            . '<li>E. Exceptions</li><li>F. Patches</li><li>G. Store &amp; System Checks</li>'
-            . '<li>H. Scan Details</li><li>I. Domain Scorecard</li></ul></section>';
+            . '<li>Executive Dashboard</li><li>A. Findings (' . count($findings) . ')</li>'
+            . '<li>B. Domain Scorecard</li><li>C. Exceptions</li><li>D. Patches</li>'
+            . '<li>E. Store &amp; System Checks</li><li>F. Scan Details</li></ul></section>';
 
         return $html;
     }
@@ -146,24 +130,28 @@ class HtmlReportGenerator
         $logs = is_array($report['collectors']['logs']['metrics'] ?? null) ? $report['collectors']['logs']['metrics'] : [];
         $patches = is_array($report['collectors']['patches']['metrics'] ?? null) ? $report['collectors']['patches']['metrics'] : [];
         $cards = [
-            ['label' => 'Health score', 'value' => $score . '/100', 'tone' => 'blue'],
             ['label' => 'Recommendations', 'value' => (string)count($findings), 'tone' => 'orange'],
             ['label' => 'Exceptions', 'value' => (string)($logs['exception_count'] ?? 0), 'tone' => 'red'],
             ['label' => 'Extensions', 'value' => (string)($magento['enabled_module_count'] ?? 0), 'tone' => 'purple'],
             ['label' => 'Scan alerts', 'value' => (string)($summary['scan_error_count'] ?? 0), 'tone' => 'teal'],
             ['label' => 'Security advisories', 'value' => (string)($composer['vulnerability_count'] ?? 0), 'tone' => 'yellow'],
-            ['label' => 'Configured patches', 'value' => (string)($patches['patch_count'] ?? 0), 'tone' => 'green'],
+            ['label' => 'Applied patches', 'value' => (string)($patches['applied_count'] ?? 0), 'tone' => 'green'],
         ];
 
         $html = '<section class="dashboard page-break"><div class="dashboard-header"><div><p class="eyebrow">Magento Open Source</p>'
-            . '<h2>Health Dashboard</h2><p>Latest health results for ' . $this->escape((string)($report['completed_at'] ?? '')) . '</p></div>'
-            . '<div class="dashboard-score"><span>Health score</span><strong>' . $score . '<small>/100</small></strong></div></div><div class="dashboard-cards">';
-        foreach ($cards as $card) {
-            $html .= '<article class="dashboard-card ' . $this->escape($card['tone']) . '"><span>' . $this->escape($card['label'])
-                . '</span><strong>' . $this->escape($card['value']) . '</strong></article>';
+            . '<h2>Executive Dashboard</h2><p>Latest health results for ' . $this->escape((string)($report['completed_at'] ?? '')) . '</p></div>'
+            . '<div class="dashboard-score ' . $this->scoreTone($score) . '"><span>Health score</span><strong>' . $score . '<small>/100</small></strong></div></div>'
+            . '<table class="dashboard-card-grid" role="presentation"><tbody>';
+        foreach (array_chunk($cards, 3) as $cardRow) {
+            $html .= '<tr>';
+            foreach ($cardRow as $card) {
+                $html .= '<td class="dashboard-card ' . $this->escape($card['tone']) . '"><span>' . $this->escape($card['label'])
+                    . '</span><br><strong>' . $this->escape($card['value']) . '</strong></td>';
+            }
+            $html .= '</tr>';
         }
-        $html .= '</div><div class="dashboard-columns"><div><h3>Recommendations by risk</h3>'
-            . $this->riskGuide($counts) . '</div><div><h3>Application information</h3>'
+        $html .= '</tbody></table><table class="dashboard-detail-grid" role="presentation"><tbody><tr><td><h3>Recommendations by risk</h3>'
+            . $this->riskGuide($counts) . '</td><td><h3>Application information</h3>'
             . $this->keyValueTable([
                 'Magento version' => $application['version'] ?? null,
                 'PHP version' => $magento['php_version'] ?? null,
@@ -171,8 +159,8 @@ class HtmlReportGenerator
                 'Database version' => $database['version'] ?? null,
                 'Search version' => $search['version'] ?? null,
                 'Redis version' => $redis['version'] ?? null,
-            ]) . '</div></div><div class="dashboard-columns"><div><h3>Top recommendations</h3>'
-            . $this->renderRecommendationSummary($findings) . '</div><div><h3>Storage and services</h3>'
+            ]) . '</td></tr><tr><td><h3>Top recommendations</h3>'
+            . $this->renderRecommendationSummary($findings) . '</td><td><h3>Storage and services</h3>'
             . $this->keyValueTable([
                 'Largest tables' => is_array($database['tables'] ?? null) ? count($database['tables']) . ' measured' : null,
                 'Buffer pool utilization' => $this->formatMetric($database['buffer_pool']['utilization_percent'] ?? null, '%'),
@@ -180,7 +168,7 @@ class HtmlReportGenerator
                 'Search cluster status' => $search['cluster_status'] ?? null,
                 'Unassigned search shards' => $search['unassigned_shards'] ?? null,
                 'Checks completed' => count($report['collectors'] ?? []),
-            ]) . '</div></div></section>';
+            ]) . '</td></tr></tbody></table></section>';
 
         return $html;
     }
@@ -211,6 +199,18 @@ class HtmlReportGenerator
     private function formatMetric($value, string $suffix): string
     {
         return $value === null || $value === '' ? 'N/A' : (string)$value . $suffix;
+    }
+
+    private function scoreTone(int $score): string
+    {
+        if ($score < 50) {
+            return 'score-red';
+        }
+        if ($score < 80) {
+            return 'score-yellow';
+        }
+
+        return 'score-green';
     }
 
     /**

@@ -88,15 +88,22 @@ class PatchCollector implements CollectorInterface
                 }
             }
 
+            $configuredPatchCount = count($patches);
+            $qualityPatchesTool = $this->qualityPatchesStatus();
+            $qualityPatches = $this->qualityPatchesAppliedPatches($root);
+            $patches = array_merge($patches, $qualityPatches);
+
             return [
                 'metrics' => [
                     'patch_count' => count($patches),
-                    'configured_patch_count' => count($patches),
+                    'configured_patch_count' => $configuredPatchCount,
                     'not_applied_count' => $notAppliedCount,
                     'not_verified_count' => $notVerifiedCount,
-                    'applied_count' => null,
-                    'application_verification' => 'not_verifiable_without_patch_manager',
-                    'quality_patches_tool' => $this->qualityPatchesStatus(),
+                    'applied_count' => $qualityPatchesTool['status'] === 'installed' ? count($qualityPatches) : null,
+                    'application_verification' => $qualityPatchesTool['status'] === 'installed'
+                        ? 'verified_from_quality_patches_tool_log'
+                        : 'not_verifiable_without_patch_manager',
+                    'quality_patches_tool' => $qualityPatchesTool,
                     'patches' => $patches,
                 ],
             ];
@@ -134,6 +141,79 @@ class PatchCollector implements CollectorInterface
             'path' => '',
             'recommendations_available' => false,
         ];
+    }
+
+    /**
+     * Read the local Quality Patches Tool log. The tool writes an explicit success
+     * record after it applies a patch, so this is stronger evidence than merely
+     * finding a patch source file. The analyzer never invokes the patch tool.
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function qualityPatchesAppliedPatches(string $root): array
+    {
+        $logFile = $root . '/var/log/patch.log';
+        if (!$this->fileDriver->isExists($logFile)) {
+            return [];
+        }
+
+        $states = [];
+        foreach (preg_split('/\R/', $this->fileDriver->fileGetContents($logFile)) ?: [] as $line) {
+            if (!preg_match('/Patch ([A-Za-z0-9_-]+) has been (applied|reverted)(?: (\{.*\}))?/', $line, $matches)) {
+                continue;
+            }
+
+            $patchId = $matches[1];
+            if ($matches[2] === 'reverted') {
+                unset($states[$patchId]);
+                continue;
+            }
+
+            $metadata = isset($matches[3]) ? json_decode($matches[3], true) : [];
+            $states[$patchId] = is_array($metadata) ? (string)($metadata['file'] ?? '') : '';
+        }
+
+        $descriptions = $this->qualityPatchesDescriptions($root);
+        $patches = [];
+        foreach ($states as $patchId => $absolutePath) {
+            $relativePath = str_replace($root . '/', '', $absolutePath);
+            $patches[] = [
+                'patch_id' => $patchId,
+                'package' => 'magento/quality-patches',
+                'description' => $descriptions[$patchId] ?? $patchId,
+                'category' => $this->category($relativePath),
+                'status' => 'Applied by Quality Patches Tool',
+                'application_status' => 'applied_confirmed',
+                'recommended' => 'Applied',
+                'origin' => 'Quality Patches Tool',
+                'path' => $relativePath,
+                'details' => 'Application confirmed from var/log/patch.log.',
+            ];
+        }
+
+        return $patches;
+    }
+
+    /** @return array<string, string> */
+    private function qualityPatchesDescriptions(string $root): array
+    {
+        $infoFile = $root . '/vendor/magento/quality-patches/patches-info.json';
+        if (!$this->fileDriver->isExists($infoFile)) {
+            return [];
+        }
+
+        try {
+            $data = json_decode($this->fileDriver->fileGetContents($infoFile), true, 512, JSON_THROW_ON_ERROR);
+            $descriptions = [];
+            foreach ($data['patches'] ?? [] as $patch) {
+                if (is_array($patch) && isset($patch['id'], $patch['description'])) {
+                    $descriptions[(string)$patch['id']] = (string)$patch['description'];
+                }
+            }
+            return $descriptions;
+        } catch (\Throwable $exception) {
+            return [];
+        }
     }
 
     private function patchId(string $path): string
