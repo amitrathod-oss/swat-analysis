@@ -104,7 +104,7 @@ class HtmlReportGenerator
     private function contents(array $findings): string
     {
         $html = '<section class="toc page-break"><p class="eyebrow">Report navigation</p><h2>Table of Contents</h2><ul>'
-            . '<li>Executive Dashboard</li><li>A. Findings (' . count($findings) . ')</li>'
+            . '<li>Executive Dashboard and Developer Action Plan</li><li>A. Findings (' . count($findings) . ')</li>'
             . '<li>B. Domain Scorecard</li><li>C. Exceptions</li><li>D. Patches</li>'
             . '<li>E. Store &amp; System Checks</li><li>F. Scan Details</li></ul></section>';
 
@@ -168,7 +168,48 @@ class HtmlReportGenerator
                 'Search cluster status' => $search['cluster_status'] ?? null,
                 'Unassigned search shards' => $search['unassigned_shards'] ?? null,
                 'Checks completed' => count($report['collectors'] ?? []),
-            ]) . '</td></tr></tbody></table></section>';
+            ]) . '</td></tr></tbody></table>' . $this->renderDeveloperActionPlan($report) . '</section>';
+
+        return $html;
+    }
+
+    /** @param array<string, mixed> $report */
+    private function renderDeveloperActionPlan(array $report): string
+    {
+        $plan = is_array($report['developer_action_plan'] ?? null) ? $report['developer_action_plan'] : [];
+        $buckets = is_array($plan['buckets'] ?? null) ? $plan['buckets'] : [];
+        $status = (string)($plan['status'] ?? 'Review findings');
+        $message = (string)($plan['message'] ?? 'Use risk and site impact to decide what to fix before relying on the custom score.');
+        $html = '<h3>Developer Action Plan</h3><p><strong>Status: ' . $this->escape($status) . '.</strong> '
+            . $this->escape($message) . ' The health score is a trend indicator, not a release decision.</p>';
+
+        foreach (['fix_now' => 'Fix now', 'plan_next' => 'Plan next', 'backlog' => 'Backlog'] as $key => $fallbackLabel) {
+            $bucket = is_array($buckets[$key] ?? null) ? $buckets[$key] : [];
+            $label = (string)($bucket['label'] ?? $fallbackLabel);
+            $items = is_array($bucket['items'] ?? null) ? $bucket['items'] : [];
+            $html .= '<h4>' . $this->escape($label) . ' (' . count($items) . ')</h4>';
+            if ($items === []) {
+                $html .= '<p>No items in this priority.</p>';
+                continue;
+            }
+            $html .= '<table><thead><tr><th>Finding and impact</th><th>What to do</th><th>Owner</th><th>Observed evidence</th></tr></thead><tbody>';
+            foreach (array_slice($items, 0, 10) as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $finding = is_array($item['finding'] ?? null) ? $item['finding'] : [];
+                $impact = $finding['site_impact'] ?? $finding['finding_description'] ?? null;
+                $html .= '<tr><td><strong>' . $this->escape((string)($finding['title'] ?? 'Finding')) . '</strong><br>'
+                    . $this->renderValue($impact) . '</td><td>' . $this->renderValue($finding['recommendation'] ?? null)
+                    . '</td><td>' . $this->escape((string)($item['owner'] ?? 'Magento developer')) . '</td><td>'
+                    . $this->renderValue($finding['observed_result'] ?? null) . '<br><small>Rule: '
+                    . $this->escape((string)($finding['rule_id'] ?? 'N/A')) . '</small></td></tr>';
+            }
+            $html .= '</tbody></table>';
+            if (count($items) > 10) {
+                $html .= '<p>Showing the first 10 items in this priority. See the Findings section for the complete evidence.</p>';
+            }
+        }
 
         return $html;
     }
