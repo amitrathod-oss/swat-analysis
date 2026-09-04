@@ -26,24 +26,6 @@ class HtmlReportGeneratorTest extends TestCase
             'health_score' => 90,
             'health_score_details' => [],
             'severity_counts' => ['high' => 1],
-            'developer_action_plan' => [
-                'status' => 'Action required',
-                'message' => 'One urgent issue needs developer attention.',
-                'buckets' => [
-                    'fix_now' => ['label' => 'Fix now', 'items' => [[
-                        'owner' => 'Magento developer / Security',
-                        'finding' => [
-                            'rule_id' => 'TEST-001',
-                            'title' => '<script>alert(1)</script>',
-                            'site_impact' => 'Security risk',
-                            'recommendation' => 'Update the package',
-                            'observed_result' => 'Affected version',
-                        ],
-                    ]]],
-                    'plan_next' => ['label' => 'Plan next', 'items' => []],
-                    'backlog' => ['label' => 'Backlog', 'items' => []],
-                ],
-            ],
             'findings' => [[
                 'rule_id' => 'TEST-001',
                 'title' => '<script>alert(1)</script>',
@@ -55,10 +37,9 @@ class HtmlReportGeneratorTest extends TestCase
 
         $html = (new HtmlReportGenerator($filesystem, $reportDataBuilder))->generate(new ScanResult('scan-id'));
 
-        self::assertStringContainsString('Developer Action Plan', $html);
-        self::assertStringContainsString('Fix now (1)', $html);
-        self::assertStringContainsString('A. Findings', $html);
-        self::assertStringContainsString('F. Scan Details', $html);
+        self::assertStringContainsString('A. Introduction', $html);
+        self::assertStringContainsString('D. Findings', $html);
+        self::assertStringContainsString('H. Scan Details', $html);
         self::assertStringNotContainsString('not Adobe', $html);
         self::assertStringContainsString('&lt;script&gt;', $html);
         self::assertStringNotContainsString('<script>alert', $html);

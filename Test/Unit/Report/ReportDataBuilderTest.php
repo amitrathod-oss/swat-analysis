@@ -24,7 +24,6 @@ class ReportDataBuilderTest extends TestCase
             'severity_counts' => ['high' => 1],
             'deductions' => ['high' => 10],
             'deduction_weights' => ['high' => 10],
-            'priority_counts' => ['P1' => 1],
         ]);
         $scanResult = new ScanResult('scan-id');
         $scanResult->addCollectorResult('magento', [
@@ -36,7 +35,6 @@ class ReportDataBuilderTest extends TestCase
             'title' => 'Test finding',
             'issue_type' => 'Security',
             'risk_level' => 'High',
-            'domain' => 'Security',
         ]));
         $scanResult->complete();
 
@@ -49,8 +47,5 @@ class ReportDataBuilderTest extends TestCase
         self::assertSame('[REDACTED]', $report['collectors']['magento']['metrics']['database_password']);
         self::assertArrayNotHasKey('score_disclaimer', $report['scan_metadata']);
         self::assertSame('Test value', $report['report_profile']['customer_name']);
-        self::assertSame('Action required', $report['health_status']);
-        self::assertSame(1, $report['developer_action_plan']['buckets']['fix_now']['count']);
-        self::assertSame('Magento developer / Security', $report['developer_action_plan']['buckets']['fix_now']['items'][0]['owner']);
     }
 }
