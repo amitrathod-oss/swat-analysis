@@ -52,6 +52,10 @@ class RedisCollector implements CollectorInterface
             $client = $this->redisClientFactory->create($connectionConfiguration);
             $client->setMaxConnectRetries(1);
             $client->connect();
+            $ping = $client->ping();
+            if ($ping !== true && strtoupper((string)$ping) !== 'PONG') {
+                throw new \RuntimeException('Redis or Valkey did not acknowledge the read-only PING command.');
+            }
             $server = (array)$client->info('server');
             $memory = (array)$client->info('memory');
             $stats = (array)$client->info('stats');
@@ -62,6 +66,7 @@ class RedisCollector implements CollectorInterface
 
             return [
                 'metrics' => [
+                    'ping' => true,
                     'version' => (string)($server['redis_version'] ?? $server['valkey_version'] ?? 'unknown'),
                     'used_memory_bytes' => $usedMemory,
                     'max_memory_bytes' => $maxMemory,

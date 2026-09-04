@@ -42,6 +42,7 @@ class ComposerCollector implements CollectorInterface
             $workingDirectory = $this->directoryList->getRoot();
             $timeout = $this->config->getPositiveInt('scan.command_timeout_seconds', 30);
             $version = $this->commandRunner->version($workingDirectory, $timeout);
+            $validation = $this->commandRunner->validate($workingDirectory, $timeout);
             $audit = $this->commandRunner->audit($workingDirectory, $timeout);
             $auditData = json_decode((string)$audit['output'], true);
             if (!is_array($auditData)) {
@@ -60,6 +61,7 @@ class ComposerCollector implements CollectorInterface
             return [
                 'metrics' => [
                     'version' => trim((string)$version['output']),
+                    'validation_exit_code' => (int)$validation['exit_code'],
                     'audit_exit_code' => (int)$audit['exit_code'],
                     'vulnerability_count' => $vulnerabilityCount,
                     'affected_packages' => $affectedPackages,

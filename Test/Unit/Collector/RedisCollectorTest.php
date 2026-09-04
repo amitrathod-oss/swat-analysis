@@ -25,4 +25,13 @@ class RedisCollectorTest extends TestCase
         self::assertSame('not_applicable', $result['status']);
         self::assertSame([], $result['metrics']);
     }
+
+    public function testCollectorSourcePerformsReadOnlyPingBeforeInfo(): void
+    {
+        $source = file_get_contents(__DIR__ . '/../../../Collector/RedisCollector.php');
+
+        self::assertIsString($source);
+        self::assertStringContainsString('$client->ping()', $source);
+        self::assertStringContainsString("'ping' => true", $source);
+    }
 }

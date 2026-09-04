@@ -55,11 +55,16 @@ class MagentoCollector implements CollectorInterface
         $modulePaths = $this->componentRegistrar->getPaths(ComponentRegistrar::MODULE);
         $appCodePath = rtrim($this->directoryList->getPath(DirectoryList::ROOT), '/') . '/app/code/';
         $customModuleCount = 0;
-        foreach ($moduleNames as $moduleName) {
-            $modulePath = $modulePaths[$moduleName] ?? '';
+        $enabledModules = array_fill_keys($moduleNames, true);
+        $moduleInventory = [];
+        foreach ($modulePaths as $moduleName => $modulePath) {
             if (str_starts_with($modulePath, $appCodePath) && !str_starts_with($moduleName, 'Magento_')) {
                 $customModuleCount++;
             }
+            $moduleInventory[$moduleName] = [
+                'status' => isset($enabledModules[$moduleName]) ? 'enabled' : 'disabled',
+                'source' => str_starts_with($moduleName, 'Magento_') ? 'core' : (str_starts_with($modulePath, $appCodePath) ? 'app_code_custom' : 'composer_or_vendor'),
+            ];
         }
 
         $cacheTypes = [];
@@ -78,6 +83,12 @@ class MagentoCollector implements CollectorInterface
                 'web_server' => $_SERVER['SERVER_SOFTWARE'] ?? null,
                 'enabled_module_count' => count($moduleNames),
                 'custom_module_count' => $customModuleCount,
+                'module_inventory' => [
+                    'count' => count($moduleInventory),
+                    'enabled_count' => count($moduleNames),
+                    'disabled_count' => max(0, count($moduleInventory) - count($moduleNames)),
+                    'modules' => $moduleInventory,
+                ],
                 'cache_types' => $cacheTypes,
             ],
         ];

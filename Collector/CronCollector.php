@@ -6,6 +6,7 @@ namespace Mha\HealthCheck\Collector;
 use Mha\HealthCheck\Config\HealthCheckConfig;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use Symfony\Component\Process\Process;
 
 class CronCollector implements CollectorInterface
 {
@@ -50,8 +51,33 @@ class CronCollector implements CollectorInterface
                 ),
                 'top_failing_job_codes' => $this->collectTopFailingJobs($connection, $scheduleTable, $windowHours, $sampleLimit),
                 'recent_errors' => $this->collectRecentErrors($connection, $scheduleTable, $windowHours, $sampleLimit),
+                'installation' => $this->cronInstallation((string)($context['magento_root'] ?? getcwd())),
             ],
         ];
+    }
+
+    /** @return array<string, mixed> */
+    private function cronInstallation(string $root): array
+    {
+        if ($root === '') {
+            return ['status' => 'not_checked', 'reason' => 'Magento root is unavailable for cron entry validation.'];
+        }
+        try {
+            $process = new Process(['crontab', '-l'], null, null, null, 2);
+            $process->run();
+            $output = $process->getOutput();
+            if ($process->getExitCode() === 1 && trim($output) === '') {
+                return ['status' => 'missing', 'reason' => 'The current deployment user has no crontab entries.'];
+            }
+            if (!$process->isSuccessful()) {
+                return ['status' => 'not_checked', 'reason' => 'The current user crontab could not be read.'];
+            }
+            $hasMagentoEntry = str_contains($output, 'bin/magento')
+                && (str_contains($output, rtrim($root, '/')) || str_contains($output, 'cron:run'));
+            return ['status' => $hasMagentoEntry ? 'installed' : 'missing', 'entry_detected' => $hasMagentoEntry];
+        } catch (\Throwable $exception) {
+            return ['status' => 'not_checked', 'reason' => 'The current user crontab could not be inspected.'];
+        }
     }
 
     /**

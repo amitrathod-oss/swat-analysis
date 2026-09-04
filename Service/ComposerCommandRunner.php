@@ -23,6 +23,12 @@ class ComposerCommandRunner
         return $this->run(['composer', '--version', '--no-interaction', '--no-ansi'], $workingDirectory, $timeout);
     }
 
+    /** @return array<string, int|string> */
+    public function validate(string $workingDirectory, int $timeout): array
+    {
+        return $this->run(['composer', 'validate', '--no-check-publish', '--no-interaction', '--no-ansi'], $workingDirectory, $timeout);
+    }
+
     /**
      * Run only fixed Composer commands; no user input is interpolated into the process command.
      *

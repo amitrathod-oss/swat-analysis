@@ -7,6 +7,7 @@ use Mha\HealthCheck\Collector\CollectorInterface;
 use Mha\HealthCheck\Finding\FindingFactory;
 use Mha\HealthCheck\Rule\RuleEngine;
 use Mha\HealthCheck\Rule\RuleLoader;
+use Mha\HealthCheck\Rule\SystemCatalogueEvaluator;
 use Mha\HealthCheck\Security\SecretSanitizer;
 
 class ScanRunner
@@ -19,6 +20,7 @@ class ScanRunner
     private RuleEngine $ruleEngine;
     private FindingFactory $findingFactory;
     private SecretSanitizer $secretSanitizer;
+    private SystemCatalogueEvaluator $systemCatalogueEvaluator;
 
     /**
      * @param CollectorInterface[] $collectors
@@ -28,13 +30,15 @@ class ScanRunner
         RuleEngine $ruleEngine,
         FindingFactory $findingFactory,
         SecretSanitizer $secretSanitizer,
-        array $collectors = []
+        array $collectors = [],
+        ?SystemCatalogueEvaluator $systemCatalogueEvaluator = null
     ) {
         $this->ruleLoader = $ruleLoader;
         $this->ruleEngine = $ruleEngine;
         $this->findingFactory = $findingFactory;
         $this->secretSanitizer = $secretSanitizer;
         $this->collectors = $collectors;
+        $this->systemCatalogueEvaluator = $systemCatalogueEvaluator ?? new SystemCatalogueEvaluator();
     }
 
     /**
@@ -99,6 +103,8 @@ class ScanRunner
                 ]);
             }
         }
+
+        $metrics['catalogue'] = $this->systemCatalogueEvaluator->evaluate($metrics);
 
         try {
             foreach ($this->ruleEngine->evaluate($metrics, $this->ruleLoader->load(), new \DateTimeImmutable()) as $finding) {

@@ -80,6 +80,7 @@ class RuleLoader
             'security' => ['category' => 'Security', 'domain' => 'Security'],
             'services' => ['category' => 'Infrastructure', 'domain' => 'Availability'],
             'system' => ['category' => 'Infrastructure', 'domain' => 'Infrastructure'],
+            'system_catalogue' => ['category' => 'System information', 'domain' => 'Infrastructure'],
             'php' => ['category' => 'Application', 'domain' => 'Application'],
             'http' => ['category' => 'Performance', 'domain' => 'Performance'],
             'security_headers' => ['category' => 'Security', 'domain' => 'Security'],

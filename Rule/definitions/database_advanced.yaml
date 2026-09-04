@@ -25,7 +25,7 @@ rules:
     finding_description: The database reports one or more InnoDB deadlocks.
     site_impact: Deadlocks can roll back customer or administrative transactions.
     recommendation: Correlate with database logs and transaction traces; do not reset counters from this tool.
-  - id: DB-006
+  - id: PERF-CATALOG-001
     title: Catalog category depth is high
     category: Performance
     domain: Performance

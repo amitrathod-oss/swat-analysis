@@ -7,6 +7,20 @@ HTTP, security-header, FPC, cron, indexer, patch, store, and application-log dat
 The analyzer does not apply fixes. Its score is a transparent custom score and is
 not Adobe's SWAT Health Index.
 
+## System catalogue checks
+
+The report evaluates SYS-001 through SYS-011 plus SYS-013, SYS-015, SYS-017,
+SYS-018, and SYS-020 for Magento and PHP versions, Composer, database, search,
+cache, web-server, operating-system, module inventory, deployment mode, cron,
+indexers, filesystem permissions/capacity, and PHP runtime evidence.
+It also evaluates SEC-004, SEC-008, SEC-010, SEC-011, SEC-014, SEC-015,
+SEC-019, SEC-020, SEC-022, and SEC-024 using read-only module, database,
+filesystem, and public-response checks. Compatibility data is a versioned
+manifest shipped with the module. A platform absent from that manifest is
+reported as `not_checked` with a reason; it is never reported as compatible by
+assumption. All checks are
+read-only and do not change Magento, service, or infrastructure state.
+
 ## Requirements
 
 - Magento Open Source 2.4.7 or a compatible Magento version using framework 103.x

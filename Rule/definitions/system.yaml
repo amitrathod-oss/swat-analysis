@@ -1,5 +1,5 @@
 rules:
-  - id: SYS-001
+  - id: INF-001
     title: Disk utilization is high
     category: Infrastructure
     domain: Availability
@@ -14,7 +14,7 @@ rules:
     root_cause: Files, logs, media, or database data are consuming available storage.
     recommendation: Review disk consumers and capacity planning; do not delete data automatically.
     scoring_penalty: 10
-  - id: SYS-002
+  - id: INF-002
     title: System memory utilization is high
     category: Infrastructure
     domain: Availability
@@ -29,7 +29,7 @@ rules:
     root_cause: Workload demand exceeds available memory or services retain excessive memory.
     recommendation: Correlate with service memory metrics and capacity history before changing limits.
     scoring_penalty: 5
-  - id: SYS-003
+  - id: INF-003
     title: Disk or system metric is unavailable
     category: Infrastructure
     domain: Availability

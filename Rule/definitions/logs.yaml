@@ -1,5 +1,5 @@
 rules:
-  - id: LOG-001
+  - id: LOG-LEGACY-001
     title: Repeated application exception detected
     issue_type: Reliability
     risk_level: Elevated
@@ -13,7 +13,7 @@ rules:
     site_impact: Repeated exceptions can indicate broken customer flows, failed background work, or degraded performance.
     recommendation: Use the sanitized evidence and source module to investigate the underlying exception. Do not delete or modify logs from this scan.
 
-  - id: LOG-002
+  - id: LOG-LEGACY-002
     title: Repeated OpenSearch exception detected
     issue_type: Reliability
     risk_level: High

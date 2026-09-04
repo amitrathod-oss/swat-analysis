@@ -12,7 +12,7 @@ rules:
     finding_description: One or more configured security headers were not present.
     site_impact: Browser protections may be weaker than intended.
     recommendation: Review the web-server and application header policy with the security owner.
-  - id: SEC-004
+  - id: SEC-TRANSPORT-001
     title: Representative URL is not HTTPS
     category: Security
     domain: Security
