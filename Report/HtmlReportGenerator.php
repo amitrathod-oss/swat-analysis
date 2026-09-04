@@ -182,15 +182,29 @@ class HtmlReportGenerator
             return '<p>No recommendations were generated.</p>';
         }
         $html = '<ul class="recommendation-list">';
-        foreach (array_slice($findings, 0, 8) as $finding) {
+        $shown = [];
+        foreach ($findings as $finding) {
             if (!is_array($finding)) {
                 continue;
             }
+            $ruleId = trim((string)($finding['rule_id'] ?? ''));
+            $title = trim((string)($finding['title'] ?? 'Finding'));
+            // A rule can produce separate evidence findings (for example one per
+            // EAV attribute). The executive summary should show its action once;
+            // detailed findings still retain every individual evidence record.
+            $key = $ruleId !== '' ? 'rule:' . $ruleId : 'title:' . strtolower($title);
+            if (isset($shown[$key])) {
+                continue;
+            }
+            $shown[$key] = true;
             $html .= '<li><span class="risk-' . strtolower((string)($finding['risk_level'] ?? 'info')) . '">'
                 . $this->escape((string)($finding['risk_level'] ?? 'Info')) . '</span> '
-                . $this->escape((string)($finding['title'] ?? 'Finding')) . '</li>';
+                . $this->escape($title) . '</li>';
+            if (count($shown) === 8) {
+                break;
+            }
         }
-        return $html . '</ul>';
+        return $shown === [] ? '<p>No recommendations were generated.</p>' : $html . '</ul>';
     }
 
     /**
