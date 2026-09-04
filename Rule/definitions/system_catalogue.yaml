@@ -1,198 +1,1053 @@
 rules:
-  - { id: SYS-001, title: Magento Open Source version is unavailable, issue_type: System information, risk_level: High, metric: catalogue.SYS-001.compliant, operator: is_false, expected_result: Magento Open Source version is detected, recommendation: Restore read-only Magento metadata access. }
-  - { id: SYS-002, title: Magento release lifecycle requires review, issue_type: Lifecycle, risk_level: High, metric: catalogue.SYS-002.compliant, operator: is_false, expected_result: Magento release is covered by the shipped lifecycle manifest, recommendation: Upgrade to an organization-approved supported Magento release. }
-  - { id: SYS-003, title: PHP version is incompatible or end of life, issue_type: PHP, risk_level: Critical, metric: catalogue.SYS-003.compliant, operator: is_false, expected_result: PHP is Magento-compatible and within security support, recommendation: Plan a supported PHP upgrade with Magento compatibility validation. }
-  - { id: SYS-004, title: Composer version is incompatible, issue_type: Dependencies, risk_level: Medium, metric: catalogue.SYS-004.compliant, operator: is_false, expected_result: Composer meets the Magento minimum version, recommendation: Upgrade Composer through the normal platform process. }
-  - { id: SYS-005, title: Database server version is incompatible, issue_type: Database, risk_level: Critical, metric: catalogue.SYS-005.compliant, operator: is_false, expected_result: Database engine and version are Magento-compatible, recommendation: Migrate to a database version supported by the detected Magento release. }
-  - { id: SYS-006, title: Search service is unavailable or incompatible, issue_type: Search, risk_level: High, metric: catalogue.SYS-006.compliant, operator: is_false, expected_result: Configured search service is reachable and compatible, recommendation: Restore search connectivity or use a supported version. }
-  - { id: SYS-007, title: Redis or Valkey is unavailable or incompatible, issue_type: Cache service, risk_level: High, metric: catalogue.SYS-007.compliant, operator: is_false, expected_result: Configured cache service is reachable and compatible, recommendation: Restore cache-service connectivity or use a supported version. }
-  - { id: SYS-008, title: Web-server version is unavailable, issue_type: Web server, risk_level: Low, metric: catalogue.SYS-008.compliant, operator: is_false, expected_result: A supported web-server binary is detected, recommendation: Provide read-only access to the web-server binary. }
-  - { id: SYS-009, title: Operating system is end of life, issue_type: Operating system, risk_level: Medium, metric: catalogue.SYS-009.compliant, operator: is_false, expected_result: Operating system is within lifecycle policy, recommendation: Upgrade the operating system through the infrastructure lifecycle process. }
-  - { id: SYS-010, title: Magento module inventory is unavailable, issue_type: Modules, risk_level: Info, metric: catalogue.SYS-010.compliant, operator: is_false, expected_result: Enabled and disabled modules are classified, recommendation: Restore read-only Magento module registration access. }
-  - { id: SYS-011, title: Magento deployment mode is unsuitable for production, issue_type: Application mode, risk_level: High, metric: catalogue.SYS-011.compliant, operator: is_false, expected_result: Production mode for a production-targeted scan, recommendation: Switch to production mode through the approved deployment process. }
-  - { id: SYS-013, title: Magento cron installation is missing, issue_type: Cron, risk_level: High, metric: catalogue.SYS-013.compliant, operator: is_false, expected_result: A valid Magento cron entry exists, recommendation: Install or restore cron using the normal Magento deployment procedure. }
-  - { id: SYS-015, title: One or more indexers are unhealthy, issue_type: Indexers, risk_level: High, metric: catalogue.SYS-015.compliant, operator: is_false, expected_result: No required indexer is invalid or suspended, recommendation: Resolve the affected indexer state and reindex through the approved maintenance process. }
-  - { id: SYS-017, title: Magento filesystem permissions require attention, issue_type: Filesystem, risk_level: High, metric: catalogue.SYS-017.compliant, operator: is_false, expected_result: Required directories are writable with no unsafe scripts, recommendation: Correct permissions and ownership using the deployment-user policy. }
-  - { id: SYS-018, title: Disk or inode utilization exceeds the warning threshold, issue_type: Capacity, risk_level: High, metric: catalogue.SYS-018.compliant, operator: is_false, expected_result: Disk and inode utilization are below 80 percent, recommendation: Increase capacity or remove approved stale data before service is affected. }
-  - { id: SYS-020, title: PHP limits or OPcache require review, issue_type: PHP, risk_level: High, metric: catalogue.SYS-020.compliant, operator: is_false, expected_result: Web PHP has usable limits and OPcache enabled, recommendation: Adjust the web-SAPI PHP policy and verify it after a controlled restart. }
-  - id: SEC-004
-    title: Unknown custom extension source
-    category: Security
-    domain: Security
-    issue_type: Extensions
-    risk_level: High
-    metric: catalogue.SEC-004.compliant
-    operator: is_false
-    expected_result: Enabled custom modules have Composer provenance or an approved exception
-    recommendation: Document module ownership and provenance, or add the module through the approved package process.
-  - id: SEC-008
-    title: Excessive admin role privileges
-    category: Security
-    domain: Security
-    issue_type: Admin accounts
-    risk_level: High
-    metric: catalogue.SEC-008.compliant
-    operator: is_false
-    expected_result: Unrestricted admin roles have an explicit policy exception
-    recommendation: Apply least privilege or document the approved unrestricted-role exception.
-  - id: SEC-010
-    title: Admin lockout or session settings are weak
-    category: Security
-    domain: Security
-    issue_type: Magento configuration
-    risk_level: High
-    metric: catalogue.SEC-010.compliant
-    operator: is_false
-    expected_result: Lockout and session values are positive and policy-compliant
-    recommendation: Set secure admin lockout and session values in the appropriate configuration scope.
-  - id: SEC-011
-    title: Two-factor authentication module is unavailable
-    category: Security
-    domain: Security
-    issue_type: Admin authentication
-    risk_level: High
-    metric: catalogue.SEC-011.compliant
-    operator: is_false
-    expected_result: Magento_TwoFactorAuth is enabled when supported
-    recommendation: Enable two-factor authentication or document the approved IAM/SSO control.
-  - id: SEC-014
-    title: Secure cookies are disabled for HTTPS
-    category: Security
-    domain: Security
-    issue_type: Magento configuration
-    risk_level: High
-    metric: catalogue.SEC-014.compliant
-    operator: is_false
-    expected_result: HTTPS scopes use secure cookies
-    recommendation: Enable the secure cookie flag at each applicable configuration scope.
-  - id: SEC-015
-    title: Cookie response attributes require review
-    category: Security
-    domain: Security
-    issue_type: Session security
-    risk_level: High
-    metric: catalogue.SEC-015.compliant
-    operator: is_false
-    expected_result: Cookies include HttpOnly and SameSite attributes
-    recommendation: Configure the application or edge policy to set HttpOnly and SameSite cookie attributes.
-  - id: SEC-019
-    title: Debug or developer settings are exposed
-    category: Security
-    domain: Security
-    issue_type: Runtime exposure
-    risk_level: High
-    metric: catalogue.SEC-019.compliant
-    operator: is_false
-    expected_result: Production mode has no display_errors or Xdebug exposure
-    recommendation: Disable developer diagnostics in production and redeploy through the approved process.
-  - id: SEC-020
-    title: Public error response discloses sensitive details
-    category: Security
-    domain: Security
-    issue_type: Runtime exposure
-    risk_level: High
-    metric: catalogue.SEC-020.compliant
-    operator: is_false
-    expected_result: Missing routes return generic error responses
-    recommendation: Disable exception and stack-trace rendering on public error pages.
-  - id: SEC-022
-    title: Unsafe writable executable script
-    category: Security
-    domain: Security
-    issue_type: Filesystem execution
-    risk_level: High
-    metric: catalogue.SEC-022.compliant
-    operator: is_false
-    expected_result: No group- or world-writable PHP or shell script exists in Magento executable paths
-    recommendation: Remove writable permissions from executable scripts and validate cron deployment paths.
-  - id: SEC-024
-    title: Suspicious PHP code indicator
-    category: Security
-    domain: Security
-    issue_type: Malware indicators
-    risk_level: High
-    metric: catalogue.SEC-024.compliant
-    operator: is_false
-    expected_result: No unreviewed high-risk execution pattern appears in custom or writable PHP
-    recommendation: Review the identified file with the code owner and remove unapproved executable patterns.
-  - { id: SEC-025, title: Database user has dangerous global privileges, category: Security, domain: Security, issue_type: Database security, risk_level: High, metric: catalogue.SEC-025.compliant, operator: is_false, expected_result: Magento runtime database user has least privilege, recommendation: Remove global administrative privileges from the Magento database account. }
-  - { id: SEC-027, title: Backup or log file is world-readable, category: Security, domain: Security, issue_type: Data protection, risk_level: High, metric: catalogue.SEC-027.compliant, operator: is_false, expected_result: Sensitive backup and log files are not world-readable, recommendation: Restrict file permissions using the approved deployment-user policy. }
-  - { id: SEC-029, title: Admin brute-force control is weak, category: Security, domain: Security, issue_type: Access protection, risk_level: High, metric: catalogue.SEC-029.compliant, operator: is_false, expected_result: Admin lockout and rate-limit controls are enabled, recommendation: Configure lockout controls and document WAF or edge rate limiting. }
-  - { id: CFG-004, title: Session storage backend is unsupported, category: Configuration, domain: Configuration, issue_type: Session, risk_level: High, metric: catalogue.CFG-004.compliant, operator: is_false, expected_result: Session backend is a supported Magento backend, recommendation: Configure an approved session backend. }
-  - { id: CFG-005, title: Application cache is disabled, category: Configuration, domain: Configuration, issue_type: Cache, risk_level: High, metric: catalogue.CFG-005.compliant, operator: is_false, expected_result: At least one application cache type is enabled, recommendation: Enable the required Magento cache types through the deployment process. }
-  - { id: CFG-006, title: Full-page cache application setting is invalid, category: Configuration, domain: Configuration, issue_type: Full-page cache, risk_level: High, metric: catalogue.CFG-006.compliant, operator: is_false, expected_result: Full-page cache uses built-in or Varnish setting, recommendation: Configure a supported full-page cache application. }
-  - { id: CFG-007, title: Varnish configuration is incomplete, category: Configuration, domain: Configuration, issue_type: Full-page cache, risk_level: High, metric: catalogue.CFG-007.compliant, operator: is_false, expected_result: Selected Varnish has configuration evidence, recommendation: Configure and validate Varnish access and backend settings. }
-  - { id: CFG-009, title: Configured Redis backend is unavailable, category: Configuration, domain: Configuration, issue_type: Cache, risk_level: High, metric: catalogue.CFG-009.compliant, operator: is_false, expected_result: Configured Redis or Valkey backend is reachable, recommendation: Restore the configured cache service. }
-  - { id: CFG-010, title: Database connection configuration is invalid, category: Configuration, domain: Configuration, issue_type: Database connection, risk_level: High, metric: catalogue.CFG-010.compliant, operator: is_false, expected_result: Database configuration is present and readable, recommendation: Correct the deployment database configuration without exposing credentials. }
-  - { id: CFG-011, title: Configured search engine is unavailable, category: Configuration, domain: Configuration, issue_type: Search, risk_level: High, metric: catalogue.CFG-011.compliant, operator: is_false, expected_result: Configured catalog search is reachable, recommendation: Restore the configured search service. }
-  - { id: CFG-013, title: Store hierarchy has invalid active store URL, category: Configuration, domain: Configuration, issue_type: Store hierarchy, risk_level: High, metric: catalogue.CFG-013.compliant, operator: is_false, expected_result: Active stores have valid base URLs, recommendation: Correct store hierarchy and base URL configuration. }
-  - { id: CFG-017, title: Tax default configuration is incomplete, category: Configuration, domain: Configuration, issue_type: Tax, risk_level: High, metric: catalogue.CFG-017.compliant, operator: is_false, expected_result: Tax default country is populated, recommendation: Configure tax defaults and validate tax classes. }
-  - { id: CFG-018, title: No configured shipping carrier is active, category: Configuration, domain: Configuration, issue_type: Shipping, risk_level: High, metric: catalogue.CFG-018.compliant, operator: is_false, expected_result: At least one configured carrier is active, recommendation: Enable an approved carrier or document quote-only policy. }
-  - { id: CFG-019, title: Payment configuration requires attention, category: Configuration, domain: Configuration, issue_type: Payment, risk_level: High, metric: catalogue.CFG-019.compliant, operator: is_false, expected_result: Payment settings are inventoried without exposing secrets, recommendation: Review payment methods and environment-specific credentials. }
-  - { id: CFG-025, title: Customer account configuration requires attention, category: Configuration, domain: Configuration, issue_type: Customer accounts, risk_level: High, metric: catalogue.CFG-025.compliant, operator: is_false, expected_result: Customer account settings are inventoried, recommendation: Review customer account and password-reset policy. }
-  - id: CFG-030
-    title: Inventory configuration requires attention
-    category: Configuration
-    domain: Configuration
-    issue_type: Inventory
-    risk_level: High
-    metric: catalogue.CFG-030.compliant
-    operator: is_false
-    expected_result: Inventory settings are inventoried
-    recommendation: Review inventory, backorder, and MSI policy.
-  - { id: CFG-032, title: REST API integration metadata is unavailable, category: Configuration, domain: Configuration, issue_type: REST API, risk_level: High, metric: catalogue.CFG-032.compliant, operator: is_false, expected_result: REST API integrations are inventoried without token values, recommendation: Restore read-only integration metadata access and review ACLs. }
-  - { id: CFG-034, title: Logging or developer configuration is exposed, category: Configuration, domain: Configuration, issue_type: Developer configuration, risk_level: High, metric: catalogue.CFG-034.compliant, operator: is_false, expected_result: Production mode has no enabled developer debug setting, recommendation: Disable developer diagnostics in production. }
-  - { id: DB-006, title: Database tables without primary keys, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-006.compliant, operator: is_false, expected_result: Magento and custom transactional tables have primary keys, recommendation: Add and validate primary keys through an approved schema migration. }
-  - { id: DB-011, title: Oversized changelog table, category: Database, domain: Database, issue_type: Database health, risk_level: High, metric: catalogue.DB-011.compliant, operator: is_false, expected_result: Changelog tables remain below the review threshold, recommendation: Review indexer scheduling and changelog cleanup. }
-  - { id: DB-014, title: Long-running database process, category: Database, domain: Database, issue_type: Database health, risk_level: High, metric: catalogue.DB-014.compliant, operator: is_false, expected_result: No non-idle query exceeds the observation threshold, recommendation: Investigate query workload before taking database action. }
-  - { id: DB-015, title: Slow query evidence requires review, category: Database, domain: Database, issue_type: Database health, risk_level: High, metric: catalogue.DB-015.compliant, operator: is_false, expected_result: No sampled query digest exceeds the average threshold, recommendation: Review slow-query instrumentation and optimize recurring high-latency digests. }
-  - { id: DB-016, title: Deadlocks or lock waits observed, category: Database, domain: Database, issue_type: Database health, risk_level: High, metric: catalogue.DB-016.compliant, operator: is_false }
-  - { id: DB-017, title: Foreign-key integrity violation, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-017.compliant, operator: is_false }
-  - { id: DB-018, title: Orphaned Magento EAV record, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-018.compliant, operator: is_false }
-  - { id: DB-019, title: Duplicate product business key, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-019.compliant, operator: is_false }
-  - { id: DB-020, title: Invalid EAV entity linkage, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-020.compliant, operator: is_false }
-  - { id: DB-021, title: Broken attribute metadata, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-021.compliant, operator: is_false }
-  - { id: DB-022, title: Broken category product relationship, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-022.compliant, operator: is_false }
-  - { id: DB-023, title: Broken product website assignment, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-023.compliant, operator: is_false }
-  - { id: DB-025, title: Quote and order inconsistency, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-025.compliant, operator: is_false }
-  - { id: DB-026, title: MSI reservation inconsistency, category: Database, domain: Database, issue_type: Inventory integrity, risk_level: High, metric: catalogue.DB-026.compliant, operator: is_false }
-  - { id: DB-028, title: Database backup freshness requires evidence, category: Database, domain: Database, issue_type: Backup, risk_level: High, metric: catalogue.DB-028.compliant, operator: is_false }
-  - { id: DB-031, title: Database connection utilization is high, category: Database, domain: Database, issue_type: Database runtime, risk_level: High, metric: catalogue.DB-031.compliant, operator: is_false }
-  - { id: DB-033, title: Magento schema metadata is unavailable, category: Database, domain: Database, issue_type: Database integrity, risk_level: High, metric: catalogue.DB-033.compliant, operator: is_false }
-  - { id: DB-034, title: Database user has unrestricted host grant, category: Database, domain: Database, issue_type: Database security, risk_level: High, metric: catalogue.DB-034.compliant, operator: is_false }
-  - { id: PERF-001, title: Magento cache type is disabled, category: Performance, domain: Performance, issue_type: Magento cache, risk_level: High, metric: catalogue.PERF-001.compliant, operator: is_false }
-  - { id: PERF-002, title: Cache backend is unavailable, category: Performance, domain: Performance, issue_type: Cache service, risk_level: High, metric: catalogue.PERF-002.compliant, operator: is_false }
-  - { id: PERF-003, title: Full-page cache is disabled, category: Performance, domain: Performance, issue_type: HTTP cache, risk_level: High, metric: catalogue.PERF-003.compliant, operator: is_false }
-  - { id: PERF-004, title: Search cluster is unavailable, category: Performance, domain: Performance, issue_type: Search, risk_level: High, metric: catalogue.PERF-004.compliant, operator: is_false }
-  - { id: PERF-005, title: Indexer mode or status is unhealthy, category: Performance, domain: Performance, issue_type: Indexers, risk_level: High, metric: catalogue.PERF-005.compliant, operator: is_false }
-  - { id: PERF-006, title: Cron performance is unhealthy, category: Performance, domain: Performance, issue_type: Cron, risk_level: High, metric: catalogue.PERF-006.compliant, operator: is_false }
-  - { id: PERF-007, title: Queue consumer health requires evidence, category: Performance, domain: Performance, issue_type: Queues, risk_level: High, metric: catalogue.PERF-007.compliant, operator: is_false }
-  - { id: PERF-008, title: PHP-FPM health requires evidence, category: Performance, domain: Performance, issue_type: PHP-FPM, risk_level: High, metric: catalogue.PERF-008.compliant, operator: is_false }
-  - { id: PERF-009, title: OPcache is disabled, category: Performance, domain: Performance, issue_type: PHP, risk_level: High, metric: catalogue.PERF-009.compliant, operator: is_false }
-  - { id: PERF-011, title: Static deployment consistency requires evidence, category: Performance, domain: Performance, issue_type: Static assets, risk_level: High, metric: catalogue.PERF-011.compliant, operator: is_false }
-  - { id: PERF-012, title: Production performance mode is unsuitable, category: Performance, domain: Performance, issue_type: Application mode, risk_level: High, metric: catalogue.PERF-012.compliant, operator: is_false }
-  - { id: PERF-018, title: Database query performance requires review, category: Performance, domain: Performance, issue_type: Database, risk_level: High, metric: catalogue.PERF-018.compliant, operator: is_false }
-  - { id: PERF-022, title: Host capacity utilization is high, category: Performance, domain: Performance, issue_type: Infrastructure, risk_level: High, metric: catalogue.PERF-022.compliant, operator: is_false }
-  - { id: LOG-001, title: Magento exception log has actionable exceptions, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-001.compliant, operator: is_false }
-  - { id: LOG-002, title: Magento system log has critical errors, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-002.compliant, operator: is_false }
-  - { id: LOG-004, title: Magento error report requires review, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-004.compliant, operator: is_false }
-  - { id: LOG-006, title: GraphQL or REST API error observed, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-006.compliant, operator: is_false }
-  - { id: LOG-007, title: SQL or database error observed, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-007.compliant, operator: is_false }
-  - { id: LOG-010, title: Cron or indexing failure observed, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-010.compliant, operator: is_false }
-  - { id: LOG-011, title: Queue failure observed, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-011.compliant, operator: is_false }
-  - { id: LOG-012, title: Shipping or payment error observed, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-012.compliant, operator: is_false }
-  - { id: LOG-016, title: Search service error observed, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-016.compliant, operator: is_false }
-  - { id: LOG-017, title: Redis or cache error observed, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-017.compliant, operator: is_false }
-  - { id: LOG-018, title: Deployment error observed, category: Exceptions and logs, domain: Application, issue_type: Log analysis, risk_level: High, metric: catalogue.LOG-018.compliant, operator: is_false }
-  - { id: EXT-004, title: Composer lock consistency is invalid, category: Extensions and code quality, domain: Dependencies, issue_type: Dependencies, risk_level: High, metric: catalogue.EXT-004.compliant, operator: is_false }
-  - { id: EXT-008, title: Vendor modification requires evidence, category: Extensions and code quality, domain: Integrity, issue_type: Integrity, risk_level: High, metric: catalogue.EXT-008.compliant, operator: is_false }
-  - { id: EXT-009, title: Custom PHP syntax requires evidence, category: Extensions and code quality, domain: Code quality, issue_type: Static analysis, risk_level: High, metric: catalogue.EXT-009.compliant, operator: is_false }
-  - { id: EXT-013, title: XML configuration requires evidence, category: Extensions and code quality, domain: Configuration, issue_type: Configuration XML, risk_level: High, metric: catalogue.EXT-013.compliant, operator: is_false }
-  - { id: JOB-001, title: Indexer status is unhealthy, category: Jobs, domain: Operations, issue_type: Indexers, risk_level: High, metric: catalogue.JOB-001.compliant, operator: is_false }
-  - { id: JOB-003, title: Magento cron is not configured, category: Jobs, domain: Operations, issue_type: Cron, risk_level: High, metric: catalogue.JOB-003.compliant, operator: is_false }
-  - { id: JOB-008, title: Consumer process status requires evidence, category: Jobs, domain: Operations, issue_type: Queues, risk_level: High, metric: catalogue.JOB-008.compliant, operator: is_false }
-  - { id: JOB-009, title: Consumer backlog requires evidence, category: Jobs, domain: Operations, issue_type: Queues, risk_level: High, metric: catalogue.JOB-009.compliant, operator: is_false }
-  - { id: STO-002, title: Category availability requires evidence, category: Storefront, domain: Storefront, issue_type: Functional check, risk_level: High, metric: catalogue.STO-002.compliant, operator: is_false }
-  - { id: STO-003, title: Product availability requires evidence, category: Storefront, domain: Storefront, issue_type: Functional check, risk_level: High, metric: catalogue.STO-003.compliant, operator: is_false }
-  - { id: STO-007, title: Checkout availability requires evidence, category: Storefront, domain: Storefront, issue_type: Functional check, risk_level: High, metric: catalogue.STO-007.compliant, operator: is_false }
-  - { id: OPS-002, title: Backup restore test requires evidence, category: Operations, domain: Operations, issue_type: Backups, risk_level: High, metric: catalogue.OPS-002.compliant, operator: is_false }
+- id: SYS-001
+  title: Magento Open Source version is unavailable
+  category: System information
+  domain: System information
+  issue_type: System information
+  risk_level: High
+  metric: catalogue.SYS-001.compliant
+  operator: is_false
+  expected_result: Magento Open Source version is detected
+  recommendation: Restore read-only Magento metadata access.
+- id: SYS-002
+  title: Magento release lifecycle requires review
+  category: System information
+  domain: System information
+  issue_type: Lifecycle
+  risk_level: High
+  metric: catalogue.SYS-002.compliant
+  operator: is_false
+  expected_result: Magento release is covered by the shipped lifecycle manifest
+  recommendation: Upgrade to an organization-approved supported Magento release.
+- id: SYS-003
+  title: PHP version is incompatible or end of life
+  category: System information
+  domain: System information
+  issue_type: PHP
+  risk_level: Critical
+  metric: catalogue.SYS-003.compliant
+  operator: is_false
+  expected_result: PHP is Magento-compatible and within security support
+  recommendation: Plan a supported PHP upgrade with Magento compatibility validation.
+- id: SYS-004
+  title: Composer version is incompatible
+  category: System information
+  domain: System information
+  issue_type: Dependencies
+  risk_level: Medium
+  metric: catalogue.SYS-004.compliant
+  operator: is_false
+  expected_result: Composer meets the Magento minimum version
+  recommendation: Upgrade Composer through the normal platform process.
+- id: SYS-005
+  title: Database server version is incompatible
+  category: System information
+  domain: System information
+  issue_type: Database
+  risk_level: Critical
+  metric: catalogue.SYS-005.compliant
+  operator: is_false
+  expected_result: Database engine and version are Magento-compatible
+  recommendation: Migrate to a database version supported by the detected Magento
+    release.
+- id: SYS-006
+  title: Search service is unavailable or incompatible
+  category: System information
+  domain: System information
+  issue_type: Search
+  risk_level: High
+  metric: catalogue.SYS-006.compliant
+  operator: is_false
+  expected_result: Configured search service is reachable and compatible
+  recommendation: Restore search connectivity or use a supported version.
+- id: SYS-007
+  title: Redis or Valkey is unavailable or incompatible
+  category: System information
+  domain: System information
+  issue_type: Cache service
+  risk_level: High
+  metric: catalogue.SYS-007.compliant
+  operator: is_false
+  expected_result: Configured cache service is reachable and compatible
+  recommendation: Restore cache-service connectivity or use a supported version.
+- id: SYS-008
+  title: Web-server version is unavailable
+  category: System information
+  domain: System information
+  issue_type: Web server
+  risk_level: Low
+  metric: catalogue.SYS-008.compliant
+  operator: is_false
+  expected_result: A supported web-server binary is detected
+  recommendation: Provide read-only access to the web-server binary.
+- id: SYS-009
+  title: Operating system is end of life
+  category: System information
+  domain: System information
+  issue_type: Operating system
+  risk_level: Medium
+  metric: catalogue.SYS-009.compliant
+  operator: is_false
+  expected_result: Operating system is within lifecycle policy
+  recommendation: Upgrade the operating system through the infrastructure lifecycle
+    process.
+- id: SYS-010
+  title: Magento module inventory is unavailable
+  category: System information
+  domain: System information
+  issue_type: Modules
+  risk_level: Info
+  metric: catalogue.SYS-010.compliant
+  operator: is_false
+  expected_result: Enabled and disabled modules are classified
+  recommendation: Restore read-only Magento module registration access.
+- id: SYS-011
+  title: Magento deployment mode is unsuitable for production
+  category: System information
+  domain: System information
+  issue_type: Application mode
+  risk_level: High
+  metric: catalogue.SYS-011.compliant
+  operator: is_false
+  expected_result: Production mode for a production-targeted scan
+  recommendation: Switch to production mode through the approved deployment process.
+- id: SYS-013
+  title: Magento cron installation is missing
+  category: System information
+  domain: System information
+  issue_type: Cron
+  risk_level: High
+  metric: catalogue.SYS-013.compliant
+  operator: is_false
+  expected_result: A valid Magento cron entry exists
+  recommendation: Install or restore cron using the normal Magento deployment procedure.
+- id: SYS-015
+  title: One or more indexers are unhealthy
+  category: System information
+  domain: System information
+  issue_type: Indexers
+  risk_level: High
+  metric: catalogue.SYS-015.compliant
+  operator: is_false
+  expected_result: No required indexer is invalid or suspended
+  recommendation: Resolve the affected indexer state and reindex through the approved
+    maintenance process.
+- id: SYS-017
+  title: Magento filesystem permissions require attention
+  category: System information
+  domain: System information
+  issue_type: Filesystem
+  risk_level: High
+  metric: catalogue.SYS-017.compliant
+  operator: is_false
+  expected_result: Required directories are writable with no unsafe scripts
+  recommendation: Correct permissions and ownership using the deployment-user policy.
+- id: SYS-018
+  title: Disk or inode utilization exceeds the warning threshold
+  category: System information
+  domain: System information
+  issue_type: Capacity
+  risk_level: High
+  metric: catalogue.SYS-018.compliant
+  operator: is_false
+  expected_result: Disk and inode utilization are below 80 percent
+  recommendation: Increase capacity or remove approved stale data before service is
+    affected.
+- id: SYS-020
+  title: PHP limits or OPcache require review
+  category: System information
+  domain: System information
+  issue_type: PHP
+  risk_level: High
+  metric: catalogue.SYS-020.compliant
+  operator: is_false
+  expected_result: Web PHP has usable limits and OPcache enabled
+  recommendation: Adjust the web-SAPI PHP policy and verify it after a controlled
+    restart.
+- id: SEC-004
+  title: Unknown custom extension source
+  category: Security
+  domain: Security
+  issue_type: Extensions
+  risk_level: High
+  metric: catalogue.SEC-004.compliant
+  operator: is_false
+  expected_result: Enabled custom modules have Composer provenance or an approved
+    exception
+  recommendation: Document module ownership and provenance, or add the module through
+    the approved package process.
+- id: SEC-008
+  title: Excessive admin role privileges
+  category: Security
+  domain: Security
+  issue_type: Admin accounts
+  risk_level: High
+  metric: catalogue.SEC-008.compliant
+  operator: is_false
+  expected_result: Unrestricted admin roles have an explicit policy exception
+  recommendation: Apply least privilege or document the approved unrestricted-role
+    exception.
+- id: SEC-010
+  title: Admin lockout or session settings are weak
+  category: Security
+  domain: Security
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.SEC-010.compliant
+  operator: is_false
+  expected_result: Lockout and session values are positive and policy-compliant
+  recommendation: Set secure admin lockout and session values in the appropriate configuration
+    scope.
+- id: SEC-011
+  title: Two-factor authentication module is unavailable
+  category: Security
+  domain: Security
+  issue_type: Admin authentication
+  risk_level: High
+  metric: catalogue.SEC-011.compliant
+  operator: is_false
+  expected_result: Magento_TwoFactorAuth is enabled when supported
+  recommendation: Enable two-factor authentication or document the approved IAM/SSO
+    control.
+- id: SEC-014
+  title: Secure cookies are disabled for HTTPS
+  category: Security
+  domain: Security
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.SEC-014.compliant
+  operator: is_false
+  expected_result: HTTPS scopes use secure cookies
+  recommendation: Enable the secure cookie flag at each applicable configuration scope.
+- id: SEC-015
+  title: Cookie response attributes require review
+  category: Security
+  domain: Security
+  issue_type: Session security
+  risk_level: High
+  metric: catalogue.SEC-015.compliant
+  operator: is_false
+  expected_result: Cookies include HttpOnly and SameSite attributes
+  recommendation: Configure the application or edge policy to set HttpOnly and SameSite
+    cookie attributes.
+- id: SEC-019
+  title: Debug or developer settings are exposed
+  category: Security
+  domain: Security
+  issue_type: Runtime exposure
+  risk_level: High
+  metric: catalogue.SEC-019.compliant
+  operator: is_false
+  expected_result: Production mode has no display_errors or Xdebug exposure
+  recommendation: Disable developer diagnostics in production and redeploy through
+    the approved process.
+- id: SEC-020
+  title: Public error response discloses sensitive details
+  category: Security
+  domain: Security
+  issue_type: Runtime exposure
+  risk_level: High
+  metric: catalogue.SEC-020.compliant
+  operator: is_false
+  expected_result: Missing routes return generic error responses
+  recommendation: Disable exception and stack-trace rendering on public error pages.
+- id: SEC-022
+  title: Unsafe writable executable script
+  category: Security
+  domain: Security
+  issue_type: Filesystem execution
+  risk_level: High
+  metric: catalogue.SEC-022.compliant
+  operator: is_false
+  expected_result: No group- or world-writable PHP or shell script exists in Magento
+    executable paths
+  recommendation: Remove writable permissions from executable scripts and validate
+    cron deployment paths.
+- id: SEC-024
+  title: Suspicious PHP code indicator
+  category: Security
+  domain: Security
+  issue_type: Malware indicators
+  risk_level: High
+  metric: catalogue.SEC-024.compliant
+  operator: is_false
+  expected_result: No unreviewed high-risk execution pattern appears in custom or
+    writable PHP
+  recommendation: Review the identified file with the code owner and remove unapproved
+    executable patterns.
+- id: SEC-025
+  title: Database user has dangerous global privileges
+  category: Security
+  domain: Security
+  issue_type: Database security
+  risk_level: High
+  metric: catalogue.SEC-025.compliant
+  operator: is_false
+  expected_result: Magento runtime database user has least privilege
+  recommendation: Remove global administrative privileges from the Magento database
+    account.
+- id: SEC-027
+  title: Backup or log file is world-readable
+  category: Security
+  domain: Security
+  issue_type: Data protection
+  risk_level: High
+  metric: catalogue.SEC-027.compliant
+  operator: is_false
+  expected_result: Sensitive backup and log files are not world-readable
+  recommendation: Restrict file permissions using the approved deployment-user policy.
+- id: SEC-029
+  title: Admin brute-force control is weak
+  category: Security
+  domain: Security
+  issue_type: Access protection
+  risk_level: High
+  metric: catalogue.SEC-029.compliant
+  operator: is_false
+  expected_result: Admin lockout and rate-limit controls are enabled
+  recommendation: Configure lockout controls and document WAF or edge rate limiting.
+- id: CFG-004
+  title: Session storage backend is unsupported
+  category: Configuration
+  domain: Configuration
+  issue_type: Session
+  risk_level: High
+  metric: catalogue.CFG-004.compliant
+  operator: is_false
+  expected_result: Session backend is a supported Magento backend
+  recommendation: Configure an approved session backend.
+- id: CFG-005
+  title: Application cache is disabled
+  category: Configuration
+  domain: Configuration
+  issue_type: Cache
+  risk_level: High
+  metric: catalogue.CFG-005.compliant
+  operator: is_false
+  expected_result: At least one application cache type is enabled
+  recommendation: Enable the required Magento cache types through the deployment process.
+- id: CFG-006
+  title: Full-page cache application setting is invalid
+  category: Configuration
+  domain: Configuration
+  issue_type: Full-page cache
+  risk_level: High
+  metric: catalogue.CFG-006.compliant
+  operator: is_false
+  expected_result: Full-page cache uses built-in or Varnish setting
+  recommendation: Configure a supported full-page cache application.
+- id: CFG-007
+  title: Varnish configuration is incomplete
+  category: Configuration
+  domain: Configuration
+  issue_type: Full-page cache
+  risk_level: High
+  metric: catalogue.CFG-007.compliant
+  operator: is_false
+  expected_result: Selected Varnish has configuration evidence
+  recommendation: Configure and validate Varnish access and backend settings.
+- id: CFG-009
+  title: Configured Redis backend is unavailable
+  category: Configuration
+  domain: Configuration
+  issue_type: Cache
+  risk_level: High
+  metric: catalogue.CFG-009.compliant
+  operator: is_false
+  expected_result: Configured Redis or Valkey backend is reachable
+  recommendation: Restore the configured cache service.
+- id: CFG-010
+  title: Database connection configuration is invalid
+  category: Configuration
+  domain: Configuration
+  issue_type: Database connection
+  risk_level: High
+  metric: catalogue.CFG-010.compliant
+  operator: is_false
+  expected_result: Database configuration is present and readable
+  recommendation: Correct the deployment database configuration without exposing credentials.
+- id: CFG-011
+  title: Configured search engine is unavailable
+  category: Configuration
+  domain: Configuration
+  issue_type: Search
+  risk_level: High
+  metric: catalogue.CFG-011.compliant
+  operator: is_false
+  expected_result: Configured catalog search is reachable
+  recommendation: Restore the configured search service.
+- id: CFG-013
+  title: Store hierarchy has invalid active store URL
+  category: Configuration
+  domain: Configuration
+  issue_type: Store hierarchy
+  risk_level: High
+  metric: catalogue.CFG-013.compliant
+  operator: is_false
+  expected_result: Active stores have valid base URLs
+  recommendation: Correct store hierarchy and base URL configuration.
+- id: CFG-017
+  title: Tax default configuration is incomplete
+  category: Configuration
+  domain: Configuration
+  issue_type: Tax
+  risk_level: High
+  metric: catalogue.CFG-017.compliant
+  operator: is_false
+  expected_result: Tax default country is populated
+  recommendation: Configure tax defaults and validate tax classes.
+- id: CFG-018
+  title: No configured shipping carrier is active
+  category: Configuration
+  domain: Configuration
+  issue_type: Shipping
+  risk_level: High
+  metric: catalogue.CFG-018.compliant
+  operator: is_false
+  expected_result: At least one configured carrier is active
+  recommendation: Enable an approved carrier or document quote-only policy.
+- id: CFG-019
+  title: Payment configuration requires attention
+  category: Configuration
+  domain: Configuration
+  issue_type: Payment
+  risk_level: High
+  metric: catalogue.CFG-019.compliant
+  operator: is_false
+  expected_result: Payment settings are inventoried without exposing secrets
+  recommendation: Review payment methods and environment-specific credentials.
+- id: CFG-025
+  title: Customer account configuration requires attention
+  category: Configuration
+  domain: Configuration
+  issue_type: Customer accounts
+  risk_level: High
+  metric: catalogue.CFG-025.compliant
+  operator: is_false
+  expected_result: Customer account settings are inventoried
+  recommendation: Review customer account and password-reset policy.
+- id: CFG-030
+  title: Inventory configuration requires attention
+  category: Configuration
+  domain: Configuration
+  issue_type: Inventory
+  risk_level: High
+  metric: catalogue.CFG-030.compliant
+  operator: is_false
+  expected_result: Inventory settings are inventoried
+  recommendation: Review inventory, backorder, and MSI policy.
+- id: CFG-032
+  title: REST API integration metadata is unavailable
+  category: Configuration
+  domain: Configuration
+  issue_type: REST API
+  risk_level: High
+  metric: catalogue.CFG-032.compliant
+  operator: is_false
+  expected_result: REST API integrations are inventoried without token values
+  recommendation: Restore read-only integration metadata access and review ACLs.
+- id: CFG-034
+  title: Logging or developer configuration is exposed
+  category: Configuration
+  domain: Configuration
+  issue_type: Developer configuration
+  risk_level: High
+  metric: catalogue.CFG-034.compliant
+  operator: is_false
+  expected_result: Production mode has no enabled developer debug setting
+  recommendation: Disable developer diagnostics in production.
+- id: DB-006
+  title: Database tables without primary keys
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-006.compliant
+  operator: is_false
+  expected_result: Magento and custom transactional tables have primary keys
+  recommendation: Add and validate primary keys through an approved schema migration.
+- id: DB-011
+  title: Oversized changelog table
+  category: Database
+  domain: Database
+  issue_type: Database health
+  risk_level: High
+  metric: catalogue.DB-011.compliant
+  operator: is_false
+  expected_result: Changelog tables remain below the review threshold
+  recommendation: Review indexer scheduling and changelog cleanup.
+- id: DB-014
+  title: Long-running database process
+  category: Database
+  domain: Database
+  issue_type: Database health
+  risk_level: High
+  metric: catalogue.DB-014.compliant
+  operator: is_false
+  expected_result: No non-idle query exceeds the observation threshold
+  recommendation: Investigate query workload before taking database action.
+- id: DB-015
+  title: Slow query evidence requires review
+  category: Database
+  domain: Database
+  issue_type: Database health
+  risk_level: High
+  metric: catalogue.DB-015.compliant
+  operator: is_false
+  expected_result: No sampled query digest exceeds the average threshold
+  recommendation: Review slow-query instrumentation and optimize recurring high-latency
+    digests.
+- id: DB-016
+  title: Deadlocks or lock waits observed
+  category: Database
+  domain: Database
+  issue_type: Database health
+  risk_level: High
+  metric: catalogue.DB-016.compliant
+  operator: is_false
+  expected_result: No recurring deadlocks/lock waits above threshold; store only normalized
+    signatures, not full sensitive SQL.
+  recommendation: Investigate database locking patterns and optimize long-running
+    transactions to eliminate deadlocks.
+- id: DB-017
+  title: Foreign-key integrity violation
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-017.compliant
+  operator: is_false
+  expected_result: Every declared foreign-key target exists.
+  recommendation: Ensure that every declared foreign-key target exists.
+- id: DB-018
+  title: Orphaned Magento EAV record
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-018.compliant
+  operator: is_false
+  expected_result: No orphan records in mandatory core relations; list count and capped
+    sample identifiers only.
+  recommendation: Clean up orphaned EAV records and repair entity linkages to maintain
+    database integrity.
+- id: DB-019
+  title: Duplicate product business key
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-019.compliant
+  operator: is_false
+  expected_result: No duplicate keys that violate Magento uniqueness expectations.
+  recommendation: Review product SKU/key assignments and resolve duplicate entries
+    violating uniqueness.
+- id: DB-020
+  title: Invalid EAV entity linkage
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-020.compliant
+  operator: is_false
+  expected_result: No EAV row references missing entity or attribute.
+  recommendation: Clean up orphaned EAV records and repair entity linkages to maintain
+    database integrity.
+- id: DB-021
+  title: Broken attribute metadata
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-021.compliant
+  operator: is_false
+  expected_result: All product/customer attributes point to valid entity type and
+    backend storage where applicable.
+  recommendation: Ensure that all product/customer attributes point to valid entity
+    type and backend storage where applicable.
+- id: DB-022
+  title: Broken category product relationship
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-022.compliant
+  operator: is_false
+  expected_result: No category-product relation references a missing category or product.
+  recommendation: Repair broken category-product relationships by removing references
+    to deleted entities.
+- id: DB-023
+  title: Broken product website assignment
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-023.compliant
+  operator: is_false
+  expected_result: No product-website mapping references missing records.
+  recommendation: Re-assign products to active store websites and repair website linkage
+    mappings.
+- id: DB-025
+  title: Quote and order inconsistency
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-025.compliant
+  operator: is_false
+  expected_result: No impossible core quote/order relation found.
+  recommendation: Reconcile quote and order inconsistencies to ensure checkout data
+    integrity.
+- id: DB-026
+  title: MSI reservation inconsistency
+  category: Database
+  domain: Database
+  issue_type: Inventory integrity
+  risk_level: High
+  metric: catalogue.DB-026.compliant
+  operator: is_false
+  expected_result: No reservation inconsistency or missing source/stock relation;
+    old non-MSI versions are NOT_APPLICABLE.
+  recommendation: Re-index inventory reservations and resolve stock reservation discrepancies.
+- id: DB-028
+  title: Database backup freshness requires evidence
+  category: Database
+  domain: Database
+  issue_type: Backup
+  risk_level: High
+  metric: catalogue.DB-028.compliant
+  operator: is_false
+  expected_result: A successful database backup record is within recovery policy age.
+  recommendation: Ensure that a successful database backup record is within recovery
+    policy age.
+- id: DB-031
+  title: Database connection utilization is high
+  category: Database
+  domain: Database
+  issue_type: Database runtime
+  risk_level: High
+  metric: catalogue.DB-031.compliant
+  operator: is_false
+  expected_result: Current connections are below warning threshold of max_connections
+    and connection errors are not increasing.
+  recommendation: Ensure that current connections are below warning threshold of max_connections
+    and connection errors are not increasing.
+- id: DB-033
+  title: Magento schema metadata is unavailable
+  category: Database
+  domain: Database
+  issue_type: Database integrity
+  risk_level: High
+  metric: catalogue.DB-033.compliant
+  operator: is_false
+  expected_result: Schema versions align with installed modules and no expected table
+    is missing.
+  recommendation: Ensure that schema versions align with installed modules and no
+    expected table is missing.
+- id: DB-034
+  title: Database user has unrestricted host grant
+  category: Database
+  domain: Database
+  issue_type: Database security
+  risk_level: High
+  metric: catalogue.DB-034.compliant
+  operator: is_false
+  expected_result: Runtime user host restriction and TLS requirements meet policy;
+    unavailable mysql.user access is NOT_CHECKED.
+  recommendation: Ensure that runtime user host restriction and TLS requirements meet
+    policy; unavailable mysql.user access is NOT_CHECKED.
+- id: PERF-001
+  title: Magento cache type is disabled
+  category: Performance
+  domain: Performance
+  issue_type: Magento cache
+  risk_level: High
+  metric: catalogue.PERF-001.compliant
+  operator: is_false
+  expected_result: All policy-required cache types enabled.
+  recommendation: Ensure that all policy-required cache types enabled.
+- id: PERF-002
+  title: Cache backend is unavailable
+  category: Performance
+  domain: Performance
+  issue_type: Cache service
+  risk_level: High
+  metric: catalogue.PERF-002.compliant
+  operator: is_false
+  expected_result: Cache backend is reachable and healthy.
+  recommendation: Ensure that cache backend is reachable and healthy.
+- id: PERF-003
+  title: Full-page cache is disabled
+  category: Performance
+  domain: Performance
+  issue_type: HTTP cache
+  risk_level: High
+  metric: catalogue.PERF-003.compliant
+  operator: is_false
+  expected_result: Cache hit/miss behavior and Varnish health are consistent with
+    policy.
+  recommendation: Ensure that cache hit/miss behavior and Varnish health are consistent
+    with policy.
+- id: PERF-004
+  title: Search cluster is unavailable
+  category: Performance
+  domain: Performance
+  issue_type: Search
+  risk_level: High
+  metric: catalogue.PERF-004.compliant
+  operator: is_false
+  expected_result: Cluster status green or documented acceptable yellow; no red state.
+  recommendation: Ensure that cluster status green or documented acceptable yellow;
+    no red state.
+- id: PERF-005
+  title: Indexer mode or status is unhealthy
+  category: Performance
+  domain: Performance
+  issue_type: Indexers
+  risk_level: High
+  metric: catalogue.PERF-005.compliant
+  operator: is_false
+  expected_result: Modes/status meet policy.
+  recommendation: Ensure that modes/status meet policy.
+- id: PERF-006
+  title: Cron performance is unhealthy
+  category: Performance
+  domain: Performance
+  issue_type: Cron
+  risk_level: High
+  metric: catalogue.PERF-006.compliant
+  operator: is_false
+  expected_result: Cron jobs meet timing/success threshold.
+  recommendation: Ensure that cron jobs meet timing/success threshold.
+- id: PERF-007
+  title: Queue consumer health requires evidence
+  category: Performance
+  domain: Performance
+  issue_type: Queues
+  risk_level: High
+  metric: catalogue.PERF-007.compliant
+  operator: is_false
+  expected_result: Required consumers healthy or NOT_APPLICABLE.
+  recommendation: Ensure that required consumers healthy or NOT_APPLICABLE.
+- id: PERF-008
+  title: PHP-FPM health requires evidence
+  category: Performance
+  domain: Performance
+  issue_type: PHP-FPM
+  risk_level: High
+  metric: catalogue.PERF-008.compliant
+  operator: is_false
+  expected_result: No pool saturation or unsafe production setting.
+  recommendation: Ensure pool saturation or unsafe production setting. to maintain
+    system integrity.
+- id: PERF-009
+  title: OPcache is disabled
+  category: Performance
+  domain: Performance
+  issue_type: PHP
+  risk_level: High
+  metric: catalogue.PERF-009.compliant
+  operator: is_false
+  expected_result: OPcache enabled and not near exhaustion.
+  recommendation: Ensure that oPcache enabled and not near exhaustion.
+- id: PERF-011
+  title: Static deployment consistency requires evidence
+  category: Performance
+  domain: Performance
+  issue_type: Static assets
+  risk_level: High
+  metric: catalogue.PERF-011.compliant
+  operator: is_false
+  expected_result: Static assets consistent with deployed code.
+  recommendation: Ensure that static assets consistent with deployed code.
+- id: PERF-012
+  title: Production performance mode is unsuitable
+  category: Performance
+  domain: Performance
+  issue_type: Application mode
+  risk_level: High
+  metric: catalogue.PERF-012.compliant
+  operator: is_false
+  expected_result: Production mode.
+  recommendation: Ensure that production mode.
+- id: PERF-018
+  title: Database query performance requires review
+  category: Performance
+  domain: Performance
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.PERF-018.compliant
+  operator: is_false
+  expected_result: No recurring query exceeds policy threshold.
+  recommendation: Ensure recurring query exceeds policy threshold. to maintain system
+    integrity.
+- id: PERF-022
+  title: Host capacity utilization is high
+  category: Performance
+  domain: Performance
+  issue_type: Infrastructure
+  risk_level: High
+  metric: catalogue.PERF-022.compliant
+  operator: is_false
+  expected_result: No sustained capacity threshold breach.
+  recommendation: Ensure sustained capacity threshold breach. to maintain system integrity.
+- id: LOG-001
+  title: Magento exception log has actionable exceptions
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-001.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-002
+  title: Magento system log has critical errors
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-002.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-004
+  title: Magento error report requires review
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-004.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-006
+  title: GraphQL or REST API error observed
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-006.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-007
+  title: SQL or database error observed
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-007.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-010
+  title: Cron or indexing failure observed
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-010.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-011
+  title: Queue failure observed
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-011.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-012
+  title: Shipping or payment error observed
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-012.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-016
+  title: Search service error observed
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-016.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-017
+  title: Redis or cache error observed
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-017.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: LOG-018
+  title: Deployment error observed
+  category: Exceptions and logs
+  domain: Application
+  issue_type: Log analysis
+  risk_level: High
+  metric: catalogue.LOG-018.compliant
+  operator: is_false
+  expected_result: No new/repeated actionable signature above configured frequency
+    threshold.
+  recommendation: Ensure new/repeated actionable signature above configured frequency
+    threshold. to maintain system integrity.
+- id: EXT-004
+  title: Composer lock consistency is invalid
+  category: Extensions and code quality
+  domain: Dependencies
+  issue_type: Dependencies
+  risk_level: High
+  metric: catalogue.EXT-004.compliant
+  operator: is_false
+  expected_result: Composer files validate and dry-run has no lock mismatch.
+  recommendation: Ensure that composer files validate and dry-run has no lock mismatch.
+- id: EXT-008
+  title: Vendor modification requires evidence
+  category: Extensions and code quality
+  domain: Integrity
+  issue_type: Integrity
+  risk_level: High
+  metric: catalogue.EXT-008.compliant
+  operator: is_false
+  expected_result: No unexplained modification under vendor/magento or Magento core
+    package.
+  recommendation: Ensure unexplained modification under vendor/magento or Magento
+    core package. to maintain system integrity.
+- id: EXT-009
+  title: Custom PHP syntax requires evidence
+  category: Extensions and code quality
+  domain: Code quality
+  issue_type: Static analysis
+  risk_level: High
+  metric: catalogue.EXT-009.compliant
+  operator: is_false
+  expected_result: All custom PHP files parse.
+  recommendation: Ensure that all custom PHP files parse.
+- id: EXT-013
+  title: XML configuration requires evidence
+  category: Extensions and code quality
+  domain: Configuration
+  issue_type: Configuration XML
+  risk_level: High
+  metric: catalogue.EXT-013.compliant
+  operator: is_false
+  expected_result: All scanned XML is well-formed and schema-valid.
+  recommendation: Ensure that all scanned XML is well-formed and schema-valid.
+- id: JOB-001
+  title: Indexer status is unhealthy
+  category: Jobs
+  domain: Operations
+  issue_type: Indexers
+  risk_level: High
+  metric: catalogue.JOB-001.compliant
+  operator: is_false
+  expected_result: No indexer invalid/error state.
+  recommendation: Ensure indexer invalid/error state. to maintain system integrity.
+- id: JOB-003
+  title: Magento cron is not configured
+  category: Jobs
+  domain: Operations
+  issue_type: Cron
+  risk_level: High
+  metric: catalogue.JOB-003.compliant
+  operator: is_false
+  expected_result: Magento cron configured.
+  recommendation: Ensure that magento cron configured.
+- id: JOB-008
+  title: Consumer process status requires evidence
+  category: Jobs
+  domain: Operations
+  issue_type: Queues
+  risk_level: High
+  metric: catalogue.JOB-008.compliant
+  operator: is_false
+  expected_result: Required consumer processes active.
+  recommendation: Ensure that required consumer processes active.
+- id: JOB-009
+  title: Consumer backlog requires evidence
+  category: Jobs
+  domain: Operations
+  issue_type: Queues
+  risk_level: High
+  metric: catalogue.JOB-009.compliant
+  operator: is_false
+  expected_result: Backlog/failed messages below policy threshold.
+  recommendation: Ensure that backlog/failed messages below policy threshold.
+- id: STO-002
+  title: Category availability requires evidence
+  category: Storefront
+  domain: Storefront
+  issue_type: Functional check
+  risk_level: High
+  metric: catalogue.STO-002.compliant
+  operator: is_false
+  expected_result: A sampled enabled category returns expected response without exception
+    marker.
+  recommendation: Ensure that a sampled enabled category returns expected response
+    without exception marker.
+- id: STO-003
+  title: Product availability requires evidence
+  category: Storefront
+  domain: Storefront
+  issue_type: Functional check
+  risk_level: High
+  metric: catalogue.STO-003.compliant
+  operator: is_false
+  expected_result: A sampled visible simple product page returns expected response
+    and product schema/name marker.
+  recommendation: Ensure that a sampled visible simple product page returns expected
+    response and product schema/name marker.
+- id: STO-007
+  title: Checkout availability requires evidence
+  category: Storefront
+  domain: Storefront
+  issue_type: Functional check
+  risk_level: High
+  metric: catalogue.STO-007.compliant
+  operator: is_false
+  expected_result: Checkout route responds without fatal/error signature; no order,
+    payment, email or customer data mutation.
+  recommendation: Ensure that checkout route responds without fatal/error signature;
+    no order, payment, email or customer data mutation.
+- id: OPS-002
+  title: Backup restore test requires evidence
+  category: Operations
+  domain: Operations
+  issue_type: Backups
+  risk_level: High
+  metric: catalogue.OPS-002.compliant
+  operator: is_false
+  expected_result: Successful restore test within policy interval.
+  recommendation: Ensure that successful restore test within policy interval.
