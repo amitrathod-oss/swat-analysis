@@ -164,7 +164,10 @@ class SystemCatalogueEvaluator
                     $unhealthyIndexers[(string)$indexerId] = $status;
                 }
             }
-            $catalogue['SYS-015'] = $this->check($unhealthyIndexers === [], 'No indexer is invalid, suspended, or unavailable.', ['unhealthy_indexers' => $unhealthyIndexers, 'indexer_count' => count($indexers)]);
+            $catalogue['SYS-015'] = $this->check($unhealthyIndexers === [], $unhealthyIndexers === []
+                ? 'No indexer is invalid, suspended, or unavailable.'
+                : sprintf('Unhealthy indexers detected (%d): %s.', count($unhealthyIndexers), implode(', ', array_keys($unhealthyIndexers))),
+                ['unhealthy_indexers' => $unhealthyIndexers, 'indexer_count' => count($indexers)]);
         }
 
         $writableDirectories = $this->array($system, 'writable_directories');
@@ -180,7 +183,11 @@ class SystemCatalogueEvaluator
                 }
             }
             $unsafe = is_array($unsafeScripts['matches'] ?? null) ? $unsafeScripts['matches'] : [];
-            $catalogue['SYS-017'] = $this->check($missingWritable === [] && $unsafe === [] && ($unsafeScripts['status'] ?? '') !== 'truncated', 'Required Magento directories are writable and no unsafe writable PHP or shell script was found.', ['not_writable' => $missingWritable, 'unsafe_scripts' => $unsafe, 'scan_status' => $unsafeScripts['status'] ?? 'unknown']);
+            $catalogue['SYS-017'] = $this->check($missingWritable === [] && $unsafe === [] && ($unsafeScripts['status'] ?? '') !== 'truncated',
+                $missingWritable === [] && $unsafe === []
+                    ? 'Required Magento directories are writable and no unsafe writable PHP or shell script was found.'
+                    : sprintf('Filesystem permission issues: Not writable [%s], Unsafe scripts [%s].', $this->formatList($missingWritable), $this->formatList($unsafe)),
+                ['not_writable' => $missingWritable, 'unsafe_scripts' => $unsafe, 'scan_status' => $unsafeScripts['status'] ?? 'unknown']);
         }
 
         $diskUsed = $system['disk']['used_percent'] ?? null;
@@ -212,12 +219,19 @@ class SystemCatalogueEvaluator
         }
         $catalogue['SEC-004'] = $inventory === [] || $extensions === []
             ? $this->notChecked('Module provenance data is unavailable.', [])
-            : $this->check($unprovenancedModules === [], 'Every enabled custom module has Composer package provenance or requires an approved documented exception.', ['modules_without_composer_provenance' => $unprovenancedModules]);
+            : $this->check($unprovenancedModules === [], $unprovenancedModules === []
+                ? 'Every enabled custom module has Composer package provenance or requires an approved documented exception.'
+                : sprintf('Custom modules lacking Composer package provenance (%d): %s.', count($unprovenancedModules), $this->formatList($unprovenancedModules)),
+                ['modules_without_composer_provenance' => $unprovenancedModules]);
 
         $adminRoles = $this->array($security, 'admin_roles');
+        $unrestrictedRoles = is_array($adminRoles['unrestricted'] ?? null) ? $adminRoles['unrestricted'] : [];
         $catalogue['SEC-008'] = ($adminRoles['status'] ?? '') !== 'success'
             ? $this->notChecked((string)($adminRoles['reason'] ?? 'Admin role privileges could not be inspected.'), $adminRoles)
-            : $this->check(($adminRoles['unrestricted'] ?? []) === [], 'No unrestricted admin role is present without an explicit policy exception.', ['unrestricted_roles' => $adminRoles['unrestricted'] ?? []]);
+            : $this->check($unrestrictedRoles === [], $unrestrictedRoles === []
+                ? 'No unrestricted admin role is present without an explicit policy exception.'
+                : sprintf('Unrestricted admin roles detected (%d): %s.', count($unrestrictedRoles), $this->formatList($unrestrictedRoles)),
+                ['unrestricted_roles' => $unrestrictedRoles]);
 
         $adminConfig = $this->array($security, 'admin_security_config');
         $adminValues = $this->configValues($adminConfig);
@@ -237,7 +251,11 @@ class SystemCatalogueEvaluator
         $twoFactorModule = $this->array($inventory, 'modules')['Magento_TwoFactorAuth'] ?? null;
         $catalogue['SEC-011'] = $inventory === []
             ? $this->notChecked('Magento module status is unavailable for two-factor authentication.', [])
-            : $this->check(is_array($twoFactorModule) && ($twoFactorModule['status'] ?? '') === 'enabled', 'Magento_TwoFactorAuth is enabled for this Magento release.', ['module' => $twoFactorModule]);
+            : $this->check(is_array($twoFactorModule) && ($twoFactorModule['status'] ?? '') === 'enabled',
+                is_array($twoFactorModule) && ($twoFactorModule['status'] ?? '') === 'enabled'
+                    ? 'Magento_TwoFactorAuth is enabled for this Magento release.'
+                    : 'Magento_TwoFactorAuth module is disabled or missing from current installation.',
+                ['module' => $twoFactorModule]);
 
         $cookieConfig = $this->array($security, 'cookie_secure_config');
         $cookieValues = $this->configValues($cookieConfig)['web/cookie/cookie_secure'] ?? [];
@@ -259,27 +277,51 @@ class SystemCatalogueEvaluator
             ? ($deploymentMode === '' ? $this->notChecked('Deployment mode is unavailable.', []) : $this->check(false, 'Production-targeted scans require Magento production mode.', ['deployment_mode' => $deploymentMode]))
             : ($displayErrors === null || $xdebugLoaded === null
                 ? $this->notChecked('PHP runtime exposure settings are unavailable.', [])
-                : $this->check($displayErrors === false && $xdebugLoaded === false, 'Production mode has no PHP error display or Xdebug exposure.', ['display_errors' => $displayErrors, 'xdebug_loaded' => $xdebugLoaded]));
+                : $this->check($displayErrors === false && $xdebugLoaded === false,
+                    $displayErrors === false && $xdebugLoaded === false
+                        ? 'Production mode has no PHP error display or Xdebug exposure.'
+                        : sprintf('Production mode exposes debug settings (display_errors=%s, xdebug_loaded=%s).', $displayErrors ? 'true' : 'false', $xdebugLoaded ? 'true' : 'false'),
+                    ['display_errors' => $displayErrors, 'xdebug_loaded' => $xdebugLoaded]));
 
         $errorDisclosure = $this->array($security, 'error_disclosure');
         $catalogue['SEC-020'] = ($errorDisclosure['status'] ?? '') !== 'success'
             ? $this->notChecked((string)($errorDisclosure['reason'] ?? 'Public error response could not be inspected.'), $errorDisclosure)
-            : $this->check(($errorDisclosure['indicators'] ?? []) === [], 'A deliberately missing public route did not disclose a stack trace, filesystem path, SQLSTATE, or exception class.', ['http_status' => $errorDisclosure['http_status'] ?? null, 'indicators' => $errorDisclosure['indicators'] ?? []]);
+            : $this->check(($errorDisclosure['indicators'] ?? []) === [],
+                ($errorDisclosure['indicators'] ?? []) === []
+                    ? 'A deliberately missing public route did not disclose a stack trace, filesystem path, SQLSTATE, or exception class.'
+                    : sprintf('Public error route disclosed sensitive indicators (%d): %s.', count($errorDisclosure['indicators'] ?? []), $this->formatList($errorDisclosure['indicators'] ?? [])),
+                ['http_status' => $errorDisclosure['http_status'] ?? null, 'indicators' => $errorDisclosure['indicators'] ?? []]);
 
         $unsafeScripts = $this->array($system, 'unsafe_scripts');
+        $unsafeMatches = is_array($unsafeScripts['matches'] ?? null) ? $unsafeScripts['matches'] : [];
         $catalogue['SEC-022'] = ($unsafeScripts['status'] ?? '') === 'not_checked'
             ? $this->notChecked((string)($unsafeScripts['reason'] ?? 'Executable script permissions could not be inspected.'), $unsafeScripts)
-            : $this->check(($unsafeScripts['matches'] ?? []) === [] && ($unsafeScripts['status'] ?? '') !== 'truncated', 'No group- or world-writable PHP or shell script was found in Magento executable paths.', ['matches' => $unsafeScripts['matches'] ?? [], 'scan_status' => $unsafeScripts['status'] ?? 'unknown']);
+            : $this->check($unsafeMatches === [] && ($unsafeScripts['status'] ?? '') !== 'truncated',
+                $unsafeMatches === []
+                    ? 'No group- or world-writable PHP or shell script was found in Magento executable paths.'
+                    : sprintf('Unsafe writable executable scripts found (%d): %s.', count($unsafeMatches), $this->formatList($unsafeMatches)),
+                ['matches' => $unsafeMatches, 'scan_status' => $unsafeScripts['status'] ?? 'unknown']);
 
         $suspiciousCode = $this->array($security, 'suspicious_code');
+        $suspiciousMatches = is_array($suspiciousCode['matches'] ?? null) ? $suspiciousCode['matches'] : [];
         $catalogue['SEC-024'] = ($suspiciousCode['status'] ?? '') === 'not_checked'
             ? $this->notChecked((string)($suspiciousCode['reason'] ?? 'Custom and writable PHP code could not be inspected.'), $suspiciousCode)
-            : $this->check(($suspiciousCode['matches'] ?? []) === [] && ($suspiciousCode['status'] ?? '') !== 'truncated', 'No unreviewed high-risk PHP execution pattern was found in custom or writable code.', ['matches' => $suspiciousCode['matches'] ?? [], 'scan_status' => $suspiciousCode['status'] ?? 'unknown']);
+            : $this->check($suspiciousMatches === [] && ($suspiciousCode['status'] ?? '') !== 'truncated',
+                $suspiciousMatches === []
+                    ? 'No unreviewed high-risk PHP execution pattern was found in custom or writable code.'
+                    : sprintf('Suspicious PHP execution patterns matched (%d): %s.', count($suspiciousMatches), $this->formatList($suspiciousMatches)),
+                ['matches' => $suspiciousMatches, 'scan_status' => $suspiciousCode['status'] ?? 'unknown']);
 
         $databasePrivileges = $this->array($security, 'database_privileges');
         $catalogue['SEC-025'] = ($databasePrivileges['status'] ?? '') !== 'success' ? $this->notChecked((string)($databasePrivileges['reason'] ?? 'Database privilege metadata is unavailable.'), $databasePrivileges) : $this->check(($databasePrivileges['dangerous_privileges'] ?? []) === [], 'The Magento runtime account has no dangerous global database privilege.', $databasePrivileges);
         $sensitiveFiles = $this->array($security, 'sensitive_file_permissions');
-        $catalogue['SEC-027'] = ($sensitiveFiles['status'] ?? '') !== 'success' ? $this->notChecked((string)($sensitiveFiles['reason'] ?? 'Backup and log permissions are unavailable.'), $sensitiveFiles) : $this->check(($sensitiveFiles['world_readable'] ?? []) === [], 'Backup and log files are not world-readable.', $sensitiveFiles);
+        $worldReadable = is_array($sensitiveFiles['world_readable'] ?? null) ? $sensitiveFiles['world_readable'] : [];
+        $catalogue['SEC-027'] = ($sensitiveFiles['status'] ?? '') !== 'success'
+            ? $this->notChecked((string)($sensitiveFiles['reason'] ?? 'Backup and log permissions are unavailable.'), $sensitiveFiles)
+            : $this->check($worldReadable === [], $worldReadable === []
+                ? 'Backup and log files are not world-readable.'
+                : sprintf('World-readable sensitive backup/log files found (%d): %s.', count($worldReadable), $this->formatList($worldReadable)),
+                ['world_readable' => $worldReadable]);
         $catalogue['SEC-029'] = ($adminConfig['status'] ?? '') !== 'success' || $adminValues === [] ? $this->notChecked('Admin lockout configuration or edge rate-limit evidence is unavailable.', []) : ($weakAdminSettings === [] ? $this->notChecked('Magento lockout is configured, but WAF or edge rate-limit evidence was not supplied.', ['lockout_configured' => true]) : $this->check(false, 'Admin lockout configuration contains a non-positive protection value.', ['weak_settings' => $weakAdminSettings]));
 
         $deployment = $this->array($security, 'deployment_configuration');
@@ -317,7 +359,12 @@ class SystemCatalogueEvaluator
         $catalogue['CFG-034'] = $deploymentMode === '' ? $this->notChecked('Deployment mode is unavailable for developer configuration review.', []) : $this->check($deploymentMode === 'production' && !$debugEnabled, 'Production deployment mode has no enabled developer debug configuration.', ['deployment_mode' => $deploymentMode, 'debug_enabled' => $debugEnabled]);
 
         $withoutPk = $this->array($databaseAdvanced, 'tables_without_primary_key');
-        $catalogue['DB-006'] = ($withoutPk['status'] ?? '') !== 'success' ? $this->notChecked((string)($withoutPk['reason'] ?? 'Primary-key metadata is unavailable.'), $withoutPk) : $this->check(($withoutPk['tables'] ?? []) === [], 'All Magento database tables have a primary key.', $withoutPk);
+        $missingTables = is_array($withoutPk['tables'] ?? null) ? $withoutPk['tables'] : [];
+        $catalogue['DB-006'] = ($withoutPk['status'] ?? '') !== 'success'
+            ? $this->notChecked((string)($withoutPk['reason'] ?? 'Primary-key metadata is unavailable.'), $withoutPk)
+            : $this->check($missingTables === [], $missingTables === []
+                ? 'All Magento database tables have a primary key.'
+                : sprintf('Database tables missing primary keys (%d): %s.', count($missingTables), implode(', ', $missingTables)), $withoutPk);
         $changelog = $this->array($databaseAdvanced, 'changelog_tables');
         $catalogue['DB-011'] = ($changelog['status'] ?? '') !== 'success' ? $this->notChecked('Changelog table size data is unavailable.', []) : $this->check((float)($changelog['largest_size_mb'] ?? 0) < 1024.0, 'Largest changelog table is below the 1 GB review threshold.', $changelog);
         $longQueries = $this->array($databaseAdvanced, 'long_running_queries');
@@ -328,7 +375,11 @@ class SystemCatalogueEvaluator
         $integrity = $this->array($databaseAdvanced, 'integrity_checks');
         $integrityRule = function (string $key, string $message) use ($integrity): array {
             $result = $this->array($integrity, $key);
-            return ($result['status'] ?? '') !== 'success' ? $this->notChecked((string)($result['reason'] ?? 'Required integrity evidence is unavailable.'), $result) : $this->check((int)($result['count'] ?? 0) === 0, $message, $result);
+            $count = (int)($result['count'] ?? 0);
+            $reason = ($result['status'] ?? '') !== 'success'
+                ? (string)($result['reason'] ?? 'Required integrity evidence is unavailable.')
+                : ($count === 0 ? $message : sprintf('%s (Detected %d orphaned/invalid references).', $message, $count));
+            return ($result['status'] ?? '') !== 'success' ? $this->notChecked($reason, $result) : $this->check($count === 0, $reason, $result);
         };
         $catalogue['DB-016'] = $databaseAdvanced === [] ? $this->notChecked('Database deadlock and lock-wait evidence is unavailable.', []) : $this->check((int)($databaseAdvanced['deadlocks'] ?? 0) === 0 && (int)($databaseAdvanced['row_lock_waits'] ?? 0) === 0, 'No InnoDB deadlock or active lock-wait indicator was observed.', ['deadlocks' => $databaseAdvanced['deadlocks'] ?? null, 'row_lock_waits' => $databaseAdvanced['row_lock_waits'] ?? null]);
         $catalogue['DB-017'] = $integrityRule('foreign_keys', 'Every declared foreign-key target exists.');
@@ -348,7 +399,13 @@ class SystemCatalogueEvaluator
         $remoteGrant = $this->array($databaseAdvanced, 'remote_grant_evidence');
         $catalogue['DB-034'] = ($remoteGrant['status'] ?? '') !== 'success' ? $this->notChecked((string)($remoteGrant['reason'] ?? 'Runtime database grant evidence is unavailable.'), $remoteGrant) : $this->check(!in_array('%', $remoteGrant['hosts'] ?? [], true), 'Runtime database user does not have an unrestricted wildcard host grant.', $remoteGrant);
 
-        $catalogue['PERF-001'] = $cacheTypes === [] ? $this->notChecked('Magento cache type status is unavailable.', []) : $this->check(!in_array(false, $cacheTypes, true), 'All discovered Magento cache types are enabled.', ['disabled_types' => array_keys(array_filter($cacheTypes, static fn($enabled): bool => !$enabled))]);
+        $disabledCacheTypes = array_keys(array_filter($cacheTypes, static fn($enabled): bool => !$enabled));
+        $catalogue['PERF-001'] = $cacheTypes === []
+            ? $this->notChecked('Magento cache type status is unavailable.', [])
+            : $this->check($disabledCacheTypes === [], $disabledCacheTypes === []
+                ? 'All discovered Magento cache types are enabled.'
+                : sprintf('Disabled Magento cache types (%d): %s.', count($disabledCacheTypes), implode(', ', $disabledCacheTypes)),
+                ['disabled_types' => $disabledCacheTypes]);
         $catalogue['PERF-002'] = $usesRedis ? $this->check($redisStatus === 'success', 'Configured Redis or Valkey cache backend is reachable.', ['collector_status' => $redisStatus]) : $this->notChecked('No Redis or Valkey backend is configured for the scanned deployment.', []);
         $fpc = $this->array($metrics, 'fpc');
         $catalogue['PERF-003'] = !isset($fpc['enabled']) ? $this->notChecked('Full-page cache status is unavailable.', []) : $this->check(($fpc['enabled'] ?? false) === true, 'Magento full-page cache is enabled.', ['tested_urls' => $fpc['tested_urls'] ?? 0, 'hit_rate_status' => $fpc['hit_rate_status'] ?? null]);
@@ -432,5 +489,18 @@ class SystemCatalogueEvaluator
             && (int)$php['max_input_time'] >= -1
             && (string)$php['upload_max_filesize'] !== '0'
             && (string)$php['post_max_size'] !== '0';
+    }
+    /** @param array<int|string, mixed> $items */
+    private function formatList(array $items): string
+    {
+        $strings = [];
+        foreach ($items as $item) {
+            if (is_array($item)) {
+                $strings[] = (string)($item['path'] ?? $item['file'] ?? $item['name'] ?? json_encode($item));
+            } else {
+                $strings[] = (string)$item;
+            }
+        }
+        return implode(', ', $strings);
     }
 }

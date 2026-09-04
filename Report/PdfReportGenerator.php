@@ -25,6 +25,9 @@ class PdfReportGenerator
 
     public function generate(ScanResult $scanResult): string
     {
+        ini_set('pcre.backtrack_limit', '10000000');
+        ini_set('pcre.recursion_limit', '10000000');
+
         $html = $this->htmlReportGenerator->generate($scanResult);
         // mPDF does not support browser grid/layout rules consistently. Keep
         // the report content and tables, but use its stable flow layout.
@@ -42,7 +45,12 @@ class PdfReportGenerator
             'format' => 'Letter',
             'tempDir' => sys_get_temp_dir(),
         ]);
-        $pdf->WriteHTML($html);
+
+        $chunks = explode('<article class="finding">', $html);
+        $pdf->WriteHTML($chunks[0]);
+        for ($i = 1; $i < count($chunks); $i++) {
+            $pdf->WriteHTML('<article class="finding">' . $chunks[$i]);
+        }
 
         return $pdf->Output('', 'S');
     }

@@ -31,7 +31,7 @@ class RuleEngine
 
             if ($operator === 'not_exists') {
                 if ($matches === []) {
-                    $findings[] = $this->createFinding($rule, $metric, null, $lastChecked);
+                    $findings[] = $this->createFinding($rule, $metric, null, $lastChecked, $metrics);
                 }
                 continue;
             }
@@ -39,7 +39,7 @@ class RuleEngine
             if ($operator === 'exists') {
                 if ($matches !== []) {
                     foreach ($matches as $path => $value) {
-                        $findings[] = $this->createFinding($rule, $path, $value, $lastChecked);
+                        $findings[] = $this->createFinding($rule, $path, $value, $lastChecked, $metrics);
                     }
                 }
                 continue;
@@ -47,7 +47,7 @@ class RuleEngine
 
             foreach ($matches as $path => $value) {
                 if ($this->matches($value, $operator, $rule['threshold'] ?? null)) {
-                    $findings[] = $this->createFinding($rule, $path, $value, $lastChecked);
+                    $findings[] = $this->createFinding($rule, $path, $value, $lastChecked, $metrics);
                 }
             }
         }
@@ -58,10 +58,40 @@ class RuleEngine
     /**
      * @param array<string, mixed> $rule
      * @param mixed $value
+     * @param array<string, mixed> $metrics
      */
-    private function createFinding(array $rule, string $path, $value, DateTimeInterface $lastChecked): Finding
+    private function createFinding(array $rule, string $path, $value, DateTimeInterface $lastChecked, array $metrics = []): Finding
     {
         $threshold = $rule['threshold'] ?? null;
+        $catReason = null;
+        $catDetails = [];
+
+        if (str_starts_with($path, 'catalogue.')) {
+            $parts = explode('.', $path);
+            $ruleId = $parts[1] ?? (string)($rule['id'] ?? '');
+            if (isset($metrics['catalogue'][$ruleId]) && is_array($metrics['catalogue'][$ruleId])) {
+                $catInfo = $metrics['catalogue'][$ruleId];
+                if (!empty($catInfo['reason'])) {
+                    $catReason = (string)$catInfo['reason'];
+                }
+                if (isset($catInfo['details']) && is_array($catInfo['details'])) {
+                    $catDetails = $catInfo['details'];
+                }
+            }
+        }
+
+        $description = $catReason ?? (string)($rule['finding_description'] ?? sprintf(
+            'Metric "%s" matched the configured %s condition.',
+            $path,
+            $rule['operator']
+        ));
+
+        $evidence = array_merge([
+            'metric' => $path,
+            'current_value' => $value,
+            'threshold' => $threshold,
+            'operator' => (string)$rule['operator'],
+        ], $catDetails);
 
         return $this->findingFactory->create([
             'rule_id' => (string)$rule['id'],
@@ -73,11 +103,7 @@ class RuleEngine
             'tool_used' => (string)($rule['tool_used'] ?? 'Magento Health Analyzer'),
             'data_source' => (string)($rule['data_source'] ?? 'Magento Open Source'),
             'last_checked' => $lastChecked->format(DateTimeInterface::ATOM),
-            'finding_description' => (string)($rule['finding_description'] ?? sprintf(
-                'Metric "%s" matched the configured %s condition.',
-                $path,
-                $rule['operator']
-            )),
+            'finding_description' => $description,
             'expected_result' => (string)($rule['expected_result'] ?? 'The metric should remain within the configured threshold.'),
             'observed_result' => $value,
             'root_cause' => (string)($rule['root_cause'] ?? $this->generateRootCause($rule, $path, $value)),
@@ -85,12 +111,7 @@ class RuleEngine
             'references' => $rule['references'] ?? [],
             'scoring_penalty' => (int)($rule['scoring_penalty'] ?? 0),
             'site_impact' => (string)($rule['site_impact'] ?? 'This condition may affect the reliability or performance of the site.'),
-            'evidence' => [
-                'metric' => $path,
-                'current_value' => $value,
-                'threshold' => $threshold,
-                'operator' => (string)$rule['operator'],
-            ],
+            'evidence' => $evidence,
             'recommendation' => (string)($rule['recommendation'] ?? 'Investigate the metric and its contributing workload.'),
         ]);
     }
