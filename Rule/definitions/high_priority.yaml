@@ -85,20 +85,6 @@ rules:
     site_impact: 'Customer login passwords, session cookies, and payment details can be intercepted'
     recommendation: 'Enable mandatory HTTPS redirect in Nginx/Apache and set secure base URLs in Magento'
   -
-    id: HP-007
-    title: 'Untracked or Unversioned Custom Modules'
-    category: Application
-    domain: Application
-    issue_type: Application
-    risk_level: High
-    metric: catalogue.HP-007.compliant
-    operator: is_false
-    data_source: 'Magento Codebase (app/code)'
-    tool_used: "Audit custom modules under 'app/code/' for Git tracking and documentation"
-    expected_result: 'All custom code is versioned in Git and documented with clear ownership'
-    site_impact: 'Unversioned custom code introduces hidden bugs and breaks during Magento upgrades'
-    recommendation: 'Put custom modules under Git version control or package them via Composer'
-  -
     id: HP-008
     title: 'Missing Core Security Patches'
     category: Security
@@ -240,7 +226,7 @@ rules:
     recommendation: 'Change auto-increment column types from INT to BIGINT on high-volume tables'
   -
     id: HP-018
-    title: 'World-Readable Database Backups or Log Files in Web Root'
+    title: ' Database Backups or Log Files in Web Root'
     category: Security
     domain: Security
     issue_type: Security

@@ -10,7 +10,6 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\HTTP\Client\CurlFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use Mha\HealthCheck\Config\HealthCheckConfig;
-use Symfony\Component\Process\Process;
 
 /** Read-only evidence for the CSV rules that lack a dedicated collector. */
 class PriorityCollector implements CollectorInterface
@@ -33,7 +32,6 @@ class PriorityCollector implements CollectorInterface
     {
         $probes = [
             'https' => fn() => $this->https(),
-            'custom_modules' => fn() => $this->customModules(),
             'security_patches' => fn() => $this->patches(),
             'two_factor' => fn() => $this->twoFactor(),
             'secure_cookies' => fn() => $this->secureCookies(),
@@ -176,26 +174,6 @@ class PriorityCollector implements CollectorInterface
             }
         }
         return $this->observation($matches === [], $backups ? 'Backups/logs must stay outside pub and have restricted permissions.' : 'Observed log files must remain below 100 MiB; growth and rotation require historical/host evidence.', ['matches' => $matches]);
-    }
-
-    private function customModules(): array
-    {
-        $root = rtrim($this->directoryList->getRoot(), '/');
-        $modules = glob($root . '/app/code/*/*/etc/module.xml') ?: [];
-        $issues = []; $unknown = false;
-        foreach ($modules as $manifest) {
-            $module = dirname($manifest, 2);
-            $git = new Process(['git', '-C', $module, 'ls-files', '--error-unmatch', 'etc/module.xml'], null, null, null, 5);
-            $git->run();
-            if (!$git->isSuccessful()) { $issues[] = substr($module, strlen($root) + 1); continue; }
-            $untracked = new Process(['git', '-C', $module, 'ls-files', '--others', '--exclude-standard', '--', '.'], null, null, null, 5);
-            $untracked->run();
-            $ignored = new Process(['git', '-C', $module, 'ls-files', '--others', '--ignored', '--exclude-standard', '--', '.'], null, null, null, 5);
-            $ignored->run();
-            if (!$untracked->isSuccessful() || !$ignored->isSuccessful()) $unknown = true;
-            elseif (trim($untracked->getOutput() . $ignored->getOutput()) !== '' || (glob($module . '/README*') ?: []) === []) $issues[] = substr($module, strlen($root) + 1);
-        }
-        return $this->observation($issues !== [] ? false : ($unknown ? null : true), 'Custom modules require Git tracking and a README; ownership content requires review.', ['modules_requiring_review' => $issues]);
     }
 
     private function patches(): array

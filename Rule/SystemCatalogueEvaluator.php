@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Mha\HealthCheck\Rule;
 
-/** Evaluates only the forty checks in top_40_high_priority_rules.csv. */
+/** Evaluates only the 39 active checks (HP-007 is retired). */
 class SystemCatalogueEvaluator
 {
     /** @param array<string, mixed> $metrics @return array<string, array<string, mixed>> */
@@ -11,6 +11,7 @@ class SystemCatalogueEvaluator
     {
         $checks = [];
         for ($i = 1; $i <= 40; $i++) {
+            if ($i === 7) continue;
             $checks[sprintf('HP-%03d', $i)] = $this->result(null, 'Required evidence was not collected.');
         }
         $read = static function (string $path) use ($metrics) {
@@ -46,7 +47,7 @@ class SystemCatalogueEvaluator
         $number(4, 'composer.vulnerability_count', static fn(float $v): bool => $v === 0.0);
         $mode = $metrics['security']['permissions']['app/etc/env.php']['octal'] ?? null;
         $set(5, $mode === null ? null : in_array(octdec((string)$mode), [0600, 0640], true), 'env.php must have mode 0600 or 0640.', ['mode' => $mode]);
-        foreach ([6 => 'https', 7 => 'custom_modules', 8 => 'security_patches', 10 => 'two_factor', 11 => 'secure_cookies', 17 => 'auto_increment', 18 => 'public_backups', 19 => 'admin_path', 23 => 'changelog', 25 => 'foreign_keys', 26 => 'eav', 30 => 'log_size', 31 => 'table_bloat', 32 => 'queue'] as $id => $key) {
+        foreach ([6 => 'https', 8 => 'security_patches', 10 => 'two_factor', 11 => 'secure_cookies', 17 => 'auto_increment', 18 => 'public_backups', 19 => 'admin_path', 23 => 'changelog', 25 => 'foreign_keys', 26 => 'eav', 30 => 'log_size', 31 => 'table_bloat', 32 => 'queue'] as $id => $key) {
             $evidence = $read('priority.' . $key);
             if (is_array($evidence)) $set($id, isset($evidence['compliant']) && is_bool($evidence['compliant']) ? $evidence['compliant'] : null, (string)($evidence['reason'] ?? 'Read-only observation.'), $evidence['details'] ?? []);
         }

@@ -19,10 +19,11 @@ class SystemCatalogueEvaluatorTest extends TestCase
         $rules = Yaml::parseFile($files[0])['rules'];
         $csv = fopen($root . '/top_40_high_priority_rules.csv', 'r');
         $headers = fgetcsv($csv);
-        self::assertCount(40, $rules);
+        self::assertCount(39, $rules);
         foreach ($rules as $index => $rule) {
+            if ($index === 6) fgetcsv($csv); // Retired HP-007 remains in the source CSV.
             $row = array_combine($headers, fgetcsv($csv));
-            self::assertSame(sprintf('HP-%03d', $index + 1), $rule['id']);
+            self::assertSame(sprintf('HP-%03d', $index + ($index >= 6 ? 2 : 1)), $rule['id']);
             self::assertSame($row['Rule Name'], $rule['title']);
             self::assertSame($row['Severity'], strtoupper($rule['risk_level']));
             self::assertSame($row['Expected Result'], $rule['expected_result']);
@@ -36,7 +37,8 @@ class SystemCatalogueEvaluatorTest extends TestCase
     public function testMissingEvidenceNeverPassesOrCreatesFindings(): void
     {
         $checks = (new SystemCatalogueEvaluator())->evaluate([]);
-        self::assertCount(40, $checks);
+        self::assertCount(39, $checks);
+        self::assertArrayNotHasKey('HP-007', $checks);
         foreach ($checks as $check) {
             self::assertSame('not_checked', $check['status']);
             self::assertNull($check['compliant']);
@@ -45,7 +47,7 @@ class SystemCatalogueEvaluatorTest extends TestCase
         self::assertSame([], (new RuleEngine(new FindingFactory()))->evaluate(['catalogue' => $checks], $rules, new \DateTimeImmutable()));
     }
 
-    public function testHealthyEvidencePassesAllFortyRules(): void
+    public function testHealthyEvidencePassesAllActiveRules(): void
     {
         foreach ((new SystemCatalogueEvaluator())->evaluate($this->healthy()) as $id => $check) {
             self::assertSame('pass', $check['status'], $id . ': ' . $check['reason']);
@@ -74,10 +76,10 @@ class SystemCatalogueEvaluatorTest extends TestCase
             39 => ['indexer', 'indexers', ['price' => ['status' => 'valid', 'mode' => 'realtime']]],
             40 => ['logs', 'exceptions', [['count' => 2]]],
         ];
-        foreach ([6 => 'https', 7 => 'custom_modules', 8 => 'security_patches', 10 => 'two_factor', 11 => 'secure_cookies', 17 => 'auto_increment', 18 => 'public_backups', 19 => 'admin_path', 23 => 'changelog', 25 => 'foreign_keys', 26 => 'eav', 27 => 'duplicate_sku', 30 => 'log_size', 31 => 'table_bloat', 32 => 'queue', 37 => 'fpc_engine'] as $id => $key) {
+        foreach ([6 => 'https', 8 => 'security_patches', 10 => 'two_factor', 11 => 'secure_cookies', 17 => 'auto_increment', 18 => 'public_backups', 19 => 'admin_path', 23 => 'changelog', 25 => 'foreign_keys', 26 => 'eav', 27 => 'duplicate_sku', 30 => 'log_size', 31 => 'table_bloat', 32 => 'queue', 37 => 'fpc_engine'] as $id => $key) {
             $changes[$id] = ['priority', $key, ['compliant' => false, 'reason' => 'Observed failure']];
         }
-        self::assertCount(40, $changes);
+        self::assertCount(39, $changes);
         $rules = Yaml::parseFile(dirname(__DIR__, 3) . '/Rule/definitions/high_priority.yaml')['rules'];
         foreach ($changes as $id => [$group, $key, $value]) {
             $metrics = $this->healthy();
@@ -111,7 +113,7 @@ class SystemCatalogueEvaluatorTest extends TestCase
     private function healthy(): array
     {
         $priority = [];
-        foreach (['https', 'custom_modules', 'security_patches', 'two_factor', 'secure_cookies', 'auto_increment', 'public_backups', 'admin_path', 'changelog', 'foreign_keys', 'eav', 'duplicate_sku', 'log_size', 'table_bloat', 'queue', 'fpc_engine', 'cron_recent'] as $key) $priority[$key] = ['compliant' => true, 'reason' => 'Verified fixture'];
+        foreach (['https', 'security_patches', 'two_factor', 'secure_cookies', 'auto_increment', 'public_backups', 'admin_path', 'changelog', 'foreign_keys', 'eav', 'duplicate_sku', 'log_size', 'table_bloat', 'queue', 'fpc_engine', 'cron_recent'] as $key) $priority[$key] = ['compliant' => true, 'reason' => 'Verified fixture'];
         return [
             'priority' => $priority,
             'php' => ['version' => '8.3.20', 'sapi' => 'cli', 'memory_limit' => '4G', 'display_errors' => false, 'opcache_ini_enabled' => true, 'opcache_memory_mb' => 512, 'opcache' => ['hit_rate_percent' => 95.01]],

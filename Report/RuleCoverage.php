@@ -3,14 +3,15 @@ declare(strict_types=1);
 
 namespace Mha\HealthCheck\Report;
 
-/** Reject cached reports generated before the forty-rule reset. */
+/** Reject cached reports generated with a different active rule set. */
 class RuleCoverage
 {
     public static function isCurrent(array $report): bool
     {
         $checks = $report['rule_checks'] ?? null;
-        if (!is_array($checks) || count($checks) !== 40 || !empty($report['scan_errors'])) return false;
+        if (!is_array($checks) || count($checks) !== 39 || !empty($report['scan_errors'])) return false;
         for ($i = 1; $i <= 40; $i++) {
+            if ($i === 7) continue;
             $check = $checks[sprintf('HP-%03d', $i)] ?? null;
             if (!is_array($check) || !in_array($check['status'] ?? null, ['pass', 'fail', 'not_checked'], true)) return false;
         }
