@@ -98,7 +98,9 @@ class Index extends Action
 
         try {
             $report = $this->serializer->unserialize($this->varDirectory->readFile($path));
-            return is_array($report) && ($report['metadata']['analyzer'] ?? null) === 'Mha HealthCheck';
+            return is_array($report)
+                && ($report['metadata']['analyzer'] ?? null) === 'Mha HealthCheck'
+                && \Mha\HealthCheck\Report\RuleCoverage::isCurrent($report);
         } catch (\Throwable $exception) {
             return false;
         }

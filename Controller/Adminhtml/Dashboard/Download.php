@@ -41,7 +41,7 @@ class Download extends Action
 
     public function execute()
     {
-        if (!$this->varDirectory->isExist(self::PDF_PATH)) {
+        if (!$this->hasCurrentReport()) {
             try {
                 $scanResult = $this->scanRunner->run([
                     'magento_root' => defined('BP') ? BP : getcwd(),
@@ -70,4 +70,19 @@ class Download extends Action
             'application/pdf'
         );
     }
+    private function hasCurrentReport(): bool
+    {
+        if (!$this->varDirectory->isExist(self::PDF_PATH)
+            || !$this->varDirectory->isExist('health-reports/latest.json')) return false;
+        try {
+            $report = json_decode($this->varDirectory->readFile('health-reports/latest.json'), true, 512, JSON_THROW_ON_ERROR);
+            $pdf = $this->varDirectory->stat(self::PDF_PATH);
+            $json = $this->varDirectory->stat('health-reports/latest.json');
+            return is_array($report) && \Mha\HealthCheck\Report\RuleCoverage::isCurrent($report)
+                && ($pdf['mtime'] ?? 0) >= ($json['mtime'] ?? 0);
+        } catch (\Throwable $exception) {
+            return false;
+        }
+    }
+
 }
