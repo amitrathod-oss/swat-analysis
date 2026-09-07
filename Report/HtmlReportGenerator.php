@@ -72,7 +72,7 @@ class HtmlReportGenerator
             . '<section class="page-break"><h2>C. Exceptions</h2>' . $this->renderExceptions($report) . '</section>'
             . '<section class="page-break"><h2>D. Patches</h2>' . $this->renderPatches($report) . '</section>'
             . '<section class="page-break"><h2>E. Store &amp; System Checks</h2>' . $this->renderCollectors($report)
-            . $this->renderStoreInventory($report) . $this->renderExtensionInventory($report)
+            . $this->renderRuleChecks($report) . $this->renderStoreInventory($report) . $this->renderExtensionInventory($report)
             . $this->renderExternalSources($report) . '</section>'
             . '<section><h2>F. Scan Details</h2>' . $this->definitionList([
                 'Scan ID' => $report['scan_id'] ?? null,
@@ -234,6 +234,7 @@ class HtmlReportGenerator
     {
         $counts = is_array($counts) ? $counts : [];
         $levels = [
+            'Critical' => 'Critical runtime or security issue requiring immediate attention.',
             'Severe' => 'Potential outage, major vulnerability, or severe availability/performance risk.',
             'High' => 'Significant security, configuration, performance, or service-component risk.',
             'Elevated' => 'Important performance, configuration, functionality, or availability issue.',
@@ -277,7 +278,7 @@ class HtmlReportGenerator
      */
     private function renderFindingsBySeverity(array $findings): string
     {
-        $groups = ['severe' => [], 'high' => [], 'elevated' => [], 'medium' => [], 'low' => [], 'info' => []];
+        $groups = ['critical' => [], 'severe' => [], 'high' => [], 'elevated' => [], 'medium' => [], 'low' => [], 'info' => []];
         foreach ($findings as $finding) {
             if (!is_array($finding)) {
                 continue;
@@ -715,6 +716,17 @@ class HtmlReportGenerator
     private function escape(string $value): string
     {
         return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private function renderRuleChecks(array $report): string
+    {
+        $html = '<h3>Rule coverage</h3><p>Unavailable evidence is not a pass. The score reflects detected findings only.</p><table><tr><th>Rule</th><th>Status</th><th>Observation</th></tr>';
+        foreach ($report['rule_checks'] ?? [] as $id => $check) {
+            $html .= '<tr><td>' . $this->escape((string)$id . ' ' . (string)($check['title'] ?? '')) . '</td><td>'
+                . $this->escape((string)$check['status']) . '</td><td>'
+                . $this->escape((string)$check['reason']) . '</td></tr>';
+        }
+        return $html . '</table>';
     }
 
     private function styles(): string

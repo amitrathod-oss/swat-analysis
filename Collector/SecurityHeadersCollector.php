@@ -55,6 +55,20 @@ class SecurityHeadersCollector implements CollectorInterface
             $client->addHeader('User-Agent', 'Magento-HealthCheck/1.0');
             $client->get($url);
             $rawHeaders = $client->getHeaders();
+            $cookieFlags = [];
+            foreach ($rawHeaders as $name => $value) {
+                if (strtolower((string)$name) !== 'set-cookie') continue;
+                foreach ((array)$value as $cookie) {
+                    foreach (preg_split('/,(?=\s*[^;,=\s]+=)/', (string)$cookie) ?: [] as $line) {
+                        preg_match('/;\s*SameSite=([^;\s]+)/i', $line, $sameSite);
+                        $cookieFlags[] = [
+                            'secure' => preg_match('/;\s*Secure(?:;|$)/i', $line) === 1,
+                            'httponly' => preg_match('/;\s*HttpOnly(?:;|$)/i', $line) === 1,
+                            'samesite' => strtolower($sameSite[1] ?? ''),
+                        ];
+                    }
+                }
+            }
             $headers = [];
             foreach ($rawHeaders as $name => $value) {
                 $headers[strtolower((string)$name)] = is_array($value) ? implode(', ', $value) : (string)$value;
@@ -70,6 +84,7 @@ class SecurityHeadersCollector implements CollectorInterface
                 'url' => $url,
                 'status_code' => $client->getStatus(),
                 'headers' => $headers,
+                'cookie_flags' => $cookieFlags,
                 'required_headers' => $required,
                 'missing_headers' => $missing,
                 'tls' => strtolower((string)parse_url($url, PHP_URL_SCHEME)) === 'https' ? 'https' : 'not_https',

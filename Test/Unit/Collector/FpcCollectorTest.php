@@ -28,6 +28,7 @@ class FpcCollectorTest extends TestCase
 
         self::assertFalse($result['metrics']['enabled']);
         self::assertSame(0, $result['metrics']['tested_urls']);
-        self::assertArrayNotHasKey('hit_rate_percent', $result['metrics']);
+        self::assertNull($result['metrics']['hit_rate_percent']);
+        self::assertSame('no_comparable_sample', $result['metrics']['hit_rate_status']);
     }
 }

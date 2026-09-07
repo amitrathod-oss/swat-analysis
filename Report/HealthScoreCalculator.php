@@ -11,6 +11,7 @@ class HealthScoreCalculator
      * @var array<string, int>
      */
     private const DEFAULT_DEDUCTIONS = [
+        'critical' => 20,
         'severe' => 20,
         'high' => 10,
         'elevated' => 5,
@@ -21,6 +22,7 @@ class HealthScoreCalculator
 
     /** Prevent one noisy rule from deciding the entire health score. */
     private const MAX_PENALTY_PER_RULE = [
+        'critical' => 30,
         'severe' => 30,
         'high' => 20,
         'elevated' => 15,
@@ -114,7 +116,7 @@ class HealthScoreCalculator
             'deduction_weights' => $weights,
             'domain_scores' => $domains,
             'priority_counts' => [
-                'P0' => $counts['severe'],
+                'P0' => $counts['critical'] + $counts['severe'],
                 'P1' => $counts['high'],
                 'P2' => $counts['elevated'],
                 'P3' => $counts['medium'],

@@ -9,6 +9,20 @@ use PHPUnit\Framework\TestCase;
 
 class HealthScoreCalculatorTest extends TestCase
 {
+    public function testCriticalCsvRulesAreCountedAndScoredAsP0(): void
+    {
+        $config = $this->createMock(HealthCheckConfig::class);
+        $config->method('getPositiveInt')->willReturn(100);
+        $config->method('get')->willReturn([]);
+        $result = (new HealthScoreCalculator($config))->calculate([
+            ['rule_id' => 'HP-001', 'risk_level' => 'Critical'],
+            ['rule_id' => 'HP-003', 'risk_level' => 'Severe'],
+        ]);
+        self::assertSame(60, $result['score']);
+        self::assertSame(1, $result['severity_counts']['critical']);
+        self::assertSame(2, $result['priority_counts']['P0']);
+    }
+
     public function testCalculateUsesTransparentDeductionsAndClampsTheScore(): void
     {
         $config = $this->createMock(HealthCheckConfig::class);

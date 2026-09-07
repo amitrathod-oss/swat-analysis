@@ -8,21 +8,21 @@ scan:
   command_timeout_seconds: 30
   http_timeout_seconds: 10
   search_max_indices: 100
-  long_query_seconds: 10
+  long_query_seconds: 15
   system_disk_warn_percent: 80
   system_disk_critical_percent: 90
   system_memory_warn_percent: 80
   system_memory_critical_percent: 90
 
 thresholds:
-  large_table_mb: 1024
+  large_table_mb: 10240
   attribute_options: 100
   innodb_buffer_pool_percent: 80
   cron_failed_jobs: 10
   cron_missed_jobs: 10
   cron_pending_jobs: 100
   redis_memory_percent: 80
-  fpc_min_hit_rate_percent: 50
+  fpc_min_hit_rate_percent: 85
   repeated_exception_count: 1
 
 indexers:
@@ -99,6 +99,7 @@ dashboard:
 score:
   starting_score: 100
   deductions:
+    critical: 20
     severe: 20
     high: 10
     elevated: 5

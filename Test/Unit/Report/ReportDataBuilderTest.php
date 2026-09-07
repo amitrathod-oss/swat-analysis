@@ -19,6 +19,7 @@ class ReportDataBuilderTest extends TestCase
         $config = $this->createMock(HealthCheckConfig::class);
         $scoreCalculator->method('calculate')->willReturn([
             'score' => 90,
+            'priority_counts' => ['P0' => 0, 'P1' => 1],
             'starting_score' => 100,
             'total_deduction' => 10,
             'severity_counts' => ['high' => 1],

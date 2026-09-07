@@ -1,0 +1,562 @@
+# The only active rule set. IDs follow top_40_high_priority_rules.csv row order.
+rules:
+  -
+    id: HP-001
+    title: 'Outdated PHP Runtime Version'
+    category: Infrastructure
+    domain: Infrastructure
+    issue_type: Infrastructure
+    risk_level: Critical
+    metric: catalogue.HP-001.compliant
+    operator: is_false
+    data_source: 'PHP Engine & System Runtime'
+    tool_used: "Run 'php -v' in server terminal"
+    expected_result: 'PHP version is active and supported by Magento (PHP 8.2 or 8.3)'
+    site_impact: 'Security exploits, site crashes, and failed platform upgrades'
+    recommendation: 'Upgrade PHP-FPM and CLI runtime to a supported version'
+  -
+    id: HP-002
+    title: 'Outdated MySQL / MariaDB Server Version'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: Critical
+    metric: catalogue.HP-002.compliant
+    operator: is_false
+    data_source: 'MySQL / MariaDB / Aurora Database'
+    tool_used: "Run 'mysql -V' or query 'SELECT VERSION();' in MySQL client"
+    expected_result: 'Database engine is supported (MySQL 8.0+, MariaDB 10.6+, or Aurora v3)'
+    site_impact: 'Database syntax errors, lock timeouts, and failed site updates'
+    recommendation: 'Upgrade database server to a supported release'
+  -
+    id: HP-003
+    title: 'OpenSearch / Elasticsearch Service Down or Unhealthy'
+    category: Infrastructure
+    domain: Infrastructure
+    issue_type: Infrastructure
+    risk_level: Severe
+    metric: catalogue.HP-003.compliant
+    operator: is_false
+    data_source: 'OpenSearch / Elasticsearch Search Cluster'
+    tool_used: "Run 'curl http://localhost:9200/_cluster/health' or check Magento search status"
+    expected_result: 'Search cluster health is green with zero unassigned shards'
+    site_impact: 'Storefront search, category filter navigation, and admin product grid stop working'
+    recommendation: 'Restart OpenSearch / Elasticsearch service and allocate unassigned shards'
+  -
+    id: HP-004
+    title: 'Vulnerable Third-Party Composer Packages'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-004.compliant
+    operator: is_false
+    data_source: 'Composer Dependencies'
+    tool_used: "Run 'composer audit' in site root directory"
+    expected_result: 'Zero security vulnerabilities reported across installed vendor packages'
+    site_impact: 'Hackers can exploit known security flaws in third-party libraries to gain access'
+    recommendation: "Update vulnerable packages using 'composer update' after testing in staging"
+  -
+    id: HP-005
+    title: 'Unsafe File Permissions on env.php'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-005.compliant
+    operator: is_false
+    data_source: 'Server File System & ACLs'
+    tool_used: "Run 'ls -la app/etc/env.php' to check file permissions"
+    expected_result: 'File permissions set to strict 640 or 600 (not world-writable)'
+    site_impact: 'Local server users or malicious scripts can read DB passwords and encryption keys'
+    recommendation: "Run 'chmod 640 app/etc/env.php' and assign correct web user ownership"
+  -
+    id: HP-006
+    title: 'Storefront or Admin Traffic Missing HTTPS'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-006.compliant
+    operator: is_false
+    data_source: 'Web Server (Nginx / Apache)'
+    tool_used: "Run 'curl -I http://yourdomain.com' and verify automatic 301 redirect to HTTPS"
+    expected_result: 'All storefront, admin, and API traffic is strictly encrypted over HTTPS (TLS 1.2+)'
+    site_impact: 'Customer login passwords, session cookies, and payment details can be intercepted'
+    recommendation: 'Enable mandatory HTTPS redirect in Nginx/Apache and set secure base URLs in Magento'
+  -
+    id: HP-007
+    title: 'Untracked or Unversioned Custom Modules'
+    category: Application
+    domain: Application
+    issue_type: Application
+    risk_level: High
+    metric: catalogue.HP-007.compliant
+    operator: is_false
+    data_source: 'Magento Codebase (app/code)'
+    tool_used: "Audit custom modules under 'app/code/' for Git tracking and documentation"
+    expected_result: 'All custom code is versioned in Git and documented with clear ownership'
+    site_impact: 'Unversioned custom code introduces hidden bugs and breaks during Magento upgrades'
+    recommendation: 'Put custom modules under Git version control or package them via Composer'
+  -
+    id: HP-008
+    title: 'Missing Core Security Patches'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: Critical
+    metric: catalogue.HP-008.compliant
+    operator: is_false
+    data_source: 'Adobe Commerce Security Advisory'
+    tool_used: 'Compare installed patch manifest against Adobe Security Bulletins'
+    expected_result: 'All critical security patches applied to installed Magento version'
+    site_impact: 'Store vulnerable to remote code execution and public exploits'
+    recommendation: 'Apply missing security patches via Quality Patches Tool (QPT) or upgrade'
+  -
+    id: HP-009
+    title: 'Insufficient PHP Memory Limit'
+    category: Application
+    domain: Application
+    issue_type: Application
+    risk_level: High
+    metric: catalogue.HP-009.compliant
+    operator: is_false
+    data_source: 'PHP Configuration (php.ini)'
+    tool_used: 'Run ''php -r "echo ini_get(\''memory_limit\'');"'''
+    expected_result: 'CLI memory limit >= 4G and FPM memory limit >= 2G'
+    site_impact: 'Out-of-memory fatal errors during reindexing, deployment, or checkout'
+    recommendation: 'Increase memory_limit in php.ini to meet Adobe recommended values'
+  -
+    id: HP-010
+    title: 'Two-Factor Authentication (2FA) Disabled for Admin'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-010.compliant
+    operator: is_false
+    data_source: 'Magento 2FA Module'
+    tool_used: "Run 'bin/magento module:status Magento_TwoFactorAuth'"
+    expected_result: '2FA module is enabled and actively enforcing 2FA for all admin logins'
+    site_impact: 'Stolen or compromised admin passwords immediately result in store takeover'
+    recommendation: 'Enable Magento_TwoFactorAuth and set up authenticator apps (Google Authenticator / Duo)'
+  -
+    id: HP-011
+    title: 'Disabled Secure Cookie Attributes'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-011.compliant
+    operator: is_false
+    data_source: 'Magento Session Cookie Configuration'
+    tool_used: "Check 'Use Secure Cookies' setting in Stores -> Configuration -> General -> Web"
+    expected_result: "'Use Secure Cookies' is set to Yes for both frontend and admin scopes"
+    site_impact: 'Session cookies transmitted over unencrypted HTTP connections can be stolen'
+    recommendation: "Turn on 'Use Secure Cookies' in Magento Web configuration settings"
+  -
+    id: HP-012
+    title: 'Missing HttpOnly and SameSite Cookie Flags'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-012.compliant
+    operator: is_false
+    data_source: 'HTTP Response Headers & Web Server Config'
+    tool_used: "Inspect Set-Cookie response headers in browser DevTools or using 'curl -I'"
+    expected_result: 'Cookies include HttpOnly and SameSite=Lax or SameSite=Strict attributes'
+    site_impact: 'Site is vulnerable to Cross-Site Scripting (XSS) session theft and CSRF attacks'
+    recommendation: 'Configure web server or PHP session settings to append HttpOnly and SameSite flags'
+  -
+    id: HP-013
+    title: 'Developer or Debug Mode Enabled in Production'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-013.compliant
+    operator: is_false
+    data_source: 'PHP Runtime & Magento Environment'
+    tool_used: "Run 'bin/magento deploy:mode:show' and check display_errors in php.ini"
+    expected_result: "Magento deployment mode is set to 'production' and PHP display_errors is Off"
+    site_impact: 'Exposes DB credentials, server file paths, and application stack traces on errors'
+    recommendation: "Run 'bin/magento deploy:mode:set production' and set display_errors to Off"
+  -
+    id: HP-014
+    title: 'Public Error Pages Disclosing Sensitive PHP Stack Traces'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-014.compliant
+    operator: is_false
+    data_source: 'Magento Error Handler (pub/errors)'
+    tool_used: 'Open a non-existent page and inspect response source code for PHP exception details'
+    expected_result: 'Generic error page displays without exposing PHP stack traces or SQL queries'
+    site_impact: 'Attackers use exposed stack traces and database paths to plan targeted attacks'
+    recommendation: "Configure 'pub/errors/local.xml' to log errors silently and display static error pages"
+  -
+    id: HP-015
+    title: 'OPcache Bytecode Cache Disabled or Low Memory'
+    category: Performance
+    domain: Performance
+    issue_type: Performance
+    risk_level: High
+    metric: catalogue.HP-015.compliant
+    operator: is_false
+    data_source: 'PHP OPcache Extension (php.ini)'
+    tool_used: 'Check opcache.enable and opcache.memory_consumption via phpinfo()'
+    expected_result: 'OPcache enabled with memory >= 512MB and hit rate > 95%'
+    site_impact: 'Severe CPU overhead, slow script execution, high response times'
+    recommendation: 'Enable OPcache and allocate at least 512MB memory in php.ini'
+  -
+    id: HP-016
+    title: 'Stale Running Cron Jobs Stuck in Execution'
+    category: Magento
+    domain: Magento
+    issue_type: Magento
+    risk_level: High
+    metric: catalogue.HP-016.compliant
+    operator: is_false
+    data_source: 'Magento Cron Schedule Table (cron_schedule)'
+    tool_used: "Query cron_schedule table for jobs stuck in 'running' status > 60 minutes"
+    expected_result: 'Zero cron jobs remain stuck in running status past execution timeout threshold'
+    site_impact: 'Blocked cron threads prevent subsequent scheduled tasks (indexing, emails, price rules) from executing'
+    recommendation: 'Kill stuck cron processes and adjust execution timeout limits in configuration'
+  -
+    id: HP-017
+    title: 'Database Table Auto-Increment Exhaustion Risk'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-017.compliant
+    operator: is_false
+    data_source: 'MySQL Table Schema (information_schema.tables)'
+    tool_used: 'Query max auto-increment values vs column data type max capacity (INT/BIGINT)'
+    expected_result: 'Auto-increment usage remains below 80% of max column type capacity'
+    site_impact: 'Database stops inserting new orders, quotes, or catalog entities when max value reached'
+    recommendation: 'Change auto-increment column types from INT to BIGINT on high-volume tables'
+  -
+    id: HP-018
+    title: 'World-Readable Database Backups or Log Files in Web Root'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-018.compliant
+    operator: is_false
+    data_source: 'Server Disk Storage & Web Server Root'
+    tool_used: "Search 'pub/' and 'var/' for '.sql', '.tar.gz', or log files"
+    expected_result: 'Backups and logs stored outside public web root with restricted file permissions (600)'
+    site_impact: 'Public web visitors can download full DB dumps containing customer data and passwords'
+    recommendation: 'Move backup files outside public web root and restrict file read permissions'
+  -
+    id: HP-019
+    title: 'Default Admin URL Path (/admin) Enabled'
+    category: Security
+    domain: Security
+    issue_type: Security
+    risk_level: High
+    metric: catalogue.HP-019.compliant
+    operator: is_false
+    data_source: 'Magento Core Config (app/etc/env.php)'
+    tool_used: "Check 'admin frontName' in 'app/etc/env.php'"
+    expected_result: 'Custom, non-standard admin URL path configured (e.g., /backend_x9z7)'
+    site_impact: 'Automated botnets continuously attack /admin with brute-force password attempts'
+    recommendation: "Change admin URL in 'env.php' and deploy IP rate limiting at web server / WAF level"
+  -
+    id: HP-020
+    title: 'Long-Running SQL Queries Locking Database'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-020.compliant
+    operator: is_false
+    data_source: 'MySQL Process List'
+    tool_used: "Run 'SHOW FULL PROCESSLIST;' in MySQL and check for queries active > 15 seconds"
+    expected_result: 'No transactional queries remain active longer than 10-15 seconds'
+    site_impact: 'Long queries lock database tables, exhaust connection pools, and crash checkout'
+    recommendation: 'Analyze slow queries using EXPLAIN, optimize missing indexes, and adjust query timeouts'
+  -
+    id: HP-021
+    title: 'InnoDB Transaction Deadlocks During Checkout or Reindexing'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-021.compliant
+    operator: is_false
+    data_source: 'MySQL Engine Status (SHOW ENGINE INNODB STATUS)'
+    tool_used: 'Inspect LATEST DETECTED DEADLOCK section in MySQL engine status'
+    expected_result: 'Zero transaction deadlocks occurring during concurrent order placements or reindexing'
+    site_impact: 'Orders fail mid-checkout, transactions roll back, and inventory reservations get stuck'
+    recommendation: 'Optimize custom database queries and standardize table lock order in custom code'
+  -
+    id: HP-022
+    title: 'Database Tables Missing Primary Key Constraints'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-022.compliant
+    operator: is_false
+    data_source: 'MySQL Information Schema (information_schema.tables)'
+    tool_used: "Query 'information_schema.tables' for tables without primary keys"
+    expected_result: '100% of custom and core database tables possess a primary key index'
+    site_impact: 'Causes severe database replication lag, slow DELETE/UPDATE queries, and server load'
+    recommendation: 'Add primary key auto-increment ID to all database tables lacking one'
+  -
+    id: HP-023
+    title: 'Oversized Indexer Changelog Tables (*_cl)'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-023.compliant
+    operator: is_false
+    data_source: 'Database Indexer Tables'
+    tool_used: "Check row counts of '*_cl' tables in MySQL database"
+    expected_result: 'Indexer changelog tables maintain < 100,000 pending rows during normal operation'
+    site_impact: 'Slows down background indexing, degrades site speed, and locks database rows'
+    recommendation: "Run 'bin/magento indexer:reindex' and verify cron job 'indexer_clean_up' is active"
+  -
+    id: HP-024
+    title: 'High Volume of Slow SQL Query Execution'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-024.compliant
+    operator: is_false
+    data_source: 'MySQL Slow Query Log (/var/log/mysql-slow.log)'
+    tool_used: 'Inspect MySQL slow query log for queries taking > 1.0 second'
+    expected_result: 'Zero recurring queries exceeding the slow query execution threshold'
+    site_impact: 'Consistently slow queries degrade page response times, exhaust PHP workers, and spike CPU'
+    recommendation: 'Add missing database indexes and optimize heavy EAV database queries'
+  -
+    id: HP-025
+    title: 'Database Foreign Key Integrity Violations'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-025.compliant
+    operator: is_false
+    data_source: 'Relational Database Constraints'
+    tool_used: 'Run database foreign key validation queries across sales and catalog tables'
+    expected_result: 'Zero orphaned child records referencing non-existent parent row IDs'
+    site_impact: 'Causes fatal errors during checkout, broken order processing, and corrupted reports'
+    recommendation: 'Clean up orphan database records and repair foreign key mapping constraints'
+  -
+    id: HP-026
+    title: 'Orphaned EAV Attribute Data in Catalog/Customer Tables'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-026.compliant
+    operator: is_false
+    data_source: 'Magento EAV Database Tables (catalog_product_entity_*)'
+    tool_used: 'Query EAV attribute value tables for records missing parent product or customer IDs'
+    expected_result: 'Zero orphaned attribute value rows exist in catalog or customer EAV tables'
+    site_impact: 'Bloats database size, slows down catalog search and category filters, stalls indexing'
+    recommendation: 'Run database cleanup scripts to safely remove orphaned EAV attribute rows'
+  -
+    id: HP-027
+    title: 'Duplicate Product SKUs Across Catalog'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-027.compliant
+    operator: is_false
+    data_source: 'Catalog Product Database (catalog_product_entity)'
+    tool_used: "Run 'SELECT sku, COUNT(*) FROM catalog_product_entity GROUP BY sku HAVING COUNT(*) > 1;'"
+    expected_result: 'Every product has a unique SKU assignment across the entire catalog'
+    site_impact: 'Causes wrong product updates, incorrect order fulfillment, and inventory sync errors'
+    recommendation: 'Resolve duplicate product SKUs and enforce unique database index constraint on SKU'
+  -
+    id: HP-028
+    title: 'Too Many Missed Magento Cron Jobs'
+    category: Magento
+    domain: Magento
+    issue_type: Magento
+    risk_level: High
+    metric: catalogue.HP-028.compliant
+    operator: is_false
+    data_source: 'Magento Cron Schedule Table (cron_schedule)'
+    tool_used: "Query cron_schedule for missed status counts: SELECT COUNT(*) FROM cron_schedule WHERE status='missed';"
+    expected_result: 'Missed cron job count is 0 or within minimal acceptable threshold (< 10)'
+    site_impact: 'Scheduled tasks like price rule calculations, indexer updates, and emails fail'
+    recommendation: 'Increase cron worker thread allocation or fix long-running cron jobs blocking queue'
+  -
+    id: HP-029
+    title: 'Low Full-Page Cache (FPC) Hit Ratio'
+    category: Cache/FPC
+    domain: Cache/FPC
+    issue_type: Cache/FPC
+    risk_level: High
+    metric: catalogue.HP-029.compliant
+    operator: is_false
+    data_source: 'Full-Page Cache / Varnish Engine'
+    tool_used: 'Check cache hit vs miss metrics via Varnish stats or Redis cache telemetry'
+    expected_result: 'FPC hit ratio is >= 85% for public storefront catalog and CMS pages'
+    site_impact: 'Excessive un-cached backend rendering hits PHP-FPM, increasing server load and latency'
+    recommendation: 'Identify cache-busting un-cacheable blocks (cacheable="false") and fix private data loading'
+  -
+    id: HP-030
+    title: 'Excessive System Log File Size & Growth Rate'
+    category: Application/Exceptions
+    domain: Application/Exceptions
+    issue_type: Application/Exceptions
+    risk_level: High
+    metric: catalogue.HP-030.compliant
+    operator: is_false
+    data_source: 'Magento Application Logs (var/log/system.log & exception.log)'
+    tool_used: "Check log file sizes using 'ls -lh var/log/'"
+    expected_result: 'Log files stay small (< 100MB) and rotate automatically'
+    site_impact: 'Rapid log growth exhausts server disk space and slows I/O performance'
+    recommendation: 'Fix underlying application warnings/errors and set up log rotation via logrotate'
+  -
+    id: HP-031
+    title: 'Large Database Table Bloat Exceeding Thresholds'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-031.compliant
+    operator: is_false
+    data_source: 'MySQL Database Table Sizes'
+    tool_used: 'Query information_schema.tables for tables exceeding 10GB or 10 million rows'
+    expected_result: 'Transactional tables (e.g. dataflow_batch_export, report_event, log_url) cleaned regularly'
+    site_impact: 'Degrades database backup speed, causes query latency, and increases infrastructure cost'
+    recommendation: 'Truncate temporary log/batch tables and set up automated table cleanup schedules'
+  -
+    id: HP-032
+    title: 'RabbitMQ / Message Queue Backlog or Service Down'
+    category: Infrastructure
+    domain: Infrastructure
+    issue_type: Infrastructure
+    risk_level: High
+    metric: catalogue.HP-032.compliant
+    operator: is_false
+    data_source: 'RabbitMQ Service & Magento Queue Tables'
+    tool_used: 'Check RabbitMQ management API or queue_message table for unconsumed messages'
+    expected_result: 'Message queue service is running and queue backlog is near 0'
+    site_impact: 'Asynchronous tasks like bulk inventory updates, catalog changes, and export jobs fail'
+    recommendation: 'Restart RabbitMQ service and ensure queue:consumers:start cron processes are running'
+  -
+    id: HP-033
+    title: 'High Database Connection Pool Utilization'
+    category: Database
+    domain: Database
+    issue_type: Database
+    risk_level: High
+    metric: catalogue.HP-033.compliant
+    operator: is_false
+    data_source: 'MySQL Connection Metrics (Threads_connected & max_connections)'
+    tool_used: 'Compare active connections (Threads_connected) against max_connections limit'
+    expected_result: 'Active database connections remain below 80% of max_connections limit'
+    site_impact: "'Too many connections' database error crashes storefront during traffic spikes"
+    recommendation: 'Increase MySQL max_connections, optimize PHP-FPM workers, and use connection pooling'
+  -
+    id: HP-034
+    title: 'Redis / Valkey Cache Service Down or Out of Memory'
+    category: Infrastructure
+    domain: Infrastructure
+    issue_type: Infrastructure
+    risk_level: High
+    metric: catalogue.HP-034.compliant
+    operator: is_false
+    data_source: 'Redis / Valkey In-Memory Cache Store'
+    tool_used: "Run 'redis-cli ping' and check memory usage via 'redis-cli info memory'"
+    expected_result: "Cache service is online ('PONG') with memory usage below configured limit"
+    site_impact: 'Site cache fails, page load times spike dramatically, customer sessions log out'
+    recommendation: 'Monitor Redis memory and set maxmemory-policy volatile-lru in configuration'
+  -
+    id: HP-035
+    title: 'High Disk Space or Inode Capacity Usage'
+    category: Infrastructure
+    domain: Infrastructure
+    issue_type: Infrastructure
+    risk_level: High
+    metric: catalogue.HP-035.compliant
+    operator: is_false
+    data_source: 'Linux Server Storage (df -h & df -i)'
+    tool_used: "Run 'df -h' and 'df -i' in Linux terminal for root and /var partitions"
+    expected_result: 'Disk space and inode utilization remain below 85% capacity'
+    site_impact: 'Full disk causes database write failures, corrupts session files, and halts web server'
+    recommendation: 'Delete old log files, clear temporary deployment files, and set up automated log rotation'
+  -
+    id: HP-036
+    title: 'Core Magento Caches Disabled'
+    category: Cache/FPC
+    domain: Cache/FPC
+    issue_type: Cache/FPC
+    risk_level: High
+    metric: catalogue.HP-036.compliant
+    operator: is_false
+    data_source: 'Magento Cache Status (bin/magento cache:status)'
+    tool_used: "Run 'bin/magento cache:status' in terminal"
+    expected_result: '100% of core cache types (config, layout, block_html, full_page, etc.) are enabled (status 1)'
+    site_impact: 'Disabled caches cause severe performance slowdowns and high server CPU load'
+    recommendation: "Enable all cache types using 'bin/magento cache:enable' and clear cache"
+  -
+    id: HP-037
+    title: 'Full Page Cache (FPC) Engine Misconfigured'
+    category: Cache/FPC
+    domain: Cache/FPC
+    issue_type: Cache/FPC
+    risk_level: High
+    metric: catalogue.HP-037.compliant
+    operator: is_false
+    data_source: 'Magento FPC Config & Varnish Proxy'
+    tool_used: 'Check FPC setting in Stores -> Configuration -> System -> Full Page Cache'
+    expected_result: 'Full Page Cache is enabled and configured to use Varnish or Redis in production'
+    site_impact: 'Storefront pages take several seconds to load, drastically lowering conversion rate'
+    recommendation: 'Configure Varnish Cache or Redis backend for optimal storefront page load speed'
+  -
+    id: HP-038
+    title: 'Magento Cron Job Scheduler Inactive or Failing'
+    category: Magento
+    domain: Magento
+    issue_type: Magento
+    risk_level: High
+    metric: catalogue.HP-038.compliant
+    operator: is_false
+    data_source: 'Server Crontab & Magento Cron Schedule Table'
+    tool_used: "Check 'crontab -l' and query 'cron_schedule' database table for recent executions"
+    expected_result: "Magento cron job 'bin/magento cron:run' executes every minute without errors"
+    site_impact: 'Order emails fail to send, catalog prices do not update, scheduled reindexes stall'
+    recommendation: 'Ensure Magento crontab entry is installed and monitor cron_schedule for errors'
+  -
+    id: HP-039
+    title: 'Invalid or Failing Magento Indexers'
+    category: Magento
+    domain: Magento
+    issue_type: Magento
+    risk_level: High
+    metric: catalogue.HP-039.compliant
+    operator: is_false
+    data_source: 'Magento Indexer Status (bin/magento indexer:status)'
+    tool_used: "Run 'bin/magento indexer:status' in terminal"
+    expected_result: "All indexers report status 'Ready' and mode 'Update by Schedule'"
+    site_impact: 'Outdated product prices, missing catalog items, broken search filters, slow checkout'
+    recommendation: "Run 'bin/magento indexer:reindex' for invalid indexers and set mode to Update by Schedule"
+  -
+    id: HP-040
+    title: 'High Frequency of Fatal Exception Log Errors'
+    category: Application/Exceptions
+    domain: Application/Exceptions
+    issue_type: Application/Exceptions
+    risk_level: High
+    metric: catalogue.HP-040.compliant
+    operator: is_false
+    data_source: 'Magento Exception Log (var/log/exception.log)'
+    tool_used: "Inspect recent entries in 'var/log/exception.log' using 'tail -n 100 var/log/exception.log'"
+    expected_result: 'Zero recurring fatal code exceptions logged during customer browsing or checkout'
+    site_impact: 'Hidden code bugs degrade user experience, cause checkout drop-offs, fill up server disk'
+    recommendation: 'Investigate exception stack traces, fix underlying custom module errors, and patch code'

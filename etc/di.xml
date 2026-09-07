@@ -11,6 +11,7 @@
     <type name="Mha\HealthCheck\Model\ScanRunner">
         <arguments>
             <argument name="collectors" xsi:type="array">
+                <item name="priority" xsi:type="object">Mha\HealthCheck\Collector\PriorityCollector</item>
                 <item name="magento" xsi:type="object">Mha\HealthCheck\Collector\MagentoCollector</item>
                 <item name="database" xsi:type="object">Mha\HealthCheck\Collector\DatabaseCollector</item>
                 <item name="database_advanced" xsi:type="object">Mha\HealthCheck\Collector\DatabaseAdvancedCollector</item>

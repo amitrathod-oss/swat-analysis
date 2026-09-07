@@ -37,7 +37,7 @@ class DatabaseAdvancedCollector implements CollectorInterface
         return ['metrics' => [
             'total_size_mb' => array_sum(array_map(static fn(array $row): float => (float)$row['total_size_mb'], $tables)),
             'table_groups' => $this->groups($tables),
-            'deadlocks' => (int)($status['Innodb_deadlocks'] ?? 0),
+            'deadlocks' => isset($status['Innodb_deadlocks']) ? (int)$status['Innodb_deadlocks'] : null,
             'row_lock_waits' => (int)($status['Innodb_row_lock_current_waits'] ?? 0),
             'long_running_queries' => $this->longRunningQueries($connection),
             'tables_without_primary_key' => $this->tablesWithoutPrimaryKey($connection),
@@ -195,7 +195,7 @@ class DatabaseAdvancedCollector implements CollectorInterface
             foreach ($rows as $row) {
                 $time = (int)($row['Time'] ?? $row['TIME'] ?? 0);
                 $max = max($max, $time);
-                if ($time >= $threshold && strtoupper((string)($row['Command'] ?? '')) !== 'SLEEP') {
+                if ($time > $threshold && in_array(strtoupper((string)($row['Command'] ?? $row['COMMAND'] ?? '')), ['QUERY', 'EXECUTE'], true)) {
                     $count++;
                 }
             }

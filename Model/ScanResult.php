@@ -27,6 +27,7 @@ class ScanResult
      * @var array<string, string>
      */
     private array $scanErrors = [];
+    private array $ruleChecks = [];
     private bool $historyEnabled = true;
     /** @var array<string, mixed> */
     private array $context = [];
@@ -43,6 +44,11 @@ class ScanResult
     public function addCollectorResult(string $collectorCode, array $result): void
     {
         $this->collectors[$collectorCode] = $result;
+    }
+
+    public function setRuleChecks(array $checks): void
+    {
+        $this->ruleChecks = $checks;
     }
 
     public function addFinding(Finding $finding): void
@@ -89,6 +95,7 @@ class ScanResult
     {
         $completedAt = $this->completedAt ?? new DateTimeImmutable();
         $severityCounts = [
+            'critical' => 0,
             'severe' => 0,
             'high' => 0,
             'elevated' => 0,
@@ -121,6 +128,7 @@ class ScanResult
             'severity_counts' => $severityCounts,
             'collectors' => $this->collectors,
             'findings' => $findings,
+            'rule_checks' => $this->ruleChecks,
             'scan_errors' => $this->scanErrors,
         ];
     }

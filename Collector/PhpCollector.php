@@ -58,6 +58,7 @@ class PhpCollector implements CollectorInterface
             'post_max_size' => (string)ini_get('post_max_size'),
             'display_errors' => filter_var(ini_get('display_errors'), FILTER_VALIDATE_BOOLEAN),
             'xdebug_loaded' => extension_loaded('xdebug'),
+            'opcache_memory_mb' => (int)ini_get('opcache.memory_consumption'),
             'opcache_ini_enabled' => filter_var(ini_get('opcache.enable'), FILTER_VALIDATE_BOOLEAN),
             'opcache_cli_enabled' => filter_var(ini_get('opcache.enable_cli'), FILTER_VALIDATE_BOOLEAN),
             'extensions' => get_loaded_extensions(),

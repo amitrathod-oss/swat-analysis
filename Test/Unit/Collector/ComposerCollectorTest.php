@@ -19,6 +19,7 @@ class ComposerCollectorTest extends TestCase
         $directoryList->method('getRoot')->willReturn('/project');
         $config->method('getPositiveInt')->willReturn(30);
         $runner->method('version')->willReturn(['exit_code' => 0, 'output' => 'Composer version 2.8.0']);
+        $runner->method('validate')->willReturn(['exit_code' => 0, 'output' => 'Valid']);
         $runner->method('audit')->willReturn([
             'exit_code' => 1,
             'output' => json_encode([

@@ -93,6 +93,7 @@ class ScanRunner
                     $metrics[$collectorCode] = $collectorResult['metrics'];
                 }
             } catch (\Throwable $exception) {
+                $metrics['collector_status'][$collectorCode] = ['status' => 'unavailable'];
                 $scanResult->addCollectorResult($collectorCode, [
                     'collector' => $collectorCode,
                     'status' => 'unavailable',
@@ -105,9 +106,15 @@ class ScanRunner
         }
 
         $metrics['catalogue'] = $this->systemCatalogueEvaluator->evaluate($metrics);
+        $scanResult->setRuleChecks($this->secretSanitizer->sanitize($metrics['catalogue']));
 
         try {
-            foreach ($this->ruleEngine->evaluate($metrics, $this->ruleLoader->load(), new \DateTimeImmutable()) as $finding) {
+            $rules = $this->ruleLoader->load();
+            foreach ($rules as $rule) {
+                if (isset($metrics['catalogue'][$rule['id']])) $metrics['catalogue'][$rule['id']]['title'] = $rule['title'];
+            }
+            $scanResult->setRuleChecks($this->secretSanitizer->sanitize($metrics['catalogue']));
+            foreach ($this->ruleEngine->evaluate($metrics, $rules, new \DateTimeImmutable()) as $finding) {
                 $scanResult->addFinding($this->findingFactory->create($this->secretSanitizer->sanitize($finding->toArray())));
             }
         } catch (\Throwable $exception) {
