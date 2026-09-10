@@ -51,11 +51,25 @@ class ComposerCollector implements CollectorInterface
             $advisories = is_array($auditData['advisories'] ?? null) ? $auditData['advisories'] : [];
             $abandoned = is_array($auditData['abandoned'] ?? null) ? $auditData['abandoned'] : [];
             $affectedPackages = [];
+            $advisoryDetails = [];
             $vulnerabilityCount = 0;
             foreach ($advisories as $package => $packageAdvisories) {
                 $count = is_array($packageAdvisories) ? count($packageAdvisories) : 0;
                 $affectedPackages[(string)$package] = $count;
                 $vulnerabilityCount += $count;
+                foreach (is_array($packageAdvisories) ? $packageAdvisories : [] as $advisory) {
+                    if (!is_array($advisory)) continue;
+                    $advisoryDetails[] = [
+                        'package' => (string)$package,
+                        'advisory_id' => (string)($advisory['advisoryId'] ?? $advisory['advisory_id'] ?? 'Not provided'),
+                        'severity' => (string)($advisory['severity'] ?? 'Not provided'),
+                        'cve' => (string)($advisory['cve'] ?? 'Not provided'),
+                        'title' => (string)($advisory['title'] ?? 'Not provided'),
+                        'affected_versions' => (string)($advisory['affectedVersions'] ?? $advisory['affected_versions'] ?? 'Not provided'),
+                        'reported_at' => (string)($advisory['reportedAt'] ?? $advisory['reported_at'] ?? 'Not provided'),
+                        'url' => (string)($advisory['link'] ?? $advisory['url'] ?? ''),
+                    ];
+                }
             }
 
             return [
@@ -65,6 +79,7 @@ class ComposerCollector implements CollectorInterface
                     'audit_exit_code' => (int)$audit['exit_code'],
                     'vulnerability_count' => $vulnerabilityCount,
                     'affected_packages' => $affectedPackages,
+                    'advisories' => $advisoryDetails,
                     'abandoned_packages' => array_keys($abandoned),
                     'abandoned_package_count' => count($abandoned),
                 ],

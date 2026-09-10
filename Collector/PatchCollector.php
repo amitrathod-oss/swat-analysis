@@ -5,16 +5,19 @@ namespace Mha\HealthCheck\Collector;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;
+use Magento\Framework\App\ProductMetadataInterface;
 
 class PatchCollector implements CollectorInterface
 {
     private DirectoryList $directoryList;
     private File $fileDriver;
+    private ProductMetadataInterface $productMetadata;
 
-    public function __construct(DirectoryList $directoryList, File $fileDriver)
+    public function __construct(DirectoryList $directoryList, File $fileDriver, ProductMetadataInterface $productMetadata)
     {
         $this->directoryList = $directoryList;
         $this->fileDriver = $fileDriver;
+        $this->productMetadata = $productMetadata;
     }
 
     public function getCode(): string
@@ -91,6 +94,7 @@ class PatchCollector implements CollectorInterface
             $configuredPatchCount = count($patches);
             $qualityPatchesTool = $this->qualityPatchesStatus();
             $qualityPatches = $this->qualityPatchesAppliedPatches($root);
+            $availablePatches = $this->availablePatches($root, array_column($qualityPatches, 'patch_id'));
             $patches = array_merge($patches, $qualityPatches);
 
             return [
@@ -104,6 +108,8 @@ class PatchCollector implements CollectorInterface
                         ? 'verified_from_quality_patches_tool_log'
                         : 'not_verifiable_without_patch_manager',
                     'quality_patches_tool' => $qualityPatchesTool,
+                    'available_patches' => $availablePatches,
+                    'available_not_applied_count' => count($availablePatches),
                     'patches' => $patches,
                 ],
             ];
@@ -211,6 +217,32 @@ class PatchCollector implements CollectorInterface
                 }
             }
             return $descriptions;
+        } catch (\Throwable $exception) {
+            return [];
+        }
+    }
+
+    /** @return array<int, array<string, string>> */
+    private function availablePatches(string $root, array $appliedIds): array
+    {
+        $infoFile = $root . '/vendor/magento/quality-patches/patches-info.json';
+        if (!$this->fileDriver->isExists($infoFile)) return [];
+        try {
+            $data = json_decode($this->fileDriver->fileGetContents($infoFile), true, 512, JSON_THROW_ON_ERROR);
+            $version = (string)$this->productMetadata->getVersion();
+            $available = [];
+            foreach ($data['patches'] ?? [] as $patch) {
+                if (!is_array($patch) || empty($patch['id']) || in_array((string)$patch['id'], $appliedIds, true)) continue;
+                $releases = is_array($patch['releases'] ?? null) ? $patch['releases'] : [];
+                if ($releases !== [] && !in_array($version, array_map('strval', $releases), true)) continue;
+                $available[] = [
+                    'patch_id' => (string)$patch['id'],
+                    'description' => (string)($patch['description'] ?? 'No description available.'),
+                    'category' => is_array($patch['categories'] ?? null) ? implode(', ', $patch['categories']) : '',
+                    'status' => 'Available; application not confirmed',
+                ];
+            }
+            return $available;
         } catch (\Throwable $exception) {
             return [];
         }

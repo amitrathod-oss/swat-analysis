@@ -264,7 +264,7 @@ class SecurityCollector implements CollectorInterface
                     $indicators[] = $name;
                 }
             }
-            return ['status' => 'success', 'http_status' => $client->getStatus(), 'indicators' => $indicators];
+            return ['status' => 'success', 'tested_url' => $url, 'http_status' => $client->getStatus(), 'indicators' => $indicators];
         } catch (\Throwable $exception) {
             return ['status' => 'not_checked', 'reason' => 'The public error response could not be inspected.'];
         }

@@ -62,7 +62,9 @@ class OpenSearchCollector implements CollectorInterface
 
             return [
                 'metrics' => [
+                    'engine' => $connection['engine'],
                     'version' => (string)($root['version']['number'] ?? 'unknown'),
+                    'endpoint' => $this->endpoint($connection),
                     'cluster_status' => (string)($health['status'] ?? 'unknown'),
                     'node_count' => (int)($health['number_of_nodes'] ?? 0),
                     'active_shards' => (int)($health['active_shards'] ?? 0),
@@ -100,6 +102,7 @@ class OpenSearchCollector implements CollectorInterface
                 'port' => (string)($this->scopeConfig->getValue($prefix . 'server_port') ?: '9200'),
                 'username' => (string)$this->scopeConfig->getValue($prefix . 'username'),
                 'password' => (string)$this->scopeConfig->getValue($prefix . 'password'),
+                'engine' => $engine !== '' ? $engine : (str_contains($prefix, 'opensearch') ? 'opensearch' : 'elasticsearch7'),
             ];
         }
 
@@ -132,5 +135,13 @@ class OpenSearchCollector implements CollectorInterface
         }
 
         return $result;
+    }
+
+    /** @param array<string, string> $connection */
+    private function endpoint(array $connection): string
+    {
+        $scheme = (string)$this->config->get('opensearch.scheme', 'http');
+        return (in_array($scheme, ['http', 'https'], true) ? $scheme : 'http')
+            . '://' . $connection['host'] . ':' . $connection['port'];
     }
 }

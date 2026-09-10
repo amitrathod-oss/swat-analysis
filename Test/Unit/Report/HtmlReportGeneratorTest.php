@@ -30,6 +30,8 @@ class HtmlReportGeneratorTest extends TestCase
                 'rule_id' => 'TEST-001',
                 'title' => '<script>alert(1)</script>',
                 'risk_level' => 'High',
+                'finding_description' => 'The cache setting is disabled.',
+                'root_cause' => 'The required configuration value is missing.',
                 'evidence' => [],
             ]],
             'collectors' => [],
@@ -40,6 +42,15 @@ class HtmlReportGeneratorTest extends TestCase
         self::assertStringContainsString('Executive Dashboard', $html);
         self::assertStringContainsString('A. Findings', $html);
         self::assertStringContainsString('F. Scan Details', $html);
+        self::assertStringContainsString('1. Finding Description', $html);
+        self::assertStringContainsString('2. Expected Result', $html);
+        self::assertStringContainsString('3. Site Impact', $html);
+        self::assertStringContainsString('4. Recommendations', $html);
+        self::assertStringContainsString('The cache setting is disabled.', $html);
+        self::assertStringContainsString('Reason:', $html);
+        self::assertStringNotContainsString('Likely reason:', $html);
+        self::assertStringNotContainsString('What Was Tested', $html);
+        self::assertStringNotContainsString('How to Verify the Fix', $html);
         self::assertStringNotContainsString('not Adobe', $html);
         self::assertStringContainsString('&lt;script&gt;', $html);
         self::assertStringNotContainsString('<script>alert', $html);
@@ -63,7 +74,7 @@ class HtmlReportGeneratorTest extends TestCase
 
         $html = (new HtmlReportGenerator($filesystem, $reportDataBuilder))->generate(new ScanResult('scan-id'));
         $summary = strstr($html, '<h3>Top recommendations</h3>');
-        $summary = substr((string)$summary, 0, (int)strpos((string)$summary, '<h3>Storage and services</h3>'));
+        $summary = substr((string)$summary, 0, (int)strpos((string)$summary, '<h3>Search service</h3>'));
 
         self::assertSame(1, substr_count($summary, 'Attribute Has Excessive Option Count'));
         self::assertSame(1, substr_count($summary, 'Large MySQL Table'));

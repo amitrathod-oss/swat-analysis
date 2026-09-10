@@ -31,6 +31,7 @@
                 <item name="security" xsi:type="object">Mha\HealthCheck\Collector\SecurityCollector</item>
                 <item name="integrations" xsi:type="object">Mha\HealthCheck\Collector\IntegrationCollector</item>
                 <item name="store" xsi:type="object">Mha\HealthCheck\Collector\StoreInfoCollector</item>
+                <item name="configuration" xsi:type="object">Mha\HealthCheck\Collector\ConfigurationCollector</item>
             </argument>
         </arguments>
     </type>

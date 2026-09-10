@@ -9,8 +9,8 @@ class RuleCoverage
     public static function isCurrent(array $report): bool
     {
         $checks = $report['rule_checks'] ?? null;
-        if (!is_array($checks) || count($checks) !== 39 || !empty($report['scan_errors'])) return false;
-        for ($i = 1; $i <= 40; $i++) {
+        if (!is_array($checks) || count($checks) !== 79 || !empty($report['scan_errors'])) return false;
+        for ($i = 1; $i <= 80; $i++) {
             if ($i === 7) continue;
             $check = $checks[sprintf('HP-%03d', $i)] ?? null;
             if (!is_array($check) || !in_array($check['status'] ?? null, ['pass', 'fail', 'not_checked'], true)) return false;

@@ -67,13 +67,13 @@ class HtmlReportGenerator
             . $this->cover($customer, $profile, $report)
             . $this->contents($findings)
             . $this->dashboard($report, $application, $summary, $score)
-            . '<section id="findings"><h2>A. Findings</h2>' . $this->renderDetailedFindings($findings) . '</section>'
+            . '<section id="findings"><h2>A. Findings (' . count($findings) . ' failed findings)</h2>' . $this->renderDetailedFindings($findings) . '</section>'
             . '<section class="page-break"><h2>B. Domain Scorecard</h2>' . $this->renderDomainScorecard($report) . '</section>'
             . '<section class="page-break"><h2>C. Exceptions</h2>' . $this->renderExceptions($report) . '</section>'
             . '<section class="page-break"><h2>D. Patches</h2>' . $this->renderPatches($report) . '</section>'
             . '<section class="page-break"><h2>E. Store &amp; System Checks</h2>' . $this->renderCollectors($report)
-            . $this->renderRuleChecks($report) . $this->renderStoreInventory($report) . $this->renderExtensionInventory($report)
-            . $this->renderExternalSources($report) . '</section>'
+            . $this->renderRuleChecks($report) . $this->renderStoreInventory($report)
+            . '</section>'
             . '<section><h2>F. Scan Details</h2>' . $this->definitionList([
                 'Scan ID' => $report['scan_id'] ?? null,
                 'Started at' => $report['started_at'] ?? null,
@@ -132,7 +132,6 @@ class HtmlReportGenerator
         $cards = [
             ['label' => 'Recommendations', 'value' => (string)count($findings), 'tone' => 'orange'],
             ['label' => 'Exceptions', 'value' => (string)($logs['exception_count'] ?? 0), 'tone' => 'red'],
-            ['label' => 'Extensions', 'value' => (string)($magento['enabled_module_count'] ?? 0), 'tone' => 'purple'],
             ['label' => 'Scan alerts', 'value' => (string)($summary['scan_error_count'] ?? 0), 'tone' => 'teal'],
             ['label' => 'Security advisories', 'value' => (string)($composer['vulnerability_count'] ?? 0), 'tone' => 'yellow'],
             ['label' => 'Applied patches', 'value' => (string)($patches['applied_count'] ?? 0), 'tone' => 'green'],
@@ -160,14 +159,13 @@ class HtmlReportGenerator
                 'Search version' => $search['version'] ?? null,
                 'Redis version' => $redis['version'] ?? null,
             ]) . '</td></tr><tr><td><h3>Top recommendations</h3>'
-            . $this->renderRecommendationSummary($findings) . '</td><td><h3>Storage and services</h3>'
+            . $this->renderRecommendationSummary($findings) . '</td><td><h3>Search service</h3>'
             . $this->keyValueTable([
-                'Largest tables' => is_array($database['tables'] ?? null) ? count($database['tables']) . ' measured' : null,
-                'Buffer pool utilization' => $this->formatMetric($database['buffer_pool']['utilization_percent'] ?? null, '%'),
-                'Redis memory utilization' => $this->formatMetric($redis['memory_utilization_percent'] ?? null, '%'),
                 'Search cluster status' => $search['cluster_status'] ?? null,
                 'Unassigned search shards' => $search['unassigned_shards'] ?? null,
-                'Checks completed' => count($report['collectors'] ?? []),
+                'What this means' => isset($search['unassigned_shards']) && (int)$search['unassigned_shards'] > 0
+                    ? 'Some search data is waiting to be assigned to the search service.'
+                    : 'The search service has no waiting search data.',
             ]) . '</td></tr></tbody></table></section>';
 
         return $html;
@@ -183,10 +181,12 @@ class HtmlReportGenerator
         }
         $html = '<ul class="recommendation-list">';
         $shown = [];
+        $index = 0;
         foreach ($findings as $finding) {
             if (!is_array($finding)) {
                 continue;
             }
+            $index++;
             $ruleId = trim((string)($finding['rule_id'] ?? ''));
             $title = trim((string)($finding['title'] ?? 'Finding'));
             // A rule can produce separate evidence findings (for example one per
@@ -293,8 +293,7 @@ class HtmlReportGenerator
             $html .= '<article class="severity ' . $this->escape($severity) . '"><h3>' . $this->escape(ucfirst($severity))
                 . '</h3><strong>' . count($items) . '</strong><ul>';
             foreach ($items as $finding) {
-                $html .= '<li>' . $this->escape((string)($finding['rule_id'] ?? '')) . ' — '
-                    . $this->escape((string)($finding['title'] ?? '')) . '</li>';
+                $html .= '<li>' . $this->escape((string)($finding['title'] ?? '')) . '</li>';
             }
             $html .= '</ul></article>';
         }
@@ -312,11 +311,16 @@ class HtmlReportGenerator
         }
 
         $html = '';
+        $index = 0;
         foreach ($findings as $finding) {
             if (!is_array($finding)) {
                 continue;
             }
-            $html .= '<article class="finding"><h3>' . $this->escape((string)($finding['rule_id'] ?? '')) . ': '
+            $index++;
+            $references = is_array($finding['references'] ?? null) ? $finding['references'] : [];
+            $commands = is_array($finding['remediation_commands'] ?? null) ? $finding['remediation_commands'] : [];
+            $thresholdBasis = trim((string)($finding['threshold_basis'] ?? ''));
+            $html .= '<article class="finding"><h3>' . $index . '. '
                 . $this->escape((string)($finding['title'] ?? '')) . '</h3><h4>Overview</h4>'
                 . $this->keyValueTable([
                     'Issue type' => $finding['issue_type'] ?? null,
@@ -327,19 +331,126 @@ class HtmlReportGenerator
                     'Category' => $finding['category'] ?? null,
                     'Domain' => $finding['domain'] ?? null,
                     'Scoring penalty' => $finding['scoring_penalty'] ?? 0,
-                ]) . '<h4>Finding Description</h4><p>' . $this->renderValue($finding['finding_description'] ?? null)
-                . '</p><h4>Expected Results</h4><p>' . $this->renderValue($finding['expected_result'] ?? null)
-                . '</p><h4>Observed Result</h4><p>' . $this->renderValue($finding['observed_result'] ?? null)
-                . '</p><h4>Evidence</h4>' . $this->renderValue($finding['evidence'] ?? [])
-                . '<h4>Possible Root Cause</h4><p>' . $this->renderValue($finding['root_cause'] ?? null)
-                . '<h4>Site Impact</h4><p>' . $this->renderValue($finding['site_impact'] ?? null)
-                . '</p><h4>Preconditions</h4>' . $this->renderValue($finding['preconditions'] ?? [])
-                . '<h4>Recommendations</h4><p>' . $this->renderValue($finding['recommendation'] ?? null)
-                . '</p><h4>References</h4>' . $this->renderValue($finding['references'] ?? [])
-                . '</p></article>';
+                ]) . '<h4>1. Finding Description</h4>' . $this->renderFindingDescription($finding)
+                . $this->renderEvidenceList($finding['evidence'] ?? [])
+                . '<h4>2. Expected Result</h4><p>' . $this->renderValue($finding['expected_result'] ?? null)
+                . '</p><h4>3. Site Impact</h4><p>' . $this->renderValue($finding['site_impact'] ?? null)
+                . '</p><h4>4. Recommendations</h4><p>' . $this->renderValue($finding['recommendation'] ?? null)
+                . '</p>' . $this->renderRecommendationSupport($commands, $references, $thresholdBasis)
+                . '</article>';
         }
 
         return $html;
+    }
+
+    /** @param array<string, mixed> $finding */
+    private function renderFindingDescription(array $finding): string
+    {
+        $description = $this->renderValue($finding['finding_description'] ?? null);
+        $cause = trim((string)($finding['root_cause'] ?? ''));
+        if ($cause === '') return '<p>' . $description . '</p>';
+        return '<p>' . $description . '</p><p><strong>Reason:</strong> ' . $this->escape($cause) . '</p>';
+    }
+
+    /** @param array<string, mixed> $finding */
+    private function renderWhatWasTested(array $finding): string
+    {
+        $source = trim((string)($finding['data_source'] ?? 'Magento health-check data'));
+        $tool = trim((string)($finding['tool_used'] ?? 'the configured read-only health check'));
+        return $this->escape('The scan checked ' . strtolower((string)($finding['title'] ?? 'this item')) . ' using ' . $source . '. Check performed: ' . $tool);
+    }
+
+    /** @param array<int|string, mixed> $references */
+    private function renderReferences(array $references): string
+    {
+        $html = '<ul class="metric-list">';
+        foreach ($references as $label => $reference) {
+            $url = is_string($reference) ? $reference : '';
+            if (!filter_var($url, FILTER_VALIDATE_URL)) continue;
+            $text = is_int($label) ? $url : (string)$label;
+            $html .= '<li><a href="' . $this->escape($url) . '">' . $this->escape($text) . '</a></li>';
+        }
+        return $html . '</ul>';
+    }
+
+    /** @param array<int, mixed> $commands @param array<int|string, mixed> $references */
+    private function renderRecommendationSupport(array $commands, array $references, string $thresholdBasis): string
+    {
+        $commands = array_values(array_filter($commands, 'is_string'));
+        $html = '';
+        if ($commands !== []) {
+            $html .= '<p><strong>Command:</strong></p><pre>';
+            foreach ($commands as $command) $html .= $this->escape($command) . "\n";
+            $html .= '</pre>';
+        }
+        if ($references !== []) $html .= '<p><strong>Source of truth:</strong></p>' . $this->renderReferences($references);
+        if ($thresholdBasis !== '') $html .= '<p><strong>Threshold basis:</strong> ' . $this->escape($thresholdBasis) . '</p>';
+        return $html;
+    }
+
+    /** @param mixed $evidence */
+    private function renderEvidenceList($evidence): string
+    {
+        if (!is_array($evidence) || $evidence === []) return '';
+        $items = [];
+        $this->flattenEvidence($evidence, '', $items);
+        if ($items === []) return '';
+        $html = '<p><strong>Evidence:</strong></p><ul class="metric-list">';
+        foreach (array_slice($items, 0, 20) as $item) $html .= '<li>' . $this->escape($item) . '</li>';
+        $html .= '</ul>';
+        $advisories = $evidence['advisories'] ?? [];
+        if (is_array($advisories) && $advisories !== []) $html .= $this->renderComposerAdvisories($advisories);
+        return $html;
+    }
+
+    /** @param array<int, mixed> $advisories */
+    private function renderComposerAdvisories(array $advisories): string
+    {
+        $html = '<p><strong>Composer audit details:</strong></p><div class="table-wrap"><table><thead><tr><th>Package</th><th>Severity</th><th>Advisory</th><th>CVE</th><th>Issue</th><th>Affected versions</th><th>Source</th></tr></thead><tbody>';
+        foreach ($advisories as $advisory) {
+            if (!is_array($advisory)) continue;
+            $url = (string)($advisory['url'] ?? '');
+            $source = filter_var($url, FILTER_VALIDATE_URL) ? '<a href="' . $this->escape($url) . '">Advisory link</a>' : 'Not provided';
+            $html .= '<tr><td>' . $this->escape((string)($advisory['package'] ?? '')) . '</td><td>'
+                . $this->escape((string)($advisory['severity'] ?? '')) . '</td><td>'
+                . $this->escape((string)($advisory['advisory_id'] ?? '')) . '</td><td>'
+                . $this->escape((string)($advisory['cve'] ?? '')) . '</td><td>'
+                . $this->escape((string)($advisory['title'] ?? '')) . '</td><td>'
+                . $this->escape((string)($advisory['affected_versions'] ?? '')) . '</td><td>' . $source . '</td></tr>';
+        }
+        return $html . '</tbody></table></div>';
+    }
+
+    /** @param mixed $value @param string[] $items */
+    private function flattenEvidence($value, string $path, array &$items): void
+    {
+        if (count($items) >= 20) return;
+        $firstSegment = explode('.', $path)[0] ?? '';
+        if (in_array($firstSegment, ['metric', 'operator', 'threshold', 'result', 'current_value', 'observed_value', 'advisories'], true)) return;
+        if (!is_array($value)) {
+            $label = ucfirst(str_replace('_', ' ', str_replace('.', ' / ', $path)));
+            $items[] = $label . ': ' . ($value === null ? 'not available' : (is_bool($value) ? ($value ? 'yes' : 'no') : (string)$value));
+            return;
+        }
+        foreach ($value as $key => $item) {
+            $this->flattenEvidence($item, $path === '' ? (string)$key : $path . '.' . $key, $items);
+            if (count($items) >= 20) return;
+        }
+    }
+
+    /** @param array<string, mixed> $finding */
+    private function renderVerificationSteps(array $finding): string
+    {
+        $tool = trim((string)($finding['tool_used'] ?? 'the same health check'));
+        $expected = trim((string)($finding['expected_result'] ?? 'the required result'));
+        return '<ol><li>Apply the change in a non-production environment first.</li><li>Repeat the check: ' . $this->escape($tool) . '.</li><li>Confirm the result is: ' . $this->escape($expected) . '.</li><li>Repeat the relevant storefront, admin, API, or background-job flow and confirm that the issue does not recur.</li></ol>';
+    }
+
+    /** @param array<string, mixed> $finding */
+    private function severityReason(array $finding): string
+    {
+        $impact = trim((string)($finding['site_impact'] ?? ''));
+        return $impact === '' ? 'Priority is based on the potential effect on security, customer experience, and system reliability.' : 'Priority reflects this risk: ' . $impact;
     }
 
     /** @param array<string, mixed> $report */
@@ -376,17 +487,17 @@ class HtmlReportGenerator
             return '<p>No grouped exceptions were found in the configured log window.</p>';
         }
 
-        $html = '<div class="table-wrap"><table><thead><tr><th>Fingerprint</th><th>Type</th><th>Count</th><th>First seen</th><th>Last seen</th><th>Source</th></tr></thead><tbody>';
+        $html = '<p>The table lists the exception type, frequency, source, and a short sanitized example so a developer can identify what to fix. The internal fingerprint is omitted because it is only used to group duplicate log entries.</p><div class="table-wrap"><table><thead><tr><th>Exception</th><th>Count</th><th>First seen</th><th>Last seen</th><th>Source</th><th>Example</th></tr></thead><tbody>';
         foreach ($exceptions as $exception) {
             if (!is_array($exception)) {
                 continue;
             }
-            $html .= '<tr><td>' . $this->escape((string)($exception['fingerprint'] ?? '')) . '</td><td>'
-                . $this->escape((string)($exception['exception_type'] ?? '')) . '</td><td>'
+            $html .= '<tr><td>' . $this->escape((string)($exception['exception_type'] ?? 'Application error')) . '</td><td>'
                 . $this->escape((string)($exception['count'] ?? '')) . '</td><td>'
                 . $this->escape((string)($exception['first_seen'] ?? '')) . '</td><td>'
                 . $this->escape((string)($exception['last_seen'] ?? '')) . '</td><td>'
-                . $this->escape((string)($exception['source'] ?? '')) . '</td></tr>';
+                . $this->escape((string)($exception['source'] ?? '')) . '</td><td>'
+                . $this->escape($this->shortText((string)($exception['sample'] ?? ''), 500)) . '</td></tr>';
         }
 
         return $html . '</tbody></table></div>';
@@ -397,48 +508,14 @@ class HtmlReportGenerator
      */
     private function renderPatches(array $report): string
     {
-        $patches = $report['collectors']['patches']['metrics']['patches'] ?? [];
-        if (!is_array($patches) || $patches === []) {
-            $qpt = $report['collectors']['patches']['metrics']['quality_patches_tool'] ?? [];
-            $qptStatus = is_array($qpt) ? ($qpt['status'] ?? 'not_available') : 'not_available';
-            return '<p>No installed fixes were found.</p><p><strong>Fix checker:</strong> '
-                . $this->escape((string)$qptStatus)
-                . '.</p>';
-        }
-
         $qpt = $report['collectors']['patches']['metrics']['quality_patches_tool'] ?? [];
-        $qptStatus = is_array($qpt) ? ($qpt['status'] ?? 'not_available') : 'not_available';
-        $html = '<p>This section lists installed fixes and whether their application could be confirmed.</p>'
-            . '<p><strong>Fix checker:</strong> ' . $this->escape((string)$qptStatus) . '</p>'
-            . '<div class="table-wrap"><table><thead><tr><th>Patch ID</th><th>Description</th><th>Package</th><th>Category</th><th>Status</th><th>Recommended</th></tr></thead><tbody>';
-        foreach ($patches as $patch) {
-            if (!is_array($patch)) {
-                continue;
-            }
-            $html .= '<tr><td>' . $this->escape((string)($patch['patch_id'] ?? '')) . '</td><td>'
-                . $this->escape((string)($patch['description'] ?? '')) . '</td><td>'
-                . $this->escape((string)($patch['package'] ?? '')) . '</td><td>'
-                . $this->escape((string)($patch['category'] ?? '')) . '</td><td>'
-                . $this->escape((string)($patch['status'] ?? '')) . '</td><td>'
-                . $this->escape((string)($patch['recommended'] ?? '')) . '</td></tr>';
+        $qptStatus = is_array($qpt) ? (string)($qpt['status'] ?? 'not available') : 'not available';
+        $patchEvidence = $report['rule_checks']['HP-008'] ?? [];
+        $status = is_array($patchEvidence) ? (string)($patchEvidence['status'] ?? 'not_checked') : 'not_checked';
+        if ($status !== 'fail') {
+            return '<h3>Patch verification</h3><p>No missing patch is reported by this scan. A patch can only be listed as missing after a dated comparison of this Magento release with Adobe security bulletins.</p><p><strong>Verification status:</strong> ' . $this->escape($status) . '. <strong>Quality Patches Tool:</strong> ' . $this->escape($qptStatus) . '.</p>';
         }
-
-        $html .= '</tbody></table></div><p><strong>Not applied:</strong> ' . $this->escape((string)($report['collectors']['patches']['metrics']['not_applied_count'] ?? 0))
-            . ' &nbsp; <strong>Not verified:</strong> ' . $this->escape((string)($report['collectors']['patches']['metrics']['not_verified_count'] ?? 0))
-            . ' &nbsp; <strong>Applied confirmed:</strong> ' . $this->escape((string)($report['collectors']['patches']['metrics']['applied_count'] ?? 'N/A'))
-            . '</p><h3>Selected patch details</h3><div class="table-wrap"><table><thead><tr><th>Patch ID</th><th>Origin</th><th>Path</th><th>Application status</th><th>Details</th></tr></thead><tbody>';
-        foreach ($patches as $patch) {
-            if (!is_array($patch)) {
-                continue;
-            }
-            $html .= '<tr><td>' . $this->escape((string)($patch['patch_id'] ?? '')) . '</td><td>'
-                . $this->escape((string)($patch['origin'] ?? '')) . '</td><td>'
-                . $this->escape((string)($patch['path'] ?? '')) . '</td><td>'
-                . $this->escape((string)($patch['application_status'] ?? 'not_verified')) . '</td><td>'
-                . $this->escape((string)($patch['details'] ?? '')) . '</td></tr>';
-        }
-
-        return $html . '</tbody></table></div>';
+        return '<h3>Patch verification</h3><p>' . $this->escape((string)($patchEvidence['reason'] ?? 'A verified patch comparison reported missing patches.')) . '</p><p>Apply only the named patches after confirming compatibility in staging.</p><p><strong>Quality Patches Tool:</strong> ' . $this->escape($qptStatus) . '.</p>';
     }
 
     /**
@@ -604,13 +681,13 @@ class HtmlReportGenerator
             return '<h3>Extension Inventory</h3><p>No extension metadata was collected.</p>';
         }
 
-        $html = '<h3>Extension Inventory (' . count($inventory) . ' records)</h3><p>Versions come from Magento module metadata or Composer runtime metadata. N/A means the source did not expose a version.</p><div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Composer Package</th><th>Version</th></tr></thead><tbody>';
+        $inventory = array_values(array_filter($inventory, static fn(array $extension): bool => ($extension['type'] ?? '') === 'custom_or_vendor'));
+        $html = '<h3>Third-party Extension Inventory (' . count($inventory) . ' modules)</h3><p>Only non-Magento modules are shown. Versions come from Magento or Composer metadata and can be used to plan vendor upgrades. Core Magento packages and the full Composer library list are omitted.</p><div class="table-wrap"><table><thead><tr><th>Extension</th><th>Composer Package</th><th>Installed Version</th></tr></thead><tbody>';
         foreach ($inventory as $extension) {
             if (!is_array($extension)) {
                 continue;
             }
             $html .= '<tr><td>' . $this->escape((string)($extension['name'] ?? '')) . '</td><td>'
-                . $this->escape((string)($extension['type'] ?? '')) . '</td><td>'
                 . $this->escape((string)($extension['package'] ?? '')) . '</td><td>'
                 . $this->escape((string)($extension['version'] ?? 'N/A')) . '</td></tr>';
         }
@@ -626,7 +703,7 @@ class HtmlReportGenerator
             return '<h3>External Data Sources</h3><p>No optional external integrations were configured.</p>';
         }
 
-        $html = '<h3>External Data Sources</h3><p>Adobe SWAT cloud data, Security Scan results, UCT results, New Relic Managed Alerts, Fastly analytics, and Marketplace comparison data require their respective external services and credentials. This local report does not invent those values.</p><div class="table-wrap"><table><thead><tr><th>Source</th><th>Status</th><th>Data Collected</th><th>Reason</th></tr></thead><tbody>';
+        $html = '<h3>Optional External Data Sources</h3><p>These are optional integrations, not Magento Open Source checks. New Relic and Datadog provide monitoring data; Lighthouse provides page performance; Fastly provides CDN data; Adobe Security Scan and UCT require their own services; SWAT Cloud, Marketplace metadata, and support tickets require external accounts. No external service is contacted unless an approved adapter and credentials are configured.</p><div class="table-wrap"><table><thead><tr><th>Source</th><th>Status</th><th>Data Collected</th><th>Reason</th></tr></thead><tbody>';
         foreach ($sources as $source => $details) {
             if (!is_array($details)) {
                 continue;
@@ -698,6 +775,51 @@ class HtmlReportGenerator
         return $this->escape((string)$value);
     }
 
+    /** Render finding observations as reader-friendly prose instead of JSON. */
+    private function renderFindingText($value): string
+    {
+        if ($value === null || $value === '') return 'No measured value was available.';
+        if (is_bool($value)) return $value ? 'Yes.' : 'No.';
+        if (is_scalar($value)) return $this->escape((string)$value);
+        if (!is_array($value) || $value === []) return 'No additional detail was recorded.';
+        $parts = [];
+        foreach ($value as $key => $item) {
+            if (in_array((string)$key, ['metric', 'operator', 'current_value', 'observed_value', 'result', 'threshold'], true)) continue;
+            $label = ucfirst(str_replace('_', ' ', (string)$key));
+            if (is_array($item)) {
+                if ($key === 'exceptions') {
+                    $descriptions = [];
+                    foreach ($item as $exception) {
+                        if (!is_array($exception)) continue;
+                        $description = trim((string)($exception['exception_type'] ?? 'Application error'));
+                        $source = trim((string)($exception['source'] ?? ''));
+                        $sample = $this->shortText((string)($exception['sample'] ?? ''), 180);
+                        if ($source !== '') $description .= ' from ' . $source;
+                        if ($sample !== '') $description .= ': ' . $sample;
+                        $descriptions[] = $description;
+                        if (count($descriptions) >= 5) break;
+                    }
+                    $parts[] = $label . ': ' . ($descriptions === [] ? 'none' : implode(' | ', $descriptions));
+                } else {
+                    $count = count($item);
+                    $parts[] = $label . ': ' . ($count === 0 ? 'none' : $count . ' item' . ($count === 1 ? '' : 's'));
+                }
+            } elseif (is_bool($item)) {
+                $parts[] = $label . ': ' . ($item ? 'yes' : 'no');
+            } elseif ($item !== null && $item !== '') {
+                $parts[] = $label . ': ' . (string)$item;
+            }
+            if (count($parts) >= 8) break;
+        }
+        return $this->escape($parts === [] ? 'No additional detail was recorded.' : implode('. ', $parts) . '.');
+    }
+
+    private function shortText(string $value, int $limit): string
+    {
+        $value = trim(preg_replace('/\s+/', ' ', $value) ?? $value);
+        return strlen($value) > $limit ? substr($value, 0, $limit - 1) . '…' : $value;
+    }
+
     /**
      * @param mixed $default
      * @return mixed
@@ -720,9 +842,11 @@ class HtmlReportGenerator
 
     private function renderRuleChecks(array $report): string
     {
-        $html = '<h3>Rule coverage</h3><p>Unavailable evidence is not a pass. The score reflects detected findings only.</p><table><tr><th>Rule</th><th>Status</th><th>Observation</th></tr>';
-        foreach ($report['rule_checks'] ?? [] as $id => $check) {
-            $html .= '<tr><td>' . $this->escape((string)$id . ' ' . (string)($check['title'] ?? '')) . '</td><td>'
+        $checks = array_filter($report['rule_checks'] ?? [], static fn($check): bool => is_array($check) && !str_starts_with((string)($check['reason'] ?? ''), 'Not evaluated automatically:'));
+        $count = count($checks);
+        $html = '<h3>Check coverage (' . $count . ' active checks)</h3><p>This table lists every applicable check. <strong>not_checked</strong> means the scan did not receive enough evidence to determine pass or fail; it is not a passed check and not a confirmed issue. The observation states exactly what evidence is missing. Detailed findings above contain failed checks only.</p><table><tr><th>Finding</th><th>Status</th><th>Observation</th></tr>';
+        foreach ($checks as $id => $check) {
+            $html .= '<tr><td>' . $this->escape((string)($check['title'] ?? '')) . '</td><td>'
                 . $this->escape((string)$check['status']) . '</td><td>'
                 . $this->escape((string)$check['reason']) . '</td></tr>';
         }

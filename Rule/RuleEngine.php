@@ -66,9 +66,9 @@ class RuleEngine
         $catReason = null;
         $catDetails = [];
 
-        if (str_starts_with($path, 'catalogue.')) {
+        if (str_starts_with($path, 'catalogue.') || isset($metrics['catalogue'][(string)($rule['id'] ?? '')])) {
             $parts = explode('.', $path);
-            $ruleId = $parts[1] ?? (string)($rule['id'] ?? '');
+            $ruleId = str_starts_with($path, 'catalogue.') ? ($parts[1] ?? (string)($rule['id'] ?? '')) : (string)($rule['id'] ?? '');
             if (isset($metrics['catalogue'][$ruleId]) && is_array($metrics['catalogue'][$ruleId])) {
                 $catInfo = $metrics['catalogue'][$ruleId];
                 if (!empty($catInfo['reason'])) {
@@ -86,29 +86,56 @@ class RuleEngine
             $rule['operator']
         ));
 
+        $observedValue = $catDetails !== [] ? $catDetails : $value;
         $evidence = array_merge([
             'metric' => $path,
+            'result' => $value === true ? 'PASS' : 'FAIL',
             'current_value' => $value,
-            'threshold' => $threshold,
+            'observed_value' => $observedValue,
             'operator' => (string)$rule['operator'],
         ], $catDetails);
+        if ($threshold !== null) {
+            $evidence['threshold'] = $threshold;
+        }
 
+        $title = (string)$rule['title'];
+        $dataSource = (string)($rule['data_source'] ?? 'Magento Open Source');
+        $toolUsed = (string)($rule['tool_used'] ?? 'Magento Health Analyzer');
+        if (($rule['id'] ?? '') === 'HP-003' && !empty($catDetails['engine'])) {
+            $engine = strtolower((string)$catDetails['engine']);
+            $engineName = str_starts_with($engine, 'elastic') ? 'Elasticsearch' : 'OpenSearch';
+            $title = $engineName . ' Search Service Has Unassigned Data';
+            $dataSource = $engineName . ' Search Cluster';
+            $toolUsed = 'Read-only HTTP GET ' . ($catDetails['endpoint'] ?? 'configured endpoint') . '/_cluster/health';
+        }
+        if (str_starts_with($path, 'catalogue.') && isset($catDetails['configured_stores'])) {
+            $urls = array_map(static fn(array $store): string => (string)($store['secure_url'] ?? ''), $catDetails['configured_stores']);
+            $toolUsed .= ' (configured URLs: ' . implode(', ', array_filter($urls)) . ')';
+        }
+        if (!empty($catDetails['endpoint']) && ($rule['id'] ?? '') !== 'HP-003') {
+            $toolUsed .= ' (' . $catDetails['endpoint'] . ')';
+        }
+        if (($rule['id'] ?? '') === 'HP-014' && !empty($catDetails['tested_url'])) {
+            $toolUsed = 'Read-only HTTP GET ' . $catDetails['tested_url'] . ' and inspected the error-page response.';
+        }
         return $this->findingFactory->create([
             'rule_id' => (string)$rule['id'],
-            'title' => (string)$rule['title'],
+            'title' => $title,
             'issue_type' => (string)$rule['issue_type'],
             'risk_level' => (string)$rule['risk_level'],
             'category' => (string)($rule['category'] ?? 'General'),
             'domain' => (string)($rule['domain'] ?? $rule['category'] ?? 'Application'),
-            'tool_used' => (string)($rule['tool_used'] ?? 'Magento Health Analyzer'),
-            'data_source' => (string)($rule['data_source'] ?? 'Magento Open Source'),
+            'tool_used' => $toolUsed,
+            'data_source' => $dataSource,
             'last_checked' => $lastChecked->format(DateTimeInterface::ATOM),
             'finding_description' => $description,
             'expected_result' => (string)($rule['expected_result'] ?? 'The metric should remain within the configured threshold.'),
-            'observed_result' => $value,
-            'root_cause' => (string)($rule['root_cause'] ?? $this->generateRootCause($rule, $path, $value)),
+            'observed_result' => $observedValue,
+            'root_cause' => (string)($rule['root_cause'] ?? $this->generateRootCause($rule, $path, $value, $catDetails, $metrics)),
             'preconditions' => $rule['preconditions'] ?? [],
             'references' => $rule['references'] ?? [],
+            'remediation_commands' => $rule['remediation_commands'] ?? [],
+            'threshold_basis' => $rule['threshold_basis'] ?? $this->thresholdBasis($rule),
             'scoring_penalty' => (int)($rule['scoring_penalty'] ?? 0),
             'site_impact' => (string)($rule['site_impact'] ?? 'This condition may affect the reliability or performance of the site.'),
             'evidence' => $evidence,
@@ -116,11 +143,22 @@ class RuleEngine
         ]);
     }
 
+    /** @param array<string, mixed> $rule */
+    private function thresholdBasis(array $rule): string
+    {
+        $text = implode(' ', [
+            (string)($rule['expected_result'] ?? ''),
+            (string)($rule['recommendation'] ?? ''),
+        ]);
+        if (($rule['references'] ?? []) !== [] || preg_match('/(?:\\b\\d+(?:\\.\\d+)?\\s*(?:%|[GMK]B?|seconds?|minutes?|hours?|days?|rows?|items?|jobs?|queries?|shards?)\\b|(?:>=|<=|>|<)\\s*\\d|\\b(?:PHP|MySQL|MariaDB|Aurora)\\s+\\d)/i', $text) !== 1) return '';
+        return 'The stated number is this health check\'s local operating alert threshold. It is not presented as an Adobe Commerce requirement; confirm or adjust it for this project with the service owner.';
+    }
+
     /**
      * @param array<string, mixed> $rule
      * @param mixed $value
      */
-    private function generateRootCause(array $rule, string $path, $value): string
+    private function generateRootCause(array $rule, string $path, $value, array $details = [], array $metrics = []): string
     {
         $id = (string)($rule['id'] ?? '');
         $category = strtolower((string)($rule['category'] ?? ''));
@@ -185,6 +223,13 @@ class RuleEngine
         }
 
         return sprintf('The observed metric "%s" matched the configured %s condition.', $path, $rule['operator'] ?? 'rule');
+    }
+
+    private function formatBytes(float $bytes): string
+    {
+        if ($bytes >= 1073741824) return round($bytes / 1073741824, 1) . ' GiB';
+        if ($bytes >= 1048576) return round($bytes / 1048576, 1) . ' MiB';
+        return (string)$bytes . ' bytes';
     }
 
     /**

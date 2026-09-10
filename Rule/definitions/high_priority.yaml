@@ -1,548 +1,1444 @@
-# The only active rule set. IDs follow top_40_high_priority_rules.csv row order.
 rules:
-  -
-    id: HP-001
-    title: 'Outdated PHP Runtime Version'
-    category: Infrastructure
-    domain: Infrastructure
-    issue_type: Infrastructure
-    risk_level: Critical
-    metric: catalogue.HP-001.compliant
-    operator: is_false
-    data_source: 'PHP Engine & System Runtime'
-    tool_used: "Run 'php -v' in server terminal"
-    expected_result: 'PHP version is active and supported by Magento (PHP 8.2 or 8.3)'
-    site_impact: 'Security exploits, site crashes, and failed platform upgrades'
-    recommendation: 'Upgrade PHP-FPM and CLI runtime to a supported version'
-  -
-    id: HP-002
-    title: 'Outdated MySQL / MariaDB Server Version'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: Critical
-    metric: catalogue.HP-002.compliant
-    operator: is_false
-    data_source: 'MySQL / MariaDB / Aurora Database'
-    tool_used: "Run 'mysql -V' or query 'SELECT VERSION();' in MySQL client"
-    expected_result: 'Database engine is supported (MySQL 8.0+, MariaDB 10.6+, or Aurora v3)'
-    site_impact: 'Database syntax errors, lock timeouts, and failed site updates'
-    recommendation: 'Upgrade database server to a supported release'
-  -
-    id: HP-003
-    title: 'OpenSearch / Elasticsearch Service Down or Unhealthy'
-    category: Infrastructure
-    domain: Infrastructure
-    issue_type: Infrastructure
-    risk_level: Severe
-    metric: catalogue.HP-003.compliant
-    operator: is_false
-    data_source: 'OpenSearch / Elasticsearch Search Cluster'
-    tool_used: "Run 'curl http://localhost:9200/_cluster/health' or check Magento search status"
-    expected_result: 'Search cluster health is green with zero unassigned shards'
-    site_impact: 'Storefront search, category filter navigation, and admin product grid stop working'
-    recommendation: 'Restart OpenSearch / Elasticsearch service and allocate unassigned shards'
-  -
-    id: HP-004
-    title: 'Vulnerable Third-Party Composer Packages'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-004.compliant
-    operator: is_false
-    data_source: 'Composer Dependencies'
-    tool_used: "Run 'composer audit' in site root directory"
-    expected_result: 'Zero security vulnerabilities reported across installed vendor packages'
-    site_impact: 'Hackers can exploit known security flaws in third-party libraries to gain access'
-    recommendation: "Update vulnerable packages using 'composer update' after testing in staging"
-  -
-    id: HP-005
-    title: 'Unsafe File Permissions on env.php'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-005.compliant
-    operator: is_false
-    data_source: 'Server File System & ACLs'
-    tool_used: "Run 'ls -la app/etc/env.php' to check file permissions"
-    expected_result: 'File permissions set to strict 640 or 600 (not world-writable)'
-    site_impact: 'Local server users or malicious scripts can read DB passwords and encryption keys'
-    recommendation: "Run 'chmod 640 app/etc/env.php' and assign correct web user ownership"
-  -
-    id: HP-006
-    title: 'Storefront or Admin Traffic Missing HTTPS'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-006.compliant
-    operator: is_false
-    data_source: 'Web Server (Nginx / Apache)'
-    tool_used: "Run 'curl -I http://yourdomain.com' and verify automatic 301 redirect to HTTPS"
-    expected_result: 'All storefront, admin, and API traffic is strictly encrypted over HTTPS (TLS 1.2+)'
-    site_impact: 'Customer login passwords, session cookies, and payment details can be intercepted'
-    recommendation: 'Enable mandatory HTTPS redirect in Nginx/Apache and set secure base URLs in Magento'
-  -
-    id: HP-008
-    title: 'Missing Core Security Patches'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: Critical
-    metric: catalogue.HP-008.compliant
-    operator: is_false
-    data_source: 'Adobe Commerce Security Advisory'
-    tool_used: 'Compare installed patch manifest against Adobe Security Bulletins'
-    expected_result: 'All critical security patches applied to installed Magento version'
-    site_impact: 'Store vulnerable to remote code execution and public exploits'
-    recommendation: 'Apply missing security patches via Quality Patches Tool (QPT) or upgrade'
-  -
-    id: HP-009
-    title: 'Insufficient PHP Memory Limit'
-    category: Application
-    domain: Application
-    issue_type: Application
-    risk_level: High
-    metric: catalogue.HP-009.compliant
-    operator: is_false
-    data_source: 'PHP Configuration (php.ini)'
-    tool_used: 'Run ''php -r "echo ini_get(\''memory_limit\'');"'''
-    expected_result: 'CLI memory limit >= 4G and FPM memory limit >= 2G'
-    site_impact: 'Out-of-memory fatal errors during reindexing, deployment, or checkout'
-    recommendation: 'Increase memory_limit in php.ini to meet Adobe recommended values'
-  -
-    id: HP-010
-    title: 'Two-Factor Authentication (2FA) Disabled for Admin'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-010.compliant
-    operator: is_false
-    data_source: 'Magento 2FA Module'
-    tool_used: "Run 'bin/magento module:status Magento_TwoFactorAuth'"
-    expected_result: '2FA module is enabled and actively enforcing 2FA for all admin logins'
-    site_impact: 'Stolen or compromised admin passwords immediately result in store takeover'
-    recommendation: 'Enable Magento_TwoFactorAuth and set up authenticator apps (Google Authenticator / Duo)'
-  -
-    id: HP-011
-    title: 'Disabled Secure Cookie Attributes'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-011.compliant
-    operator: is_false
-    data_source: 'Magento Session Cookie Configuration'
-    tool_used: "Check 'Use Secure Cookies' setting in Stores -> Configuration -> General -> Web"
-    expected_result: "'Use Secure Cookies' is set to Yes for both frontend and admin scopes"
-    site_impact: 'Session cookies transmitted over unencrypted HTTP connections can be stolen'
-    recommendation: "Turn on 'Use Secure Cookies' in Magento Web configuration settings"
-  -
-    id: HP-012
-    title: 'Missing HttpOnly and SameSite Cookie Flags'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-012.compliant
-    operator: is_false
-    data_source: 'HTTP Response Headers & Web Server Config'
-    tool_used: "Inspect Set-Cookie response headers in browser DevTools or using 'curl -I'"
-    expected_result: 'Cookies include HttpOnly and SameSite=Lax or SameSite=Strict attributes'
-    site_impact: 'Site is vulnerable to Cross-Site Scripting (XSS) session theft and CSRF attacks'
-    recommendation: 'Configure web server or PHP session settings to append HttpOnly and SameSite flags'
-  -
-    id: HP-013
-    title: 'Developer or Debug Mode Enabled in Production'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-013.compliant
-    operator: is_false
-    data_source: 'PHP Runtime & Magento Environment'
-    tool_used: "Run 'bin/magento deploy:mode:show' and check display_errors in php.ini"
-    expected_result: "Magento deployment mode is set to 'production' and PHP display_errors is Off"
-    site_impact: 'Exposes DB credentials, server file paths, and application stack traces on errors'
-    recommendation: "Run 'bin/magento deploy:mode:set production' and set display_errors to Off"
-  -
-    id: HP-014
-    title: 'Public Error Pages Disclosing Sensitive PHP Stack Traces'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-014.compliant
-    operator: is_false
-    data_source: 'Magento Error Handler (pub/errors)'
-    tool_used: 'Open a non-existent page and inspect response source code for PHP exception details'
-    expected_result: 'Generic error page displays without exposing PHP stack traces or SQL queries'
-    site_impact: 'Attackers use exposed stack traces and database paths to plan targeted attacks'
-    recommendation: "Configure 'pub/errors/local.xml' to log errors silently and display static error pages"
-  -
-    id: HP-015
-    title: 'OPcache Bytecode Cache Disabled or Low Memory'
-    category: Performance
-    domain: Performance
-    issue_type: Performance
-    risk_level: High
-    metric: catalogue.HP-015.compliant
-    operator: is_false
-    data_source: 'PHP OPcache Extension (php.ini)'
-    tool_used: 'Check opcache.enable and opcache.memory_consumption via phpinfo()'
-    expected_result: 'OPcache enabled with memory >= 512MB and hit rate > 95%'
-    site_impact: 'Severe CPU overhead, slow script execution, high response times'
-    recommendation: 'Enable OPcache and allocate at least 512MB memory in php.ini'
-  -
-    id: HP-016
-    title: 'Stale Running Cron Jobs Stuck in Execution'
-    category: Magento
-    domain: Magento
-    issue_type: Magento
-    risk_level: High
-    metric: catalogue.HP-016.compliant
-    operator: is_false
-    data_source: 'Magento Cron Schedule Table (cron_schedule)'
-    tool_used: "Query cron_schedule table for jobs stuck in 'running' status > 60 minutes"
-    expected_result: 'Zero cron jobs remain stuck in running status past execution timeout threshold'
-    site_impact: 'Blocked cron threads prevent subsequent scheduled tasks (indexing, emails, price rules) from executing'
-    recommendation: 'Kill stuck cron processes and adjust execution timeout limits in configuration'
-  -
-    id: HP-017
-    title: 'Database Table Auto-Increment Exhaustion Risk'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-017.compliant
-    operator: is_false
-    data_source: 'MySQL Table Schema (information_schema.tables)'
-    tool_used: 'Query max auto-increment values vs column data type max capacity (INT/BIGINT)'
-    expected_result: 'Auto-increment usage remains below 80% of max column type capacity'
-    site_impact: 'Database stops inserting new orders, quotes, or catalog entities when max value reached'
-    recommendation: 'Change auto-increment column types from INT to BIGINT on high-volume tables'
-  -
-    id: HP-018
-    title: ' Database Backups or Log Files in Web Root'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-018.compliant
-    operator: is_false
-    data_source: 'Server Disk Storage & Web Server Root'
-    tool_used: "Search 'pub/' and 'var/' for '.sql', '.tar.gz', or log files"
-    expected_result: 'Backups and logs stored outside public web root with restricted file permissions (600)'
-    site_impact: 'Public web visitors can download full DB dumps containing customer data and passwords'
-    recommendation: 'Move backup files outside public web root and restrict file read permissions'
-  -
-    id: HP-019
-    title: 'Default Admin URL Path (/admin) Enabled'
-    category: Security
-    domain: Security
-    issue_type: Security
-    risk_level: High
-    metric: catalogue.HP-019.compliant
-    operator: is_false
-    data_source: 'Magento Core Config (app/etc/env.php)'
-    tool_used: "Check 'admin frontName' in 'app/etc/env.php'"
-    expected_result: 'Custom, non-standard admin URL path configured (e.g., /backend_x9z7)'
-    site_impact: 'Automated botnets continuously attack /admin with brute-force password attempts'
-    recommendation: "Change admin URL in 'env.php' and deploy IP rate limiting at web server / WAF level"
-  -
-    id: HP-020
-    title: 'Long-Running SQL Queries Locking Database'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-020.compliant
-    operator: is_false
-    data_source: 'MySQL Process List'
-    tool_used: "Run 'SHOW FULL PROCESSLIST;' in MySQL and check for queries active > 15 seconds"
-    expected_result: 'No transactional queries remain active longer than 10-15 seconds'
-    site_impact: 'Long queries lock database tables, exhaust connection pools, and crash checkout'
-    recommendation: 'Analyze slow queries using EXPLAIN, optimize missing indexes, and adjust query timeouts'
-  -
-    id: HP-021
-    title: 'InnoDB Transaction Deadlocks During Checkout or Reindexing'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-021.compliant
-    operator: is_false
-    data_source: 'MySQL Engine Status (SHOW ENGINE INNODB STATUS)'
-    tool_used: 'Inspect LATEST DETECTED DEADLOCK section in MySQL engine status'
-    expected_result: 'Zero transaction deadlocks occurring during concurrent order placements or reindexing'
-    site_impact: 'Orders fail mid-checkout, transactions roll back, and inventory reservations get stuck'
-    recommendation: 'Optimize custom database queries and standardize table lock order in custom code'
-  -
-    id: HP-022
-    title: 'Database Tables Missing Primary Key Constraints'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-022.compliant
-    operator: is_false
-    data_source: 'MySQL Information Schema (information_schema.tables)'
-    tool_used: "Query 'information_schema.tables' for tables without primary keys"
-    expected_result: '100% of custom and core database tables possess a primary key index'
-    site_impact: 'Causes severe database replication lag, slow DELETE/UPDATE queries, and server load'
-    recommendation: 'Add primary key auto-increment ID to all database tables lacking one'
-  -
-    id: HP-023
-    title: 'Oversized Indexer Changelog Tables (*_cl)'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-023.compliant
-    operator: is_false
-    data_source: 'Database Indexer Tables'
-    tool_used: "Check row counts of '*_cl' tables in MySQL database"
-    expected_result: 'Indexer changelog tables maintain < 100,000 pending rows during normal operation'
-    site_impact: 'Slows down background indexing, degrades site speed, and locks database rows'
-    recommendation: "Run 'bin/magento indexer:reindex' and verify cron job 'indexer_clean_up' is active"
-  -
-    id: HP-024
-    title: 'High Volume of Slow SQL Query Execution'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-024.compliant
-    operator: is_false
-    data_source: 'MySQL Slow Query Log (/var/log/mysql-slow.log)'
-    tool_used: 'Inspect MySQL slow query log for queries taking > 1.0 second'
-    expected_result: 'Zero recurring queries exceeding the slow query execution threshold'
-    site_impact: 'Consistently slow queries degrade page response times, exhaust PHP workers, and spike CPU'
-    recommendation: 'Add missing database indexes and optimize heavy EAV database queries'
-  -
-    id: HP-025
-    title: 'Database Foreign Key Integrity Violations'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-025.compliant
-    operator: is_false
-    data_source: 'Relational Database Constraints'
-    tool_used: 'Run database foreign key validation queries across sales and catalog tables'
-    expected_result: 'Zero orphaned child records referencing non-existent parent row IDs'
-    site_impact: 'Causes fatal errors during checkout, broken order processing, and corrupted reports'
-    recommendation: 'Clean up orphan database records and repair foreign key mapping constraints'
-  -
-    id: HP-026
-    title: 'Orphaned EAV Attribute Data in Catalog/Customer Tables'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-026.compliant
-    operator: is_false
-    data_source: 'Magento EAV Database Tables (catalog_product_entity_*)'
-    tool_used: 'Query EAV attribute value tables for records missing parent product or customer IDs'
-    expected_result: 'Zero orphaned attribute value rows exist in catalog or customer EAV tables'
-    site_impact: 'Bloats database size, slows down catalog search and category filters, stalls indexing'
-    recommendation: 'Run database cleanup scripts to safely remove orphaned EAV attribute rows'
-  -
-    id: HP-027
-    title: 'Duplicate Product SKUs Across Catalog'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-027.compliant
-    operator: is_false
-    data_source: 'Catalog Product Database (catalog_product_entity)'
-    tool_used: "Run 'SELECT sku, COUNT(*) FROM catalog_product_entity GROUP BY sku HAVING COUNT(*) > 1;'"
-    expected_result: 'Every product has a unique SKU assignment across the entire catalog'
-    site_impact: 'Causes wrong product updates, incorrect order fulfillment, and inventory sync errors'
-    recommendation: 'Resolve duplicate product SKUs and enforce unique database index constraint on SKU'
-  -
-    id: HP-028
-    title: 'Too Many Missed Magento Cron Jobs'
-    category: Magento
-    domain: Magento
-    issue_type: Magento
-    risk_level: High
-    metric: catalogue.HP-028.compliant
-    operator: is_false
-    data_source: 'Magento Cron Schedule Table (cron_schedule)'
-    tool_used: "Query cron_schedule for missed status counts: SELECT COUNT(*) FROM cron_schedule WHERE status='missed';"
-    expected_result: 'Missed cron job count is 0 or within minimal acceptable threshold (< 10)'
-    site_impact: 'Scheduled tasks like price rule calculations, indexer updates, and emails fail'
-    recommendation: 'Increase cron worker thread allocation or fix long-running cron jobs blocking queue'
-  -
-    id: HP-029
-    title: 'Low Full-Page Cache (FPC) Hit Ratio'
-    category: Cache/FPC
-    domain: Cache/FPC
-    issue_type: Cache/FPC
-    risk_level: High
-    metric: catalogue.HP-029.compliant
-    operator: is_false
-    data_source: 'Full-Page Cache / Varnish Engine'
-    tool_used: 'Check cache hit vs miss metrics via Varnish stats or Redis cache telemetry'
-    expected_result: 'FPC hit ratio is >= 85% for public storefront catalog and CMS pages'
-    site_impact: 'Excessive un-cached backend rendering hits PHP-FPM, increasing server load and latency'
-    recommendation: 'Identify cache-busting un-cacheable blocks (cacheable="false") and fix private data loading'
-  -
-    id: HP-030
-    title: 'Excessive System Log File Size & Growth Rate'
-    category: Application/Exceptions
-    domain: Application/Exceptions
-    issue_type: Application/Exceptions
-    risk_level: High
-    metric: catalogue.HP-030.compliant
-    operator: is_false
-    data_source: 'Magento Application Logs (var/log/system.log & exception.log)'
-    tool_used: "Check log file sizes using 'ls -lh var/log/'"
-    expected_result: 'Log files stay small (< 100MB) and rotate automatically'
-    site_impact: 'Rapid log growth exhausts server disk space and slows I/O performance'
-    recommendation: 'Fix underlying application warnings/errors and set up log rotation via logrotate'
-  -
-    id: HP-031
-    title: 'Large Database Table Bloat Exceeding Thresholds'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-031.compliant
-    operator: is_false
-    data_source: 'MySQL Database Table Sizes'
-    tool_used: 'Query information_schema.tables for tables exceeding 10GB or 10 million rows'
-    expected_result: 'Transactional tables (e.g. dataflow_batch_export, report_event, log_url) cleaned regularly'
-    site_impact: 'Degrades database backup speed, causes query latency, and increases infrastructure cost'
-    recommendation: 'Truncate temporary log/batch tables and set up automated table cleanup schedules'
-  -
-    id: HP-032
-    title: 'RabbitMQ / Message Queue Backlog or Service Down'
-    category: Infrastructure
-    domain: Infrastructure
-    issue_type: Infrastructure
-    risk_level: High
-    metric: catalogue.HP-032.compliant
-    operator: is_false
-    data_source: 'RabbitMQ Service & Magento Queue Tables'
-    tool_used: 'Check RabbitMQ management API or queue_message table for unconsumed messages'
-    expected_result: 'Message queue service is running and queue backlog is near 0'
-    site_impact: 'Asynchronous tasks like bulk inventory updates, catalog changes, and export jobs fail'
-    recommendation: 'Restart RabbitMQ service and ensure queue:consumers:start cron processes are running'
-  -
-    id: HP-033
-    title: 'High Database Connection Pool Utilization'
-    category: Database
-    domain: Database
-    issue_type: Database
-    risk_level: High
-    metric: catalogue.HP-033.compliant
-    operator: is_false
-    data_source: 'MySQL Connection Metrics (Threads_connected & max_connections)'
-    tool_used: 'Compare active connections (Threads_connected) against max_connections limit'
-    expected_result: 'Active database connections remain below 80% of max_connections limit'
-    site_impact: "'Too many connections' database error crashes storefront during traffic spikes"
-    recommendation: 'Increase MySQL max_connections, optimize PHP-FPM workers, and use connection pooling'
-  -
-    id: HP-034
-    title: 'Redis / Valkey Cache Service Down or Out of Memory'
-    category: Infrastructure
-    domain: Infrastructure
-    issue_type: Infrastructure
-    risk_level: High
-    metric: catalogue.HP-034.compliant
-    operator: is_false
-    data_source: 'Redis / Valkey In-Memory Cache Store'
-    tool_used: "Run 'redis-cli ping' and check memory usage via 'redis-cli info memory'"
-    expected_result: "Cache service is online ('PONG') with memory usage below configured limit"
-    site_impact: 'Site cache fails, page load times spike dramatically, customer sessions log out'
-    recommendation: 'Monitor Redis memory and set maxmemory-policy volatile-lru in configuration'
-  -
-    id: HP-035
-    title: 'High Disk Space or Inode Capacity Usage'
-    category: Infrastructure
-    domain: Infrastructure
-    issue_type: Infrastructure
-    risk_level: High
-    metric: catalogue.HP-035.compliant
-    operator: is_false
-    data_source: 'Linux Server Storage (df -h & df -i)'
-    tool_used: "Run 'df -h' and 'df -i' in Linux terminal for root and /var partitions"
-    expected_result: 'Disk space and inode utilization remain below 85% capacity'
-    site_impact: 'Full disk causes database write failures, corrupts session files, and halts web server'
-    recommendation: 'Delete old log files, clear temporary deployment files, and set up automated log rotation'
-  -
-    id: HP-036
-    title: 'Core Magento Caches Disabled'
-    category: Cache/FPC
-    domain: Cache/FPC
-    issue_type: Cache/FPC
-    risk_level: High
-    metric: catalogue.HP-036.compliant
-    operator: is_false
-    data_source: 'Magento Cache Status (bin/magento cache:status)'
-    tool_used: "Run 'bin/magento cache:status' in terminal"
-    expected_result: '100% of core cache types (config, layout, block_html, full_page, etc.) are enabled (status 1)'
-    site_impact: 'Disabled caches cause severe performance slowdowns and high server CPU load'
-    recommendation: "Enable all cache types using 'bin/magento cache:enable' and clear cache"
-  -
-    id: HP-037
-    title: 'Full Page Cache (FPC) Engine Misconfigured'
-    category: Cache/FPC
-    domain: Cache/FPC
-    issue_type: Cache/FPC
-    risk_level: High
-    metric: catalogue.HP-037.compliant
-    operator: is_false
-    data_source: 'Magento FPC Config & Varnish Proxy'
-    tool_used: 'Check FPC setting in Stores -> Configuration -> System -> Full Page Cache'
-    expected_result: 'Full Page Cache is enabled and configured to use Varnish or Redis in production'
-    site_impact: 'Storefront pages take several seconds to load, drastically lowering conversion rate'
-    recommendation: 'Configure Varnish Cache or Redis backend for optimal storefront page load speed'
-  -
-    id: HP-038
-    title: 'Magento Cron Job Scheduler Inactive or Failing'
-    category: Magento
-    domain: Magento
-    issue_type: Magento
-    risk_level: High
-    metric: catalogue.HP-038.compliant
-    operator: is_false
-    data_source: 'Server Crontab & Magento Cron Schedule Table'
-    tool_used: "Check 'crontab -l' and query 'cron_schedule' database table for recent executions"
-    expected_result: "Magento cron job 'bin/magento cron:run' executes every minute without errors"
-    site_impact: 'Order emails fail to send, catalog prices do not update, scheduled reindexes stall'
-    recommendation: 'Ensure Magento crontab entry is installed and monitor cron_schedule for errors'
-  -
-    id: HP-039
-    title: 'Invalid or Failing Magento Indexers'
-    category: Magento
-    domain: Magento
-    issue_type: Magento
-    risk_level: High
-    metric: catalogue.HP-039.compliant
-    operator: is_false
-    data_source: 'Magento Indexer Status (bin/magento indexer:status)'
-    tool_used: "Run 'bin/magento indexer:status' in terminal"
-    expected_result: "All indexers report status 'Ready' and mode 'Update by Schedule'"
-    site_impact: 'Outdated product prices, missing catalog items, broken search filters, slow checkout'
-    recommendation: "Run 'bin/magento indexer:reindex' for invalid indexers and set mode to Update by Schedule"
-  -
-    id: HP-040
-    title: 'High Frequency of Fatal Exception Log Errors'
-    category: Application/Exceptions
-    domain: Application/Exceptions
-    issue_type: Application/Exceptions
-    risk_level: High
-    metric: catalogue.HP-040.compliant
-    operator: is_false
-    data_source: 'Magento Exception Log (var/log/exception.log)'
-    tool_used: "Inspect recent entries in 'var/log/exception.log' using 'tail -n 100 var/log/exception.log'"
-    expected_result: 'Zero recurring fatal code exceptions logged during customer browsing or checkout'
-    site_impact: 'Hidden code bugs degrade user experience, cause checkout drop-offs, fill up server disk'
-    recommendation: 'Investigate exception stack traces, fix underlying custom module errors, and patch code'
+- id: HP-001
+  title: Outdated PHP Runtime Version
+  category: Infrastructure
+  domain: Infrastructure
+  issue_type: Infrastructure
+  risk_level: Critical
+  metric: catalogue.HP-001.compliant
+  operator: is_false
+  data_source: PHP Engine & System Runtime
+  tool_used: Run 'php -v' in server terminal
+  expected_result: PHP version is active and supported by Magento (PHP 8.2 or 8.3)
+  site_impact: Security exploits, site crashes, and failed platform upgrades
+  recommendation: Upgrade PHP-FPM and CLI runtime to a supported version
+  root_cause: The measured Magento configuration or service state does not meet the
+    required health baseline.
+  references:
+    Adobe Commerce system requirements: https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements
+- id: HP-002
+  title: Outdated MySQL / MariaDB Server Version
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: Critical
+  metric: catalogue.HP-002.compliant
+  operator: is_false
+  data_source: MySQL / MariaDB / Aurora Database
+  tool_used: Run 'mysql -V' or query 'SELECT VERSION();' in MySQL client
+  expected_result: Database engine is supported (MySQL 8.0+, MariaDB 10.6+, or Aurora
+    v3)
+  site_impact: Database syntax errors, lock timeouts, and failed site updates
+  recommendation: Upgrade database server to a supported release
+  root_cause: Database configuration or schema health does not meet the Magento operating
+    requirements.
+  references:
+    Adobe Commerce system requirements: https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements
+- id: HP-003
+  title: Catalog Search Service Has Unassigned Data
+  category: Infrastructure
+  domain: Infrastructure
+  issue_type: Infrastructure
+  risk_level: Severe
+  metric: catalogue.HP-003.compliant
+  operator: is_false
+  data_source: Configured Magento Search Cluster
+  tool_used: Configured catalog search cluster health check
+  expected_result: Search cluster health is green with zero unassigned shards
+  root_cause: 'Part of the search data is waiting to be assigned to a search server. Technically, the configured search service reports this as an unassigned shard.'
+  site_impact: Storefront search, category filter navigation, and admin product grid
+    stop working
+  recommendation: 'Ask the infrastructure team to restore the configured search service to a healthy state and assign the waiting search data. Do not delete search data or restart production services until the cluster status and disk capacity have been reviewed.'
+- id: HP-004
+  title: Vulnerable Third-Party Composer Packages
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-004.compliant
+  operator: is_false
+  data_source: Composer Dependencies
+  tool_used: Run 'composer audit' in site root directory
+  expected_result: Zero security vulnerabilities reported across installed vendor
+    packages
+  root_cause: Composer found known security advisories in the installed third-party
+    packages.
+  site_impact: Hackers can exploit known security flaws in third-party libraries to
+    gain access
+  recommendation: 'Update only the affected packages after testing in staging: phpcsstandards/phpcsutils and spomky-labs/otphp. Review composer.lock after the update and run composer audit again before deployment.'
+  remediation_commands:
+    - composer update phpcsstandards/phpcsutils spomky-labs/otphp --with-all-dependencies
+- id: HP-005
+  title: Unsafe File Permissions on env.php
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-005.compliant
+  operator: is_false
+  data_source: Adobe Commerce production file-system permission guidance
+  tool_used: Run 'ls -la app/etc/env.php' to check file permissions
+  expected_result: 'env.php is not writable by the web-server group or other users (not writable).'
+  root_cause: 'The current permission mode allows a group user or another local user to change the deployment configuration file.'
+  site_impact: 'A local user or compromised process could change database, cache, or encryption configuration and disrupt the store.'
+  recommendation: 'After confirming the deployment owner and group, run chmod g-w,o-rwx app/etc/env.php. This removes group write access and every permission for other users while keeping the owner permissions unchanged. Recheck the file mode before deployment.'
+  remediation_commands:
+    - chmod g-w,o-rwx app/etc/env.php
+  references:
+    Adobe Commerce production file-system permission guidance: https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/deployment/file-system-permissions
+- id: HP-006
+  title: Storefront or Admin Traffic Missing HTTPS
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-006.compliant
+  operator: is_false
+  data_source: Web Server (Nginx / Apache)
+  tool_used: Configured storefront URL HTTP-to-HTTPS redirect check
+  expected_result: All storefront, admin, and API traffic is strictly encrypted over
+    HTTPS (TLS 1.2+)
+  site_impact: Customer login passwords, session cookies, and payment details can
+    be intercepted
+  recommendation: Enable mandatory HTTPS redirect in Nginx/Apache and set secure base
+    URLs in Magento
+  root_cause: Security configuration or access controls do not meet the Magento hardening
+    policy.
+- id: HP-008
+  title: Missing Core Security Patches
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: Critical
+  metric: catalogue.HP-008.compliant
+  operator: is_false
+  data_source: Adobe Commerce Security Advisory
+  tool_used: Compare installed patch manifest against Adobe Security Bulletins
+  expected_result: All critical security patches applied to installed Magento version
+  site_impact: Store vulnerable to remote code execution and public exploits
+  recommendation: Apply missing security patches via Quality Patches Tool (QPT) or
+    upgrade
+  root_cause: Security configuration or access controls do not meet the Magento hardening
+    policy.
+- id: HP-009
+  title: Insufficient PHP Memory Limit
+  category: Application
+  domain: Application
+  issue_type: Application
+  risk_level: High
+  metric: catalogue.HP-009.compliant
+  operator: is_false
+  data_source: PHP Configuration (php.ini)
+  tool_used: Run 'php -r "echo ini_get(\'memory_limit\');"'
+  expected_result: CLI memory limit >= 4G and FPM memory limit >= 2G
+  root_cause: The scanned PHP runtime has less memory than Magento needs for imports,
+    compilation, and reindexing.
+  site_impact: Out-of-memory fatal errors during reindexing, deployment, or checkout
+  recommendation: Increase memory_limit in php.ini to meet Adobe recommended values
+- id: HP-010
+  title: Two-Factor Authentication (2FA) Disabled for Admin
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-010.compliant
+  operator: is_false
+  data_source: Magento 2FA Module
+  tool_used: Run 'bin/magento module:status Magento_TwoFactorAuth'
+  expected_result: 2FA module is enabled and actively enforcing 2FA for all admin
+    logins
+  root_cause: Magento administrator two-factor authentication is disabled, leaving
+    password-only admin access.
+  site_impact: Stolen or compromised admin passwords immediately result in store takeover
+  recommendation: 'Enable Magento_TwoFactorAuth in app/etc/config.php, deploy the change, and ask each Admin user to enrol with the selected 2FA provider at their next login.'
+  remediation_commands:
+    - bin/magento module:enable Magento_TwoFactorAuth
+    - bin/magento setup:upgrade
+    - bin/magento cache:flush
+    - bin/magento security:tfa:providers
+  references:
+    Adobe Commerce two-factor authentication guide: https://experienceleague.adobe.com/en/docs/commerce-admin/systems/security/2fa/security-two-factor-authentication
+- id: HP-011
+  title: Disabled Secure Cookie Attributes
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-011.compliant
+  operator: is_false
+  data_source: Magento Session Cookie Configuration
+  tool_used: Check 'Use Secure Cookies' setting in Stores -> Configuration -> General
+    -> Web
+  expected_result: '''Use Secure Cookies'' is set to Yes for both frontend and admin
+    scopes'
+  site_impact: Session cookies transmitted over unencrypted HTTP connections can be
+    stolen
+  recommendation: Turn on 'Use Secure Cookies' in Magento Web configuration settings
+  root_cause: Security configuration or access controls do not meet the Magento hardening
+    policy.
+- id: HP-012
+  title: Missing HttpOnly and SameSite Cookie Flags
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-012.compliant
+  operator: is_false
+  data_source: HTTP Response Headers & Web Server Config
+  tool_used: Inspect Set-Cookie response headers in browser DevTools or using 'curl
+    -I'
+  expected_result: Cookies include HttpOnly and SameSite=Lax or SameSite=Strict attributes
+  root_cause: One or more session cookies are missing the browser flags that limit
+    script access and cross-site requests.
+  site_impact: Site is vulnerable to Cross-Site Scripting (XSS) session theft and
+    CSRF attacks
+  recommendation: Configure web server or PHP session settings to append HttpOnly
+    and SameSite flags
+- id: HP-013
+  title: Developer or Debug Mode Enabled in Production
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-013.compliant
+  operator: is_false
+  data_source: PHP Runtime & Magento Environment
+  tool_used: Run 'bin/magento deploy:mode:show' and check display_errors in php.ini
+  expected_result: Magento deployment mode is set to 'production' and PHP display_errors
+    is Off
+  root_cause: The site is running with developer-style error output enabled or is
+    not in production deployment mode.
+  site_impact: Exposes DB credentials, server file paths, and application stack traces
+    on errors
+  recommendation: Run 'bin/magento deploy:mode:set production' and set display_errors
+    to Off
+- id: HP-014
+  title: Public Error Page Shows Server Details
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-014.compliant
+  operator: is_false
+  data_source: Magento Error Handler (pub/errors)
+  tool_used: Request a non-existent public URL and inspect the returned error page
+  expected_result: Generic error page displays without exposing PHP stack traces or
+    SQL queries
+  root_cause: A public error response exposed a server filesystem path or other diagnostic
+    detail.
+  site_impact: Attackers use exposed stack traces and database paths to plan targeted
+    attacks
+  recommendation: 'To check this, open any non-existent storefront URL and confirm the page does not show server paths, stack traces, SQL errors, or exception names. Configure pub/errors/local.xml to show a generic error page and keep technical details in server logs only.'
+- id: HP-015
+  title: OPcache Bytecode Cache Disabled or Low Memory
+  category: Performance
+  domain: Performance
+  issue_type: Performance
+  risk_level: High
+  metric: catalogue.HP-015.compliant
+  operator: is_false
+  data_source: PHP OPcache Extension (php.ini)
+  tool_used: Check opcache.enable and opcache.memory_consumption via phpinfo()
+  expected_result: OPcache enabled with memory >= 512MB and hit rate > 95%
+  root_cause: OPcache is enabled but its measured hit rate is below the configured
+    performance target.
+  site_impact: Severe CPU overhead, slow script execution, high response times
+  recommendation: Enable OPcache and allocate at least 512MB memory in php.ini
+- id: HP-016
+  title: Stale Running Cron Jobs Stuck in Execution
+  category: Magento
+  domain: Magento
+  issue_type: Magento
+  risk_level: High
+  metric: catalogue.HP-016.compliant
+  operator: is_false
+  data_source: Magento Cron Schedule Table (cron_schedule)
+  tool_used: Query cron_schedule table for jobs stuck in 'running' status > 60 minutes
+  expected_result: Zero cron jobs remain stuck in running status past execution timeout
+    threshold
+  site_impact: Blocked cron threads prevent subsequent scheduled tasks (indexing,
+    emails, price rules) from executing
+  recommendation: Kill stuck cron processes and adjust execution timeout limits in
+    configuration
+  root_cause: The measured Magento configuration or service state does not meet the
+    required health baseline.
+- id: HP-017
+  title: Database Table Auto-Increment Exhaustion Risk
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-017.compliant
+  operator: is_false
+  data_source: MySQL Table Schema (information_schema.tables)
+  tool_used: Query max auto-increment values vs column data type max capacity (INT/BIGINT)
+  expected_result: Auto-increment usage remains below 80% of max column type capacity
+  site_impact: Database stops inserting new orders, quotes, or catalog entities when
+    max value reached
+  recommendation: Change auto-increment column types from INT to BIGINT on high-volume
+    tables
+  root_cause: Database configuration or schema health does not meet the Magento operating
+    requirements.
+- id: HP-018
+  title: ' Database Backups or Log Files in Web Root'
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-018.compliant
+  operator: is_false
+  data_source: Server Disk Storage & Web Server Root
+  tool_used: Search 'pub/' and 'var/' for '.sql', '.tar.gz', or log files
+  expected_result: Backups and logs stored outside public web root with restricted
+    file permissions (600)
+  site_impact: Public web visitors can download full DB dumps containing customer
+    data and passwords
+  recommendation: Move backup files outside public web root and restrict file read
+    permissions
+  root_cause: Security configuration or access controls do not meet the Magento hardening
+    policy.
+- id: HP-019
+  title: Default Admin URL Path (/admin) Enabled
+  category: Security
+  domain: Security
+  issue_type: Security
+  risk_level: High
+  metric: catalogue.HP-019.compliant
+  operator: is_false
+  data_source: Magento Core Config (app/etc/env.php)
+  tool_used: Check 'admin frontName' in 'app/etc/env.php'
+  expected_result: Custom, non-standard admin URL path configured (e.g., /backend_x9z7)
+  site_impact: Automated botnets continuously attack /admin with brute-force password
+    attempts
+  recommendation: Change admin URL in 'env.php' and deploy IP rate limiting at web
+    server / WAF level
+  root_cause: Security configuration or access controls do not meet the Magento hardening
+    policy.
+- id: HP-020
+  title: Long-Running SQL Queries Locking Database
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-020.compliant
+  operator: is_false
+  data_source: MySQL Process List
+  tool_used: Run 'SHOW FULL PROCESSLIST;' in MySQL and check for queries active >
+    15 seconds
+  expected_result: No transactional queries remain active longer than 10-15 seconds
+  site_impact: Long queries lock database tables, exhaust connection pools, and crash
+    checkout
+  recommendation: Analyze slow queries using EXPLAIN, optimize missing indexes, and
+    adjust query timeouts
+  root_cause: Database configuration or schema health does not meet the Magento operating
+    requirements.
+- id: HP-021
+  title: InnoDB Transaction Deadlocks During Checkout or Reindexing
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-021.compliant
+  operator: is_false
+  data_source: MySQL Engine Status (SHOW ENGINE INNODB STATUS)
+  tool_used: Inspect LATEST DETECTED DEADLOCK section in MySQL engine status
+  expected_result: Zero transaction deadlocks occurring during concurrent order placements
+    or reindexing
+  site_impact: Orders fail mid-checkout, transactions roll back, and inventory reservations
+    get stuck
+  recommendation: Optimize custom database queries and standardize table lock order
+    in custom code
+  root_cause: Database configuration or schema health does not meet the Magento operating
+    requirements.
+- id: HP-022
+  title: Custom Tables Missing Primary Key Constraints
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-022.compliant
+  operator: is_false
+  data_source: MySQL Information Schema (information_schema.tables)
+  tool_used: Query 'information_schema.tables' for tables without primary keys
+  expected_result: 100% of custom and core database tables possess a primary key index
+  root_cause: One or more database tables do not declare a primary key, so row identity
+    and maintenance operations are less reliable.
+  site_impact: Causes severe database replication lag, slow DELETE/UPDATE queries,
+    and server load
+  recommendation: Add primary key auto-increment ID to all database tables lacking
+    one
+- id: HP-023
+  title: Oversized Indexer Changelog Tables (*_cl)
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-023.compliant
+  operator: is_false
+  data_source: Database Indexer Tables
+  tool_used: Check row counts of '*_cl' tables in MySQL database
+  expected_result: Indexer changelog tables maintain < 100,000 pending rows during
+    normal operation
+  site_impact: Slows down background indexing, degrades site speed, and locks database
+    rows
+  recommendation: Run 'bin/magento indexer:reindex' and verify cron job 'indexer_clean_up'
+    is active
+  root_cause: Database configuration or schema health does not meet the Magento operating
+    requirements.
+- id: HP-024
+  title: High Volume of Slow SQL Query Execution
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-024.compliant
+  operator: is_false
+  data_source: MySQL Slow Query Log (/var/log/mysql-slow.log)
+  tool_used: Inspect MySQL slow query log for queries taking > 1.0 second
+  expected_result: Zero recurring queries exceeding the slow query execution threshold
+  site_impact: Consistently slow queries degrade page response times, exhaust PHP
+    workers, and spike CPU
+  recommendation: Add missing database indexes and optimize heavy EAV database queries
+  root_cause: Database configuration or schema health does not meet the Magento operating
+    requirements.
+- id: HP-025
+  title: Custom Data Relationship Integrity
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-025.compliant
+  operator: is_false
+  data_source: Relational Database Constraints
+  tool_used: Run database foreign key validation queries across sales and catalog
+    tables
+  expected_result: Zero orphaned child records referencing non-existent parent row
+    IDs
+  root_cause: Custom data was removed or imported without preserving its referenced
+    parent records.
+  site_impact: Causes fatal errors during checkout, broken order processing, and corrupted
+    reports
+  recommendation: Confirm the affected table and records, then repair or remove only
+    the invalid custom rows after a database backup.
+  finding_description: A custom or application data relationship points to a record
+    that does not exist. Magento core foreign-key design is not being challenged.
+- id: HP-026
+  title: Custom EAV Data Integrity
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-026.compliant
+  operator: is_false
+  data_source: Magento EAV Database Tables (catalog_product_entity_*)
+  tool_used: Query EAV attribute value tables for records missing parent product or
+    customer IDs
+  expected_result: Zero orphaned attribute value rows exist in catalog or customer
+    EAV tables
+  root_cause: A custom import, extension, or cleanup task left an attribute value
+    without its parent entity or attribute definition.
+  site_impact: Bloats database size, slows down catalog search and category filters,
+    stalls indexing
+  recommendation: Review the listed rows and remove or repair only confirmed orphaned
+    custom data after a database backup.
+  finding_description: A catalog or customer attribute row points to a missing record.
+    Standard Magento EAV architecture is supported and is not itself a finding.
+- id: HP-027
+  title: Duplicate Product SKUs Across Catalog
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-027.compliant
+  operator: is_false
+  data_source: Catalog Product Database (catalog_product_entity)
+  tool_used: Run 'SELECT sku, COUNT(*) FROM catalog_product_entity GROUP BY sku HAVING
+    COUNT(*) > 1;'
+  expected_result: Every product has a unique SKU assignment across the entire catalog
+  site_impact: Causes wrong product updates, incorrect order fulfillment, and inventory
+    sync errors
+  recommendation: Resolve duplicate product SKUs and enforce unique database index
+    constraint on SKU
+  root_cause: Database configuration or schema health does not meet the Magento operating
+    requirements.
+- id: HP-028
+  title: Too Many Missed Magento Cron Jobs
+  category: Magento
+  domain: Magento
+  issue_type: Magento
+  risk_level: High
+  metric: catalogue.HP-028.compliant
+  operator: is_false
+  data_source: Magento Cron Schedule Table (cron_schedule)
+  tool_used: 'Query cron_schedule for missed status counts: SELECT COUNT(*) FROM cron_schedule
+    WHERE status=''missed'';'
+  expected_result: Missed cron job count is 0 or within minimal acceptable threshold
+    (< 10)
+  site_impact: Scheduled tasks like price rule calculations, indexer updates, and
+    emails fail
+  recommendation: Increase cron worker thread allocation or fix long-running cron
+    jobs blocking queue
+  root_cause: The measured Magento configuration or service state does not meet the
+    required health baseline.
+- id: HP-029
+  title: Low Full-Page Cache (FPC) Hit Ratio
+  category: Cache/FPC
+  domain: Cache/FPC
+  issue_type: Cache/FPC
+  risk_level: High
+  metric: catalogue.HP-029.compliant
+  operator: is_false
+  data_source: Full-Page Cache / Varnish Engine
+  tool_used: Check cache hit vs miss metrics via Varnish stats or Redis cache telemetry
+  expected_result: FPC hit ratio is >= 85% for public storefront catalog and CMS pages
+  site_impact: Excessive un-cached backend rendering hits PHP-FPM, increasing server
+    load and latency
+  recommendation: Identify cache-busting un-cacheable blocks (cacheable="false") and
+    fix private data loading
+  root_cause: The measured Magento configuration or service state does not meet the
+    required health baseline.
+- id: HP-030
+  title: Excessive System Log File Size & Growth Rate
+  category: Application/Exceptions
+  domain: Application/Exceptions
+  issue_type: Application/Exceptions
+  risk_level: High
+  metric: catalogue.HP-030.compliant
+  operator: is_false
+  data_source: Magento Application Logs (var/log/system.log & exception.log)
+  tool_used: Check log file sizes using 'ls -lh var/log/'
+  expected_result: Log files stay small (< 100MB) and rotate automatically
+  site_impact: Rapid log growth exhausts server disk space and slows I/O performance
+  recommendation: Fix underlying application warnings/errors and set up log rotation
+    via logrotate
+  root_cause: The measured Magento configuration or service state does not meet the
+    required health baseline.
+- id: HP-031
+  title: Large Database Table Bloat Exceeding Thresholds
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-031.compliant
+  operator: is_false
+  data_source: MySQL Database Table Sizes
+  tool_used: Query information_schema.tables for tables exceeding 10GB or 10 million
+    rows
+  expected_result: Transactional tables (e.g. dataflow_batch_export, report_event,
+    log_url) cleaned regularly
+  site_impact: Degrades database backup speed, causes query latency, and increases
+    infrastructure cost
+  recommendation: Truncate temporary log/batch tables and set up automated table cleanup
+    schedules
+  root_cause: Database configuration or schema health does not meet the Magento operating
+    requirements.
+- id: HP-032
+  title: RabbitMQ / Message Queue Backlog or Service Down
+  category: Infrastructure
+  domain: Infrastructure
+  issue_type: Infrastructure
+  risk_level: High
+  metric: catalogue.HP-032.compliant
+  operator: is_false
+  data_source: RabbitMQ Service & Magento Queue Tables
+  tool_used: Check RabbitMQ management API or queue_message table for unconsumed messages
+  expected_result: Message queue service is running and queue backlog is near 0
+  site_impact: Asynchronous tasks like bulk inventory updates, catalog changes, and
+    export jobs fail
+  recommendation: Restart RabbitMQ service and ensure queue:consumers:start cron processes
+    are running
+  root_cause: The measured Magento configuration or service state does not meet the
+    required health baseline.
+- id: HP-033
+  title: High Database Connection Pool Utilization
+  category: Database
+  domain: Database
+  issue_type: Database
+  risk_level: High
+  metric: catalogue.HP-033.compliant
+  operator: is_false
+  data_source: MySQL Connection Metrics (Threads_connected & max_connections)
+  tool_used: Compare active connections (Threads_connected) against max_connections
+    limit
+  expected_result: Active database connections remain below 80% of max_connections
+    limit
+  site_impact: '''Too many connections'' database error crashes storefront during
+    traffic spikes'
+  recommendation: Increase MySQL max_connections, optimize PHP-FPM workers, and use
+    connection pooling
+  root_cause: Database configuration or schema health does not meet the Magento operating
+    requirements.
+- id: HP-034
+  title: Redis / Valkey Cache Service Down or Out of Memory
+  category: Infrastructure
+  domain: Infrastructure
+  issue_type: Infrastructure
+  risk_level: High
+  metric: catalogue.HP-034.compliant
+  operator: is_false
+  data_source: Redis / Valkey In-Memory Cache Store
+  tool_used: Run 'redis-cli ping' and check memory usage via 'redis-cli info memory'
+  expected_result: Cache service is online ('PONG') with memory usage below configured
+    limit
+  site_impact: Site cache fails, page load times spike dramatically, customer sessions
+    log out
+  recommendation: Monitor Redis memory and set maxmemory-policy volatile-lru in configuration
+  root_cause: The measured Magento configuration or service state does not meet the
+    required health baseline.
+- id: HP-035
+  title: High Disk Space or Inode Capacity Usage
+  category: Infrastructure
+  domain: Infrastructure
+  issue_type: Infrastructure
+  risk_level: High
+  metric: catalogue.HP-035.compliant
+  operator: is_false
+  data_source: Linux Server Storage (df -h & df -i)
+  tool_used: Run 'df -h' and 'df -i' in Linux terminal for root and /var partitions
+  expected_result: Disk space and inode utilization remain below 85% capacity
+  site_impact: Full disk causes database write failures, corrupts session files, and
+    halts web server
+  recommendation: Delete old log files, clear temporary deployment files, and set
+    up automated log rotation
+  root_cause: The measured Magento configuration or service state does not meet the
+    required health baseline.
+- id: HP-036
+  title: Disabled Magento Cache Types
+  category: Cache/FPC
+  domain: Cache/FPC
+  issue_type: Cache/FPC
+  risk_level: High
+  metric: catalogue.HP-036.compliant
+  operator: is_false
+  data_source: Magento Cache Status (bin/magento cache:status)
+  tool_used: Run 'bin/magento cache:status' in terminal
+  expected_result: Only the cache types required for this environment are enabled.
+  root_cause: One or more Magento cache types are disabled, so Magento must rebuild
+    data that should be served from cache.
+  site_impact: Disabled caches cause severe performance slowdowns and high server
+    CPU load
+  recommendation: Enable only the disabled cache types named in the finding, then clear the Magento cache. Do not change cache types that are already enabled.
+- id: HP-037
+  title: Full Page Cache (FPC) Engine Misconfigured
+  category: Cache/FPC
+  domain: Cache/FPC
+  issue_type: Cache/FPC
+  risk_level: High
+  metric: catalogue.HP-037.compliant
+  operator: is_false
+  data_source: Magento FPC Config & Varnish Proxy
+  tool_used: Check FPC setting in Stores -> Configuration -> System -> Full Page Cache
+  expected_result: Full Page Cache is enabled and configured to use Varnish or Redis
+    in production
+  root_cause: Full-page cache is enabled, but its configured backend is not a recognized
+    Varnish or Redis/Valkey production backend.
+  site_impact: Storefront pages take several seconds to load, drastically lowering
+    conversion rate
+  recommendation: Enable the full-page cache, choose the approved Varnish or Redis/Valkey backend, clear Magento cache, and retest a storefront page.
+  finding_description: Full-page cache is not using a supported production setup. The report shows whether it is enabled and which cache engine Magento selected.
+- id: HP-038
+  title: Magento Cron Job Scheduler Inactive or Failing
+  category: Magento
+  domain: Magento
+  issue_type: Magento
+  risk_level: High
+  metric: catalogue.HP-038.compliant
+  operator: is_false
+  data_source: Server Crontab & Magento Cron Schedule Table
+  tool_used: Check 'crontab -l' and query 'cron_schedule' database table for recent
+    executions
+  expected_result: Magento cron job 'bin/magento cron:run' executes every minute without
+    errors
+  root_cause: Magento cron has not completed a recent successful run or has recorded
+    scheduling errors.
+  site_impact: Order emails fail to send, catalog prices do not update, scheduled
+    reindexes stall
+  recommendation: Ensure Magento crontab entry is installed and monitor cron_schedule
+    for errors
+- id: HP-039
+  title: Invalid or Failing Magento Indexers
+  category: Magento
+  domain: Magento
+  issue_type: Magento
+  risk_level: High
+  metric: catalogue.HP-039.compliant
+  operator: is_false
+  data_source: Magento Indexer Status (bin/magento indexer:status)
+  tool_used: Run 'bin/magento indexer:status' in terminal
+  expected_result: All indexers report status 'Ready' and mode 'Update by Schedule'
+  root_cause: At least one Magento indexer is invalid or is not configured to update
+    by schedule.
+  site_impact: Outdated product prices, missing catalog items, broken search filters,
+    slow checkout
+  recommendation: Run 'bin/magento indexer:reindex' for invalid indexers and set mode
+    to Update by Schedule
+- id: HP-040
+  title: High Frequency of Fatal Exception Log Errors
+  category: Application/Exceptions
+  domain: Application/Exceptions
+  issue_type: Application/Exceptions
+  risk_level: High
+  metric: catalogue.HP-040.compliant
+  operator: is_false
+  data_source: Magento Exception Log (var/log/exception.log)
+  tool_used: Inspect recent entries in 'var/log/exception.log' using 'tail -n 100
+    var/log/exception.log'
+  expected_result: Zero recurring fatal code exceptions logged during customer browsing
+    or checkout
+  root_cause: The log sample contains repeated fatal exception signatures, indicating
+    an application error is recurring.
+  site_impact: Hidden code bugs degrade user experience, cause checkout drop-offs,
+    fill up server disk
+  recommendation: Open the named log source, inspect the reported exception type and
+    sample, then fix the responsible custom module or integration.
+  finding_description: The recent Magento logs contain repeated fatal exceptions.
+    The report names the exception type and source below so the owning module can
+    be identified.
+- id: HP-041
+  title: Suspicious code indicator scan
+  category: Security
+  domain: Security
+  issue_type: Malware indicators
+  risk_level: High
+  metric: catalogue.HP-041.compliant
+  operator: is_false
+  data_source: Magento filesystem and read-only CLI access
+  tool_used: rg -n --glob "*.php" "(base64_decode\(|eval\(|gzinflate\(|shell_exec\(|passthru\(|system\()"
+    app/code pub var generated
+  expected_result: No unreviewed high-risk pattern in executable writable/custom code.
+  root_cause: Inspect suspicious code indicator scan without changing application
+    or infrastructure state.
+  site_impact: Inspect suspicious code indicator scan without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate suspicious code indicator scan using the
+    verified evidence above.
+- id: HP-042
+  title: Database user privileges
+  category: Database
+  domain: Database
+  issue_type: Database security
+  risk_level: High
+  metric: catalogue.HP-042.compliant
+  operator: is_false
+  data_source: Read-only database account with INFORMATION_SCHEMA and Magento schema
+    SELECT
+  tool_used: SELECT GRANTEE, PRIVILEGE_TYPE, IS_GRANTABLE FROM information_schema.user_privileges
+    WHERE GRANTEE = CURRENT_USER()
+  expected_result: Magento runtime account has least privilege for its schema and
+    does not hold global FILE, SUPER, GRANT OPTION, or administrative privileges.
+  root_cause: Inspect database user privileges without changing application or infrastructure
+    state.
+  site_impact: Inspect database user privileges without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate database user privileges using the verified
+    evidence above.
+- id: HP-043
+  title: Remote database exposure
+  category: Security
+  domain: Security
+  issue_type: Network security
+  risk_level: Critical
+  metric: catalogue.HP-043.compliant
+  operator: is_false
+  data_source: DevOps/server network configuration access
+  tool_used: Inspect database bind-address/listen settings and firewall/security-group
+    evidence when server access is provided; otherwise report NOT_CHECKED
+  expected_result: Database is not publicly reachable.
+  root_cause: Inspect remote database exposure without changing application or infrastructure
+    state.
+  site_impact: Inspect remote database exposure without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate remote database exposure using the verified
+    evidence above.
+- id: HP-044
+  title: Backup and log file permissions
+  category: Security
+  domain: Security
+  issue_type: Data protection
+  risk_level: High
+  metric: catalogue.HP-044.compliant
+  operator: is_false
+  data_source: Filesystem metadata access
+  tool_used: 'find var/backups var/log -type f -printf "%m %u:%g %p
+
+    "; inspect configured backup paths if present'
+  expected_result: Sensitive files are not  and have expected owner/group.
+  root_cause: Inspect backup and log file permissions without changing application
+    or infrastructure state.
+  site_impact: Inspect backup and log file permissions without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate backup and log file permissions using
+    the verified evidence above.
+- id: HP-045
+  title: HTTP security headers
+  category: Security
+  domain: Security
+  issue_type: HTTP security
+  risk_level: Medium
+  metric: catalogue.HP-045.compliant
+  operator: is_false
+  data_source: Public HTTP access
+  tool_used: curl -sSI --max-time 10 configured storefront URL
+  expected_result: Required policy headers present with safe values.
+  root_cause: Inspect http security headers without changing application or infrastructure
+    state.
+  site_impact: Inspect http security headers without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate http security headers using the verified
+    evidence above.
+- id: HP-046
+  title: Admin brute-force and rate-limiting controls
+  category: Security
+  domain: Security
+  issue_type: Access protection
+  risk_level: High
+  metric: catalogue.HP-046.compliant
+  operator: is_false
+  data_source: Magento config; optional web-server/WAF/log access
+  tool_used: Inspect admin/security config, web-server/WAF rate-limit configuration,
+    and access-log status distribution if available
+  expected_result: Layered brute-force control is documented and enabled.
+  root_cause: Inspect admin brute-force and rate-limiting controls without changing
+    application or infrastructure state.
+  site_impact: Inspect admin brute-force and rate-limiting controls without changing
+    application or infrastructure state.
+  recommendation: Investigate and remediate admin brute-force and rate-limiting controls
+    using the verified evidence above.
+- id: HP-047
+  title: Security Scan Tool registration evidence
+  category: Security
+  domain: Security
+  issue_type: External security scanning
+  risk_level: Low
+  metric: catalogue.HP-047.compliant
+  operator: is_false
+  data_source: Magento config; optional user-supplied scan export
+  tool_used: Inspect configured public site URLs and an optional local SWAT integration
+    metadata file only; never authenticate to Adobe account automatically
+  expected_result: Security scanning is externally enabled or exception documented.
+  root_cause: Inspect security scan tool registration evidence without changing application
+    or infrastructure state.
+  site_impact: Inspect security scan tool registration evidence without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate security scan tool registration evidence
+    using the verified evidence above.
+- id: HP-048
+  title: Unsecure base URL
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-048.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/env.php, app/etc/config.php and SELECT scope,scope_id,value
+    FROM core_config_data WHERE path='web/unsecure/base_url'
+  expected_result: Unsecure base URL is a valid canonical URL, not localhost/private
+    address in production, and aligns with secure hostname.
+  root_cause: Inspect unsecure base url without changing application or infrastructure
+    state.
+  site_impact: Inspect unsecure base url without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate unsecure base url using the verified evidence
+    above.
+- id: HP-049
+  title: Base URL scope consistency
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-049.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/env.php, app/etc/config.php and SELECT scope,scope_id,value
+    FROM core_config_data WHERE path='web/unsecure/base_url'
+  expected_result: Website/store-view base URLs are intentional, unique where required,
+    and no scope inherits an invalid host.
+  root_cause: Inspect base url scope consistency without changing application or infrastructure
+    state.
+  site_impact: Inspect base url scope consistency without changing application or
+    infrastructure state.
+  recommendation: Investigate and remediate base url scope consistency using the verified
+    evidence above.
+- id: HP-050
+  title: Cookie domain and path
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-050.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path IN
+    ('web/cookie/cookie_domain','web/cookie/cookie_path')
+  expected_result: Cookie domain and cookie path are valid for configured base hosts;
+    no broad or mismatched domain in production.
+  root_cause: Inspect cookie domain and path without changing application or infrastructure
+    state.
+  site_impact: Inspect cookie domain and path without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate cookie domain and path using the verified
+    evidence above.
+- id: HP-051
+  title: Session storage backend
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-051.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/env.php session section and deployment topology hint; mask
+    host/password/database.
+  expected_result: Session backend in env.php is file, Redis/Valkey, or database as
+    policy allows; multi-node production should not use local file sessions.
+  root_cause: Inspect session storage backend without changing application or infrastructure
+    state.
+  site_impact: Inspect session storage backend without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate session storage backend using the verified
+    evidence above.
+- id: HP-052
+  title: Application cache configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-052.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/env.php cache and cache_types sections; bin/magento cache:status
+  expected_result: Cache frontends/backends are configured consistently in env.php;
+    production has a persistent/shared backend where topology requires it.
+  root_cause: Inspect application cache configuration without changing application
+    or infrastructure state.
+  site_impact: Inspect application cache configuration without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate application cache configuration using
+    the verified evidence above.
+- id: HP-053
+  title: Full-page cache application setting
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-053.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,value FROM core_config_data WHERE path='system/full_page_cache/caching_application';
+    bin/magento cache:status
+  expected_result: Full-page cache is enabled and uses built-in or Varnish according
+    to deployment policy.
+  root_cause: The full-page cache application setting is disabled or is not set to a supported Magento cache application.
+  site_impact: Storefront pages may be generated repeatedly instead of being served from cache, increasing page-load time and server load.
+  recommendation: In Stores > Configuration > Advanced > System > Full Page Cache, enable caching and select the approved application for this environment. Clear Magento cache, warm the storefront cache, and confirm cached responses are served.
+- id: HP-054
+  title: Varnish configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-054.compliant
+  operator: is_false
+  data_source: Magento config; optional Varnish read-only admin access
+  tool_used: SELECT path,value FROM core_config_data WHERE path LIKE 'system/full_page_cache/varnish/%';
+    varnishadm ping if allow-listed
+  expected_result: When Varnish is selected, access list, backend host/port and exported
+    VCL checksum are present and service is reachable; otherwise NOT_APPLICABLE.
+  root_cause: Inspect varnish configuration without changing application or infrastructure
+    state.
+  site_impact: Inspect varnish configuration without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate varnish configuration using the verified
+    evidence above.
+- id: HP-055
+  title: Session cookie lifetime and validation
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-055.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT path,value FROM core_config_data WHERE path LIKE 'web/cookie/%'
+    OR path LIKE 'web/session/%'; read env.php session
+  expected_result: Cookie lifetime, session use_remote_addr/use_http_via and session
+    size policy are intentional; values must not cause unsafe or unstable sessions.
+  root_cause: Inspect session cookie lifetime and validation without changing application
+    or infrastructure state.
+  site_impact: Inspect session cookie lifetime and validation without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate session cookie lifetime and validation
+    using the verified evidence above.
+- id: HP-056
+  title: Redis cache configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-056.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/env.php cache/session configuration; issue PING only.
+  expected_result: When Redis/Valkey backend is configured, hostname, database separation,
+    prefix, compression and persistent connection policy meet policy; mask secrets.
+  root_cause: Inspect redis cache configuration without changing application or infrastructure
+    state.
+  site_impact: Inspect redis cache configuration without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate redis cache configuration using the verified
+    evidence above.
+- id: HP-057
+  title: Database connection configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-057.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/env.php db connection section; execute SELECT 1 through
+    Magento resource connection.
+  expected_result: Database host, port, table prefix, persistent connections and SSL
+    options are syntactically valid; secrets always masked.
+  root_cause: Inspect database connection configuration without changing application
+    or infrastructure state.
+  site_impact: Inspect database connection configuration without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate database connection configuration using
+    the verified evidence above.
+- id: HP-058
+  title: Search engine configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-058.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'catalog/search/%'; read env.php search config
+  expected_result: Configured catalog search engine has valid endpoint/index prefix
+    and matches reachable service; do not expose credentials.
+  root_cause: Inspect search engine configuration without changing application or
+    infrastructure state.
+  site_impact: Inspect search engine configuration without changing application or
+    infrastructure state.
+  recommendation: Investigate and remediate search engine configuration using the
+    verified evidence above.
+- id: HP-059
+  title: Email transport configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-059.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    '%smtp%' OR path LIKE 'system/%mail%'
+  expected_result: Core or extension email transport configuration has a non-empty
+    safe sender/host configuration; mask username/password/API key.
+  root_cause: The configured sender email address is missing or invalid, so Magento cannot reliably create outbound email messages.
+  site_impact: Order confirmations, password resets, and other customer emails may fail or be rejected by the mail provider.
+  recommendation: In Stores > Configuration > General > Store Email Addresses, enter a valid monitored sender address. Review SMTP or mail-provider settings, send a test email from a non-production environment, and confirm delivery and reply handling.
+- id: HP-060
+  title: Store, website, and store-view hierarchy
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-060.compliant
+  operator: is_false
+  data_source: Read-only database access
+  tool_used: SELECT website_id,code,default_group_id FROM store_website; SELECT group_id,website_id,root_category_id,default_store_id
+    FROM store_group; SELECT store_id,code,website_id,group_id,is_active FROM store
+  expected_result: Compare store_website, store_group, store tables to effective base
+    URLs, default groups/stores and enabled status; detect orphan mappings.
+  root_cause: Inspect store, website, and store-view hierarchy without changing application
+    or infrastructure state.
+  site_impact: Inspect store, website, and store-view hierarchy without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate store, website, and store-view hierarchy
+    using the verified evidence above.
+- id: HP-061
+  title: Default and allowed countries
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-061.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path IN
+    ('general/country/default','general/country/allow')
+  expected_result: Default country is in allowed_countries for each relevant scope
+    and has directory country data.
+  root_cause: Inspect default and allowed countries without changing application or
+    infrastructure state.
+  site_impact: Inspect default and allowed countries without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate default and allowed countries using the
+    verified evidence above.
+- id: HP-062
+  title: Locale and timezone
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Low
+  metric: catalogue.HP-062.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path IN
+    ('general/locale/code','general/locale/timezone')
+  expected_result: Locale and timezone are valid IANA/PHP values and consistent with
+    store/business policy.
+  root_cause: Inspect locale and timezone without changing application or infrastructure
+    state.
+  site_impact: Inspect locale and timezone without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate locale and timezone using the verified
+    evidence above.
+- id: HP-063
+  title: Base and allowed currencies
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-063.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'currency/%'
+  expected_result: Base currency exists, allowed currencies include base currency,
+    and rates configuration is complete where multiple currencies are enabled.
+  root_cause: Inspect base and allowed currencies without changing application or
+    infrastructure state.
+  site_impact: Inspect base and allowed currencies without changing application or
+    infrastructure state.
+  recommendation: Investigate and remediate base and allowed currencies using the
+    verified evidence above.
+- id: HP-064
+  title: Tax configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-064.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'tax/%'; SELECT class_id,class_name,class_type FROM tax_class
+  expected_result: Tax default country/region/postcode, calculation basis, display
+    settings and required tax classes are configured consistently.
+  root_cause: Inspect tax configuration without changing application or infrastructure
+    state.
+  site_impact: Inspect tax configuration without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate tax configuration using the verified evidence
+    above.
+- id: HP-065
+  title: Shipping configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-065.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'carriers/%/active'
+  expected_result: At least one shipping carrier is active for every enabled website
+    or an intentional quote-only/no-shipping policy is documented.
+  root_cause: Inspect shipping configuration without changing application or infrastructure
+    state.
+  site_impact: Inspect shipping configuration without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate shipping configuration using the verified
+    evidence above.
+- id: HP-066
+  title: Payment configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-066.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'payment/%'
+  expected_result: Payment methods intended for each website are active, sandbox/production
+    credentials are appropriate for environment, and no plaintext secret is reported.
+  root_cause: Inspect payment configuration without changing application or infrastructure
+    state.
+  site_impact: Inspect payment configuration without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate payment configuration using the verified
+    evidence above.
+- id: HP-067
+  title: Product alert configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Low
+  metric: catalogue.HP-067.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'catalog/productalert/%'
+  expected_result: If price/stock alerts are enabled, verify cron runs and email identity/template
+    are configured; otherwise NOT_APPLICABLE.
+  root_cause: Inspect product alert configuration without changing application or
+    infrastructure state.
+  site_impact: Inspect product alert configuration without changing application or
+    infrastructure state.
+  recommendation: Investigate and remediate product alert configuration using the
+    verified evidence above.
+- id: HP-068
+  title: Sitemap and robots configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-068.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'sitemap/%' OR path='design/search_engine_robots/default_robots'
+  expected_result: Sitemap generation path is safe under pub/, frequency/limit values
+    are valid, robots default is not accidental NOINDEX on production.
+  root_cause: Inspect sitemap and robots configuration without changing application
+    or infrastructure state.
+  site_impact: Inspect sitemap and robots configuration without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate sitemap and robots configuration using
+    the verified evidence above.
+- id: HP-069
+  title: URL rewrite configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-069.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/env.php, app/etc/config.php and SELECT scope,scope_id,value
+    FROM core_config_data WHERE path='web/seo/use_rewrites'
+  expected_result: URL rewrites enabled as policy requires; detect duplicate request_path
+    and malformed target_path separately.
+  root_cause: Inspect url rewrite configuration without changing application or infrastructure
+    state.
+  site_impact: Inspect url rewrite configuration without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate url rewrite configuration using the verified
+    evidence above.
+- id: HP-070
+  title: Catalog search settings
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-070.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'catalog/search/%'
+  expected_result: Search engine, minimum query length, autocomplete, search suggestions/recommendations
+    and index prefix have valid values.
+  root_cause: Inspect catalog search settings without changing application or infrastructure
+    state.
+  site_impact: Inspect catalog search settings without changing application or infrastructure
+    state.
+  recommendation: Investigate and remediate catalog search settings using the verified
+    evidence above.
+- id: HP-071
+  title: Guest checkout configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-071.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/env.php, app/etc/config.php and SELECT scope,scope_id,value
+    FROM core_config_data WHERE path='checkout/options/guest_checkout'
+  expected_result: Guest checkout setting aligns with business policy and checkout
+    success URL functionality is tested non-destructively.
+  root_cause: Inspect guest checkout configuration without changing application or
+    infrastructure state.
+  site_impact: Inspect guest checkout configuration without changing application or
+    infrastructure state.
+  recommendation: Investigate and remediate guest checkout configuration using the
+    verified evidence above.
+- id: HP-072
+  title: Customer account and password reset configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-072.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'customer/%'
+  expected_result: Customer account confirmation, password reset lifetime, reset request
+    limits and account sharing settings meet policy.
+  root_cause: Inspect customer account and password reset configuration without changing
+    application or infrastructure state.
+  site_impact: Inspect customer account and password reset configuration without changing
+    application or infrastructure state.
+  recommendation: Investigate and remediate customer account and password reset configuration
+    using the verified evidence above.
+- id: HP-073
+  title: CAPTCHA and reCAPTCHA configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-073.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    '%captcha%' OR path LIKE '%recaptcha%'
+  expected_result: When enabled, CAPTCHA/reCAPTCHA is configured on required forms
+    with valid site-key presence; secrets masked. If not enabled, report policy warning.
+  root_cause: Inspect captcha and recaptcha configuration without changing application
+    or infrastructure state.
+  site_impact: Inspect captcha and recaptcha configuration without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate captcha and recaptcha configuration using
+    the verified evidence above.
+- id: HP-074
+  title: WYSIWYG and allowed media configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Low
+  metric: catalogue.HP-074.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'cms/wysiwyg/%'; inspect media uploader allow-list
+  expected_result: WYSIWYG is configured per policy and media gallery upload paths
+    do not permit executable content.
+  root_cause: The content-editor setting is not set to a supported explicit value, or media upload restrictions have not been confirmed.
+  site_impact: Content editors may be unable to manage pages consistently, and unsafe upload settings can increase the risk of unwanted files being stored in the media area.
+  recommendation: In Stores > Configuration > Content Management > WYSIWYG Options, set the editor option explicitly. Review the media upload allow-list so executable file types cannot be uploaded, then test an allowed image upload and a blocked executable-file upload.
+- id: HP-075
+  title: Image processing configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Low
+  metric: catalogue.HP-075.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'dev/image/%'
+  expected_result: Image adapter and resize/cache settings are valid; identify absent
+    image optimization pipeline as recommendation.
+  root_cause: Inspect image processing configuration without changing application
+    or infrastructure state.
+  site_impact: Inspect image processing configuration without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate image processing configuration using the
+    verified evidence above.
+- id: HP-076
+  title: Asynchronous email sending
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Low
+  metric: catalogue.HP-076.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/env.php, app/etc/config.php and SELECT scope,scope_id,value
+    FROM core_config_data WHERE path='sales_email/general/async_sending'
+  expected_result: For busy production stores, async sending is enabled and matching
+    cron/consumer processes are healthy; otherwise WARN recommendation.
+  root_cause: Inspect asynchronous email sending without changing application or infrastructure
+    state.
+  site_impact: Inspect asynchronous email sending without changing application or
+    infrastructure state.
+  recommendation: Investigate and remediate asynchronous email sending using the verified
+    evidence above.
+- id: HP-077
+  title: Inventory and MSI configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-077.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: SELECT scope,scope_id,path,value FROM core_config_data WHERE path LIKE
+    'cataloginventory/%'; SELECT stock_id,website_id FROM inventory_stock_sales_channel
+  expected_result: Stock configuration, source/stock assignments, backorders and reservations
+    are internally consistent.
+  root_cause: Inspect inventory and msi configuration without changing application
+    or infrastructure state.
+  site_impact: Inspect inventory and msi configuration without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate inventory and msi configuration using
+    the verified evidence above.
+- id: HP-078
+  title: GraphQL security and cache configuration
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-078.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Read app/etc/config.php, etc/graphql/*.xml, core_config_data paths LIKE
+    graphql/%; GET /graphql with safe introspection-disabled probe only if policy
+    permits.
+  expected_result: Inspect GraphQL modules, query complexity/depth configuration supplied
+    by modules, endpoint headers and anonymous access policy. Core values absent are
+    NOT_APPLICABLE.
+  root_cause: Inspect graphql security and cache configuration without changing application
+    or infrastructure state.
+  site_impact: Inspect graphql security and cache configuration without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate graphql security and cache configuration
+    using the verified evidence above.
+- id: HP-079
+  title: REST API integrations and OAuth tokens
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: High
+  metric: catalogue.HP-079.compliant
+  operator: is_false
+  data_source: Read-only database access
+  tool_used: SELECT integration_id,name,status,consumer_id FROM integration; SELECT
+    integration_id,resource_id FROM integration_permission; SELECT role_id,resource_id
+    FROM authorization_rule WHERE role_id IN (SELECT role_id FROM oauth_token WHERE
+    user_type=1)
+  expected_result: List active integrations, token expiry/configuration and ACL roles;
+    never return token values or hashes.
+  root_cause: Inspect rest api integrations and oauth tokens without changing application
+    or infrastructure state.
+  site_impact: Inspect rest api integrations and oauth tokens without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate rest api integrations and oauth tokens
+    using the verified evidence above.
+- id: HP-080
+  title: Webhooks and external API settings
+  category: Configuration
+  domain: Configuration
+  issue_type: Magento configuration
+  risk_level: Medium
+  metric: catalogue.HP-080.compliant
+  operator: is_false
+  data_source: Magento filesystem plus read-only database access
+  tool_used: Scan enabled module etc/*.xml and safe allow-listed config paths for
+    webhook/API endpoint declarations; do not call external endpoints.
+  expected_result: Inventory modules/config keys declaring webhooks or external HTTP
+    clients; validate endpoint URLs are HTTPS and configuration is masked.
+  root_cause: Inspect webhooks and external api settings without changing application
+    or infrastructure state.
+  site_impact: Inspect webhooks and external api settings without changing application
+    or infrastructure state.
+  recommendation: Investigate and remediate webhooks and external api settings using
+    the verified evidence above.

@@ -19,25 +19,30 @@ class SystemCatalogueEvaluatorTest extends TestCase
         $rules = Yaml::parseFile($files[0])['rules'];
         $csv = fopen($root . '/top_40_high_priority_rules.csv', 'r');
         $headers = fgetcsv($csv);
-        self::assertCount(39, $rules);
-        foreach ($rules as $index => $rule) {
-            if ($index === 6) fgetcsv($csv); // Retired HP-007 remains in the source CSV.
-            $row = array_combine($headers, fgetcsv($csv));
-            self::assertSame(sprintf('HP-%03d', $index + ($index >= 6 ? 2 : 1)), $rule['id']);
+        $rows = [];
+        while (($line = fgetcsv($csv)) !== false) $rows[] = array_combine($headers, $line);
+        self::assertCount(80, $rows);
+        self::assertCount(79, $rules);
+        $byId = [];
+        foreach ($rules as $rule) $byId[$rule['id']] = $rule;
+        foreach ($rows as $index => $row) {
+            $id = sprintf('HP-%03d', $index + 1);
+            if ($id === 'HP-007') continue;
+            $rule = $byId[$id];
+            self::assertSame($id, $rule['id']);
             self::assertSame($row['Rule Name'], $rule['title']);
             self::assertSame($row['Severity'], strtoupper($rule['risk_level']));
             self::assertSame($row['Expected Result'], $rule['expected_result']);
             self::assertSame($row['Recommendation'], $rule['recommendation']);
             self::assertSame($row['Impact if Not Resolved'], $rule['site_impact']);
         }
-        self::assertFalse(fgetcsv($csv));
         fclose($csv);
     }
 
     public function testMissingEvidenceNeverPassesOrCreatesFindings(): void
     {
         $checks = (new SystemCatalogueEvaluator())->evaluate([]);
-        self::assertCount(39, $checks);
+        self::assertCount(79, $checks);
         self::assertArrayNotHasKey('HP-007', $checks);
         foreach ($checks as $check) {
             self::assertSame('not_checked', $check['status']);
@@ -47,10 +52,17 @@ class SystemCatalogueEvaluatorTest extends TestCase
         self::assertSame([], (new RuleEngine(new FindingFactory()))->evaluate(['catalogue' => $checks], $rules, new \DateTimeImmutable()));
     }
 
-    public function testHealthyEvidencePassesAllActiveRules(): void
+    public function testHealthyEvidencePassesImplementedRulesAndLeavesNewRulesUnmeasured(): void
     {
-        foreach ((new SystemCatalogueEvaluator())->evaluate($this->healthy()) as $id => $check) {
-            self::assertSame('pass', $check['status'], $id . ': ' . $check['reason']);
+        $checks = (new SystemCatalogueEvaluator())->evaluate($this->healthy());
+        foreach ($checks as $id => $check) {
+            if (in_array($id, ['HP-022', 'HP-025'], true)) {
+                self::assertSame('not_checked', $check['status'], $id . ': ' . $check['reason']);
+            } elseif ((int)substr($id, 3) <= 40) {
+                self::assertSame('pass', $check['status'], $id . ': ' . $check['reason']);
+            } else {
+                self::assertSame('not_checked', $check['status'], $id . ': ' . $check['reason']);
+            }
         }
     }
 
@@ -66,7 +78,6 @@ class SystemCatalogueEvaluatorTest extends TestCase
             15 => ['php', 'opcache_memory_mb', 511], 16 => ['cron', 'stale_running_count', 1],
             20 => ['database_advanced', 'long_running_queries', ['count' => 1]],
             21 => ['database_advanced', 'deadlocks', 1],
-            22 => ['database_advanced', 'tables_without_primary_key', ['status' => 'success', 'tables' => ['custom_table']]],
             24 => ['database_advanced', 'slow_query_evidence', ['status' => 'success', 'max_average_seconds' => 1.1]],
             28 => ['cron', 'status_counts', ['missed' => 10, 'error' => 0]], 29 => ['fpc', 'hit_rate_percent', 84.99],
             33 => ['database_advanced', 'connection_utilization', ['status' => 'success', 'utilization_percent' => 80]],
@@ -76,10 +87,10 @@ class SystemCatalogueEvaluatorTest extends TestCase
             39 => ['indexer', 'indexers', ['price' => ['status' => 'valid', 'mode' => 'realtime']]],
             40 => ['logs', 'exceptions', [['count' => 2]]],
         ];
-        foreach ([6 => 'https', 8 => 'security_patches', 10 => 'two_factor', 11 => 'secure_cookies', 17 => 'auto_increment', 18 => 'public_backups', 19 => 'admin_path', 23 => 'changelog', 25 => 'foreign_keys', 26 => 'eav', 27 => 'duplicate_sku', 30 => 'log_size', 31 => 'table_bloat', 32 => 'queue', 37 => 'fpc_engine'] as $id => $key) {
+        foreach ([6 => 'https', 8 => 'security_patches', 10 => 'two_factor', 11 => 'secure_cookies', 17 => 'auto_increment', 18 => 'public_backups', 19 => 'admin_path', 23 => 'changelog', 26 => 'eav', 27 => 'duplicate_sku', 30 => 'log_size', 31 => 'table_bloat', 32 => 'queue', 37 => 'fpc_engine'] as $id => $key) {
             $changes[$id] = ['priority', $key, ['compliant' => false, 'reason' => 'Observed failure']];
         }
-        self::assertCount(39, $changes);
+        self::assertCount(37, $changes);
         $rules = Yaml::parseFile(dirname(__DIR__, 3) . '/Rule/definitions/high_priority.yaml')['rules'];
         foreach ($changes as $id => [$group, $key, $value]) {
             $metrics = $this->healthy();
@@ -97,6 +108,18 @@ class SystemCatalogueEvaluatorTest extends TestCase
         self::assertSame('fail', $checks['HP-003']['status']);
         self::assertSame('fail', $checks['HP-034']['status']);
         self::assertSame('not_checked', $checks['HP-021']['status']);
+    }
+
+    public function testCoreSchemaChecksAreExcludedFromAutomaticFindings(): void
+    {
+        $metrics = $this->healthy();
+        $metrics['database_advanced']['tables_without_primary_key'] = [
+            'status' => 'success',
+            'tables' => ['custom_without_id', 'legacy_queue'],
+        ];
+        $check = (new SystemCatalogueEvaluator())->evaluate($metrics)['HP-022'];
+        self::assertSame('not_checked', $check['status']);
+        self::assertStringContainsString('does not treat Magento core schema design', $check['reason']);
     }
 
     public function testUnknownTelemetryDoesNotProduceAHealthyCompositeCheck(): void

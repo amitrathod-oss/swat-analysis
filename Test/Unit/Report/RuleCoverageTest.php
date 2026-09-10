@@ -9,13 +9,15 @@ class RuleCoverageTest extends TestCase
     {
         self::assertFalse(RuleCoverage::isCurrent(['metadata' => ['analyzer' => 'Mha HealthCheck']]));
         $report = ['rule_checks' => []];
-        for ($i = 1; $i <= 40; $i++) $report['rule_checks'][sprintf('HP-%03d', $i)] = ['status' => 'not_checked'];
+        for ($i = 1; $i <= 80; $i++) $report['rule_checks'][sprintf('HP-%03d', $i)] = ['status' => 'not_checked'];
+        self::assertFalse(RuleCoverage::isCurrent($report));
+        unset($report['rule_checks']['HP-007']);
         self::assertTrue(RuleCoverage::isCurrent($report));
         $report['findings'] = [['rule_id' => 'SYS-001']];
         self::assertFalse(RuleCoverage::isCurrent($report));
         $report['findings'] = [['rule_id' => 'HP-001']];
         self::assertTrue(RuleCoverage::isCurrent($report));
-        unset($report['rule_checks']['HP-040']);
+        unset($report['rule_checks']['HP-080']);
         self::assertFalse(RuleCoverage::isCurrent($report));
     }
 }

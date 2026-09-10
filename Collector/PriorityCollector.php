@@ -208,24 +208,35 @@ class PriorityCollector implements CollectorInterface
 
     private function https(): array
     {
-        $urls = []; $unsafe = [];
+        $urls = []; $unsafe = []; $configured = [];
         foreach ($this->stores->getStores() as $store) {
             $id = $store->getId();
             $url = (string)$this->scope->getValue('web/secure/base_url', 'store', $id);
+            $configured[] = ['store_id' => (int)$id, 'secure_url' => $url, 'frontend_secure' => $this->scope->isSetFlag('web/secure/use_in_frontend', 'store', $id)];
             if (!str_starts_with(strtolower($url), 'https://') || !$this->scope->isSetFlag('web/secure/use_in_frontend', 'store', $id)) $unsafe[] = (int)$id;
             else $urls[] = $url;
         }
-        if ($unsafe !== [] || !$this->scope->isSetFlag('web/secure/use_in_adminhtml')) return $this->observation(false, 'Storefront/admin HTTPS configuration is disabled or uses an insecure URL.', ['insecure_store_ids' => $unsafe]);
-        if ($urls === []) return $this->observation(null, 'No storefront URL is available for redirect verification.');
+        $adminSecure = $this->scope->isSetFlag('web/secure/use_in_adminhtml');
+        if ($unsafe !== [] || !$adminSecure) return $this->observation(false, 'Storefront/admin HTTPS configuration is disabled or uses an insecure URL.', ['insecure_store_ids' => $unsafe, 'configured_stores' => $configured, 'admin_secure' => $adminSecure]);
+        if ($urls === []) return $this->observation(null, 'No storefront URL is available for redirect verification.', ['configured_stores' => $configured, 'admin_secure' => $adminSecure]);
+        $redirects = [];
+        $redirectFailures = [];
         foreach (array_unique($urls) as $url) {
             $client = $this->curlFactory->create();
             $client->setTimeout(10);
             $client->setOption(CURLOPT_FOLLOWLOCATION, false);
             $client->get(preg_replace('/^https:/i', 'http:', $url));
             $headers = array_change_key_case($client->getHeaders(), CASE_LOWER);
-            if (!in_array($client->getStatus(), [301, 308], true) || !str_starts_with(strtolower((string)($headers['location'] ?? '')), 'https://')) return $this->observation(false, 'HTTP storefront must permanently redirect to HTTPS.');
+            $redirects[] = ['http_url' => preg_replace('/^https:/i', 'http:', $url), 'status' => $client->getStatus(), 'location' => (string)($headers['location'] ?? '')];
+            $location = strtolower((string)($headers['location'] ?? ''));
+            if (!in_array($client->getStatus(), [301, 302, 307, 308], true) || !str_starts_with($location, 'https://')) {
+                $redirectFailures[] = $url;
+            }
         }
-        return $this->observation(true, 'Effective HTTPS configuration and storefront redirects verified; TLS termination/API overrides require edge review.');
+        return $this->observation($redirectFailures === [], $redirectFailures === []
+            ? 'Every configured storefront URL redirects HTTP traffic to HTTPS.'
+            : 'One or more configured storefront URLs do not redirect HTTP traffic to HTTPS.',
+            ['configured_stores' => $configured, 'redirects' => $redirects, 'redirect_failures' => $redirectFailures, 'admin_secure' => $adminSecure]);
     }
 
     private function fpcEngine(): array
