@@ -111,7 +111,11 @@ class ScanRunner
         try {
             $rules = $this->ruleLoader->load();
             foreach ($rules as $rule) {
-                if (isset($metrics['catalogue'][$rule['id']])) $metrics['catalogue'][$rule['id']]['title'] = $rule['title'];
+                if (isset($metrics['catalogue'][$rule['id']])) {
+                    $metrics['catalogue'][$rule['id']]['title'] = $rule['title'];
+                    $metrics['catalogue'][$rule['id']]['risk_level'] = $rule['risk_level'];
+                    $metrics['catalogue'][$rule['id']]['domain'] = $rule['domain'] ?? $rule['category'] ?? 'Application';
+                }
             }
             $scanResult->setRuleChecks($this->secretSanitizer->sanitize($metrics['catalogue']));
             foreach ($this->ruleEngine->evaluate($metrics, $rules, new \DateTimeImmutable()) as $finding) {

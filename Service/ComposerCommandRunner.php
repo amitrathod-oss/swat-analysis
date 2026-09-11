@@ -12,7 +12,7 @@ class ComposerCommandRunner
      */
     public function audit(string $workingDirectory, int $timeout): array
     {
-        return $this->run(['composer', 'audit', '--format=json', '--no-interaction', '--no-ansi'], $workingDirectory, $timeout);
+        return $this->run(['composer', 'audit', '--locked', '--format=json', '--no-interaction', '--no-ansi'], $workingDirectory, $timeout);
     }
 
     /**

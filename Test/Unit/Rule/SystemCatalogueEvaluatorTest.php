@@ -11,21 +11,21 @@ use Symfony\Component\Yaml\Yaml;
 
 class SystemCatalogueEvaluatorTest extends TestCase
 {
-    public function testOnlyCsvRulesAreShippedWithExactMetadata(): void
+    public function testActiveRulesMatchCsvAndCandidateRulesAreComplete(): void
     {
         $root = dirname(__DIR__, 3);
         $files = glob($root . '/Rule/definitions/*.yaml');
         self::assertCount(1, $files);
         $rules = Yaml::parseFile($files[0])['rules'];
-        $csv = fopen($root . '/top_40_high_priority_rules.csv', 'r');
+        $csv = fopen($root . '/top_120_high_priority_rules.csv', 'r');
         $headers = fgetcsv($csv);
         $rows = [];
         while (($line = fgetcsv($csv)) !== false) $rows[] = array_combine($headers, $line);
-        self::assertCount(80, $rows);
+        self::assertCount(120, $rows);
         self::assertCount(79, $rules);
         $byId = [];
         foreach ($rules as $rule) $byId[$rule['id']] = $rule;
-        foreach ($rows as $index => $row) {
+        foreach (array_slice($rows, 0, 80) as $index => $row) {
             $id = sprintf('HP-%03d', $index + 1);
             if ($id === 'HP-007') continue;
             $rule = $byId[$id];
@@ -35,6 +35,17 @@ class SystemCatalogueEvaluatorTest extends TestCase
             self::assertSame($row['Expected Result'], $rule['expected_result']);
             self::assertSame($row['Recommendation'], $rule['recommendation']);
             self::assertSame($row['Impact if Not Resolved'], $rule['site_impact']);
+        }
+
+        $normalizedNames = [];
+        foreach ($rows as $index => $row) {
+            foreach ($headers as $header) {
+                self::assertNotSame('', trim($row[$header]), sprintf('CSV row %d has an empty %s field.', $index + 2, $header));
+            }
+            self::assertContains($row['Severity'], ['CRITICAL', 'SEVERE', 'HIGH', 'MEDIUM', 'LOW']);
+            $normalizedName = strtolower((string)preg_replace('/[^a-z0-9]+/i', ' ', $row['Rule Name']));
+            self::assertArrayNotHasKey($normalizedName, $normalizedNames, 'Duplicate rule name: ' . $row['Rule Name']);
+            $normalizedNames[$normalizedName] = true;
         }
         fclose($csv);
     }

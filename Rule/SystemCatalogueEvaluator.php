@@ -93,7 +93,17 @@ class SystemCatalogueEvaluator
                 : ((int)$vulnerabilities > 0
                 ? sprintf('Composer reported %d vulnerable package advisory record(s).%s', (int)$vulnerabilities, $packageText)
                 : 'Composer reported no known vulnerable package advisories.'),
-            ['vulnerability_count' => $vulnerabilities, 'affected_packages' => $affectedPackages ?? [], 'advisories' => $read('composer.advisories') ?? []]);
+            [
+                'audit_command' => $read('composer.audit_command'),
+                'audit_basis' => $read('composer.audit_basis'),
+                'working_directory' => $read('composer.working_directory'),
+                'composer_version' => $read('composer.version'),
+                'composer_lock_sha256' => $read('composer.composer_lock_sha256'),
+                'audit_checked_at' => $read('composer.audit_checked_at'),
+                'vulnerability_count' => $vulnerabilities,
+                'affected_packages' => $affectedPackages ?? [],
+                'advisories' => $read('composer.advisories') ?? [],
+            ]);
         $mode = $metrics['security']['permissions']['app/etc/env.php']['octal'] ?? null;
         $permissionMode = $mode === null ? null : octdec((string)$mode);
         $permissionProblems = [];

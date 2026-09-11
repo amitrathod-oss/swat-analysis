@@ -108,6 +108,9 @@ class RuleEngine
             $dataSource = $engineName . ' Search Cluster';
             $toolUsed = 'Read-only HTTP GET ' . ($catDetails['endpoint'] ?? 'configured endpoint') . '/_cluster/health';
         }
+        if (($rule['id'] ?? '') === 'HP-004' && !empty($catDetails['audit_command'])) {
+            $toolUsed = (string)$catDetails['audit_command'];
+        }
         if (str_starts_with($path, 'catalogue.') && isset($catDetails['configured_stores'])) {
             $urls = array_map(static fn(array $store): string => (string)($store['secure_url'] ?? ''), $catDetails['configured_stores']);
             $toolUsed .= ' (configured URLs: ' . implode(', ', array_filter($urls)) . ')';

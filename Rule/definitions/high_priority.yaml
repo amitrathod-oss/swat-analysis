@@ -58,7 +58,7 @@ rules:
   metric: catalogue.HP-004.compliant
   operator: is_false
   data_source: Composer Dependencies
-  tool_used: Run 'composer audit' in site root directory
+  tool_used: Run 'composer audit --locked --format=json --no-interaction --no-ansi' in the Magento root directory
   expected_result: Zero security vulnerabilities reported across installed vendor
     packages
   root_cause: Composer found known security advisories in the installed third-party

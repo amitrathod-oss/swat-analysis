@@ -32,7 +32,7 @@ class ReportDataBuilder
     public function build(ScanResult $scanResult): array
     {
         $report = $scanResult->toArray();
-        $scoreDetails = $this->healthScoreCalculator->calculate($report['findings']);
+        $scoreDetails = $this->healthScoreCalculator->calculate($report['findings'], $report['rule_checks'] ?? []);
         $magentoMetrics = $report['collectors']['magento']['metrics'] ?? [];
         $collectorStatuses = [
             'success' => 0,
@@ -89,7 +89,7 @@ class ReportDataBuilder
         ];
         $report['scan_metadata'] = [
             'analyzer' => 'Mha HealthCheck',
-            'score_algorithm' => 'Deduplicate identical evidence and cap the total penalty contributed by each rule; informational findings have no penalty.',
+            'score_algorithm' => 'Health score = severity-weighted points from passed checks divided by severity-weighted points from all completed pass/fail checks, multiplied by 100. Checks without enough evidence are excluded.',
             'report_generated_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
         ];
         $report['history'] = $this->historyManager ? $this->historyManager->comparison($report) : [

@@ -6,18 +6,26 @@ namespace Mha\HealthCheck\Collector;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\App\ProductMetadataInterface;
+use Mha\HealthCheck\Service\QualityPatchesCommandRunner;
 
 class PatchCollector implements CollectorInterface
 {
     private DirectoryList $directoryList;
     private File $fileDriver;
     private ProductMetadataInterface $productMetadata;
+    private QualityPatchesCommandRunner $commandRunner;
 
-    public function __construct(DirectoryList $directoryList, File $fileDriver, ProductMetadataInterface $productMetadata)
+    public function __construct(
+        DirectoryList $directoryList,
+        File $fileDriver,
+        ProductMetadataInterface $productMetadata,
+        QualityPatchesCommandRunner $commandRunner
+    )
     {
         $this->directoryList = $directoryList;
         $this->fileDriver = $fileDriver;
         $this->productMetadata = $productMetadata;
+        $this->commandRunner = $commandRunner;
     }
 
     public function getCode(): string
@@ -93,9 +101,15 @@ class PatchCollector implements CollectorInterface
 
             $configuredPatchCount = count($patches);
             $qualityPatchesTool = $this->qualityPatchesStatus();
-            $qualityPatches = $this->qualityPatchesAppliedPatches($root);
-            $availablePatches = $this->availablePatches($root, array_column($qualityPatches, 'patch_id'));
+            $patchLogAvailable = $this->fileDriver->isExists($root . '/var/log/patch.log');
+            $commandStatus = $this->qualityPatchesCommandStatus($root, $qualityPatchesTool);
+            $qualityPatches = $commandStatus['applied'] ?? $this->qualityPatchesAppliedPatches($root);
+            $availablePatches = $commandStatus['not_applied'] ?? $this->availablePatches($root, array_column($qualityPatches, 'patch_id'));
             $patches = array_merge($patches, $qualityPatches);
+            $applicationEvidence = $commandStatus !== null
+                ? (string)$qualityPatchesTool['path'] . ' status --format=json'
+                : ($patchLogAvailable ? 'var/log/patch.log' : null);
+            $applicationVerified = $qualityPatchesTool['status'] === 'installed' && $applicationEvidence !== null;
 
             return [
                 'metrics' => [
@@ -103,11 +117,13 @@ class PatchCollector implements CollectorInterface
                     'configured_patch_count' => $configuredPatchCount,
                     'not_applied_count' => $notAppliedCount,
                     'not_verified_count' => $notVerifiedCount,
-                    'applied_count' => $qualityPatchesTool['status'] === 'installed' ? count($qualityPatches) : null,
-                    'application_verification' => $qualityPatchesTool['status'] === 'installed'
-                        ? 'verified_from_quality_patches_tool_log'
+                    'applied_count' => $applicationVerified ? count($qualityPatches) : null,
+                    'application_verification' => $applicationVerified
+                        ? ($commandStatus !== null ? 'verified_from_quality_patches_tool_status' : 'verified_from_quality_patches_tool_log')
                         : 'not_verifiable_without_patch_manager',
+                    'application_evidence' => $applicationEvidence,
                     'quality_patches_tool' => $qualityPatchesTool,
+                    'applied_patches' => $qualityPatches,
                     'available_patches' => $availablePatches,
                     'available_not_applied_count' => count($availablePatches),
                     'patches' => $patches,
@@ -123,8 +139,7 @@ class PatchCollector implements CollectorInterface
     }
 
     /**
-     * Report whether the optional Quality Patches Tool is installed; never invoke it.
-     * Adobe's remote QPT recommendation feed is not available to this local analyzer.
+     * Report whether the optional Quality Patches Tool is installed.
      *
      * @return array<string, string|bool>
      */
@@ -147,6 +162,48 @@ class PatchCollector implements CollectorInterface
             'path' => '',
             'recommendations_available' => false,
         ];
+    }
+
+    /**
+     * Run the read-only QPT status command and retain only explicit Applied and
+     * Not applied records. N/A records are not presented as either state.
+     *
+     * @param array<string, string|bool> $tool
+     * @return array<string, array<int, array<string, string>>>|null
+     */
+    private function qualityPatchesCommandStatus(string $root, array $tool): ?array
+    {
+        if (($tool['status'] ?? '') !== 'installed' || empty($tool['path'])) return null;
+        $result = $this->commandRunner->status($root . '/' . $tool['path'], $root);
+        if ((int)($result['exit_code'] ?? 1) !== 0) return null;
+        $records = json_decode((string)($result['output'] ?? ''), true);
+        if (!is_array($records)) return null;
+
+        $states = ['applied' => [], 'not_applied' => []];
+        foreach ($records as $record) {
+            if (!is_array($record)) continue;
+            $status = strtolower(trim((string)($record['Status'] ?? $record['status'] ?? '')));
+            $bucket = $status === 'applied' ? 'applied' : ($status === 'not applied' ? 'not_applied' : null);
+            if ($bucket === null) continue;
+            $title = trim((string)($record['Title'] ?? $record['title'] ?? ''));
+            $id = trim((string)($record['Id'] ?? $record['id'] ?? ''));
+            if ($id === '' || strtoupper($id) === 'N/A') {
+                $id = $title !== '' ? $this->patchId($title) : 'LOCAL-PATCH';
+            }
+            $states[$bucket][] = [
+                'patch_id' => $id,
+                'package' => 'magento/quality-patches',
+                'description' => $title,
+                'category' => str_replace("\n", ', ', trim((string)($record['Category'] ?? $record['category'] ?? ''))),
+                'status' => $status === 'applied' ? 'Applied' : 'Not applied',
+                'application_status' => $status === 'applied' ? 'applied_confirmed' : 'not_applied_confirmed',
+                'recommended' => 'Review',
+                'origin' => trim((string)($record['Origin'] ?? $record['origin'] ?? 'Quality Patches Tool')),
+                'path' => '',
+                'details' => trim((string)($record['Details'] ?? $record['details'] ?? '')),
+            ];
+        }
+        return $states;
     }
 
     /**

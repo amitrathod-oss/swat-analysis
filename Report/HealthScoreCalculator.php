@@ -20,17 +20,6 @@ class HealthScoreCalculator
         'info' => 0,
     ];
 
-    /** Prevent one noisy rule from deciding the entire health score. */
-    private const MAX_PENALTY_PER_RULE = [
-        'critical' => 30,
-        'severe' => 30,
-        'high' => 20,
-        'elevated' => 15,
-        'medium' => 10,
-        'low' => 5,
-        'info' => 0,
-    ];
-
     private HealthCheckConfig $config;
 
     public function __construct(HealthCheckConfig $config)
@@ -40,30 +29,23 @@ class HealthScoreCalculator
 
     /**
      * @param array<int, array<string, mixed>> $findings
-     * @return array<string, int|array<string, int>>
+     * The score is the percentage of severity-weighted completed rule-check
+     * points that passed. Rules without enough evidence are excluded instead of
+     * being treated as pass or fail.
+     *
+     * @param array<string, array<string, mixed>> $ruleChecks
+     * @return array<string, mixed>
      */
-    public function calculate(array $findings): array
+    public function calculate(array $findings, array $ruleChecks = []): array
     {
         $startingScore = min(100, $this->config->getPositiveInt('score.starting_score', 100));
         $weights = $this->getWeights();
         $counts = array_fill_keys(array_keys(self::DEFAULT_DEDUCTIONS), 0);
         $deductions = array_fill_keys(array_keys(self::DEFAULT_DEDUCTIONS), 0);
-        $totalDeduction = 0;
         $rawTotalDeduction = 0;
-        $scoredFindings = [];
         $seenEvidence = [];
-        $rulePenalties = [];
-        $domains = [
-            'Security' => ['score' => 100, 'deduction' => 0, 'findings' => 0],
-            'Availability' => ['score' => 100, 'deduction' => 0, 'findings' => 0],
-            'Performance' => ['score' => 100, 'deduction' => 0, 'findings' => 0],
-            'Database' => ['score' => 100, 'deduction' => 0, 'findings' => 0],
-            'Application' => ['score' => 100, 'deduction' => 0, 'findings' => 0],
-            'Code Quality' => ['score' => 100, 'deduction' => 0, 'findings' => 0],
-            'Infrastructure' => ['score' => 100, 'deduction' => 0, 'findings' => 0],
-        ];
 
-        foreach ($findings as $index => $finding) {
+        foreach ($findings as $finding) {
             $severity = strtolower((string)($finding['risk_level'] ?? ''));
             if (!array_key_exists($severity, $weights)) {
                 continue;
@@ -72,45 +54,71 @@ class HealthScoreCalculator
             $rawPenalty = (int)($finding['scoring_penalty'] ?? 0) > 0
                 ? (int)$finding['scoring_penalty'] : $weights[$severity];
             $rawTotalDeduction += $rawPenalty;
+            $deductions[$severity] += $rawPenalty;
             $ruleId = (string)($finding['rule_id'] ?? '');
             $metric = is_array($finding['evidence'] ?? null) ? (string)($finding['evidence']['metric'] ?? '') : '';
             $evidenceKey = $ruleId !== '' && $metric !== '' ? $ruleId . '|' . $metric : '';
-            if ($evidenceKey !== '' && isset($seenEvidence[$evidenceKey])) {
-                continue;
-            }
-            if ($evidenceKey !== '') {
-                $seenEvidence[$evidenceKey] = true;
-            }
-            $ruleKey = $ruleId !== '' ? $ruleId : 'finding-' . $index;
-            $remaining = self::MAX_PENALTY_PER_RULE[$severity] - (int)($rulePenalties[$ruleKey] ?? 0);
-            $penalty = min($rawPenalty, max(0, $remaining));
-            if ($penalty === 0) {
-                continue;
-            }
-            $rulePenalties[$ruleKey] = (int)($rulePenalties[$ruleKey] ?? 0) + $penalty;
-            $deductions[$severity] += $penalty;
-            $totalDeduction += $penalty;
-            $scoredFindings[] = $finding;
-            $domain = (string)($finding['domain'] ?? 'Application');
-            if (!isset($domains[$domain])) {
-                $domains[$domain] = ['score' => 100, 'deduction' => 0, 'findings' => 0];
-            }
-            $domains[$domain]['deduction'] += $weights[$severity];
-            $domains[$domain]['findings']++;
+            if ($evidenceKey !== '') $seenEvidence[$evidenceKey] = true;
         }
 
+        $passed = 0;
+        $failed = 0;
+        $notChecked = 0;
+        $passedWeight = 0;
+        $failedWeight = 0;
+        $domains = [];
+        foreach ($ruleChecks as $check) {
+            if (!is_array($check)) continue;
+            $status = (string)($check['status'] ?? 'not_checked');
+            $severity = strtolower((string)($check['risk_level'] ?? 'low'));
+            $weight = max(1, (int)($weights[$severity] ?? 1));
+            $domain = (string)($check['domain'] ?? 'Application');
+            $domains[$domain] = $domains[$domain] ?? ['score' => null, 'passed' => 0, 'failed' => 0, 'not_checked' => 0, 'checked' => 0, 'passed_weight' => 0, 'failed_weight' => 0];
+            if ($status === 'pass') {
+                $passed++;
+                $passedWeight += $weight;
+                $domains[$domain]['passed']++;
+                $domains[$domain]['checked']++;
+                $domains[$domain]['passed_weight'] += $weight;
+            } elseif ($status === 'fail') {
+                $failed++;
+                $failedWeight += $weight;
+                $domains[$domain]['failed']++;
+                $domains[$domain]['checked']++;
+                $domains[$domain]['failed_weight'] += $weight;
+            } else {
+                $notChecked++;
+                $domains[$domain]['not_checked']++;
+            }
+        }
+
+        $checked = $passed + $failed;
+        $completedWeight = $passedWeight + $failedWeight;
+        $score = $completedWeight > 0 ? (int)round($startingScore * $passedWeight / $completedWeight) : $startingScore;
         foreach ($domains as $domain => $details) {
-            $domains[$domain]['score'] = max(0, 100 - $details['deduction']);
+            $domainWeight = $details['passed_weight'] + $details['failed_weight'];
+            $domains[$domain]['score'] = $domainWeight > 0
+                ? (int)round(100 * $details['passed_weight'] / $domainWeight) : null;
         }
 
         return [
-            'score' => max(0, min(100, $startingScore - $totalDeduction)),
+            'score' => max(0, min(100, $score)),
             'starting_score' => $startingScore,
-            'total_deduction' => $totalDeduction,
+            'total_deduction' => $startingScore - $score,
             'raw_total_deduction' => $rawTotalDeduction,
-            'unique_issue_count' => count($seenEvidence) > 0 ? count($seenEvidence) : count($scoredFindings),
-            'scored_finding_count' => count($scoredFindings),
-            'capped_rule_count' => count(array_filter($rulePenalties, static fn(int $penalty): bool => $penalty > 0)),
+            'unique_issue_count' => count($seenEvidence) > 0 ? count($seenEvidence) : count($findings),
+            'scored_finding_count' => $failed,
+            'checked_count' => $checked,
+            'passed_count' => $passed,
+            'failed_count' => $failed,
+            'not_checked_count' => $notChecked,
+            'passed_weight' => $passedWeight,
+            'failed_weight' => $failedWeight,
+            'completed_weight' => $completedWeight,
+            'score_method' => 'severity_weighted_completed_check_pass_rate',
+            'score_explanation' => $completedWeight > 0
+                ? sprintf('%d of %d completed checks passed. Passed checks earned %d of %d severity-weighted points. %d check%s without enough evidence %s excluded.', $passed, $checked, $passedWeight, $completedWeight, $notChecked, $notChecked === 1 ? '' : 's', $notChecked === 1 ? 'was' : 'were')
+                : 'No checks produced a pass or fail result, so the configured starting score is shown.',
             'severity_counts' => $counts,
             'deductions' => $deductions,
             'deduction_weights' => $weights,

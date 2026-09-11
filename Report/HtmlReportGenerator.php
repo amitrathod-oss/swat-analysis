@@ -71,8 +71,8 @@ class HtmlReportGenerator
             . '<section class="page-break"><h2>B. Domain Scorecard</h2>' . $this->renderDomainScorecard($report) . '</section>'
             . '<section class="page-break"><h2>C. Exceptions</h2>' . $this->renderExceptions($report) . '</section>'
             . '<section class="page-break"><h2>D. Patches</h2>' . $this->renderPatches($report) . '</section>'
-            . '<section class="page-break"><h2>E. Store &amp; System Checks</h2>' . $this->renderCollectors($report)
-            . $this->renderRuleChecks($report) . $this->renderStoreInventory($report)
+            . '<section class="page-break"><h2>E. Technical Measurements</h2>' . $this->renderCollectors($report)
+            . $this->renderStoreInventory($report)
             . '</section>'
             . '<section><h2>F. Scan Details</h2>' . $this->definitionList([
                 'Scan ID' => $report['scan_id'] ?? null,
@@ -106,7 +106,7 @@ class HtmlReportGenerator
         $html = '<section class="toc page-break"><p class="eyebrow">Report navigation</p><h2>Table of Contents</h2><ul>'
             . '<li>Executive Dashboard</li><li>A. Findings (' . count($findings) . ')</li>'
             . '<li>B. Domain Scorecard</li><li>C. Exceptions</li><li>D. Patches</li>'
-            . '<li>E. Store &amp; System Checks</li><li>F. Scan Details</li></ul></section>';
+            . '<li>E. Technical Measurements</li><li>F. Scan Details</li></ul></section>';
 
         return $html;
     }
@@ -134,12 +134,13 @@ class HtmlReportGenerator
             ['label' => 'Exceptions', 'value' => (string)($logs['exception_count'] ?? 0), 'tone' => 'red'],
             ['label' => 'Scan alerts', 'value' => (string)($summary['scan_error_count'] ?? 0), 'tone' => 'teal'],
             ['label' => 'Security advisories', 'value' => (string)($composer['vulnerability_count'] ?? 0), 'tone' => 'yellow'],
-            ['label' => 'Applied patches', 'value' => (string)($patches['applied_count'] ?? 0), 'tone' => 'green'],
+            ['label' => 'Confirmed applied patches', 'value' => isset($patches['applied_count']) ? (string)$patches['applied_count'] : 'Not verified', 'tone' => 'green'],
         ];
 
         $html = '<section class="dashboard page-break"><div class="dashboard-header"><div><p class="eyebrow">Magento Open Source</p>'
             . '<h2>Executive Dashboard</h2><p>Latest health results for ' . $this->escape((string)($report['completed_at'] ?? '')) . '</p></div>'
             . '<div class="dashboard-score ' . $this->scoreTone($score) . '"><span>Health score</span><strong>' . $score . '<small>/100</small></strong></div></div>'
+            . '<p><strong>How the score was calculated:</strong> ' . $this->escape((string)($report['health_score_details']['score_explanation'] ?? 'Score details were not available.')) . '</p>'
             . '<table class="dashboard-card-grid" role="presentation"><tbody>';
         foreach (array_chunk($cards, 3) as $cardRow) {
             $html .= '<tr>';
@@ -346,10 +347,18 @@ class HtmlReportGenerator
     /** @param array<string, mixed> $finding */
     private function renderFindingDescription(array $finding): string
     {
-        $description = $this->renderValue($finding['finding_description'] ?? null);
+        $description = trim((string)($finding['finding_description'] ?? ''));
+        $tool = trim((string)($finding['tool_used'] ?? 'Magento Health Analyzer'));
+        $source = trim((string)($finding['data_source'] ?? 'Magento Open Source'));
+        $expected = trim((string)($finding['expected_result'] ?? ''));
         $cause = trim((string)($finding['root_cause'] ?? ''));
-        if ($cause === '') return '<p>' . $description . '</p>';
-        return '<p>' . $description . '</p><p><strong>Reason:</strong> ' . $this->escape($cause) . '</p>';
+        $html = '<p><strong>Check performed:</strong> ' . $this->escape($tool) . ' Data was read from ' . $this->escape($source) . '.</p>'
+            . '<p><strong>Result received:</strong> ' . $this->escape($description !== '' ? $description : 'The measured result did not meet the expected state.') . '</p>';
+        if ($expected !== '') {
+            $html .= '<p><strong>Why this is a finding:</strong> The result above does not meet the expected result: ' . $this->escape($expected) . '.</p>';
+        }
+        if ($cause !== '') $html .= '<p><strong>Reason:</strong> ' . $this->escape($cause) . '</p>';
+        return $html;
     }
 
     /** @param array<string, mixed> $finding */
@@ -391,10 +400,19 @@ class HtmlReportGenerator
     /** @param mixed $evidence */
     private function renderEvidenceList($evidence): string
     {
-        if (!is_array($evidence) || $evidence === []) return '';
+        if (!is_array($evidence) || $evidence === []) {
+            return '<p><strong>Evidence:</strong> No additional measured evidence was captured for this finding.</p>';
+        }
         $items = [];
+        if (isset($evidence['result'])) {
+            $items[] = 'Check outcome: ' . (strtoupper((string)$evidence['result']) === 'FAIL' ? 'Failed' : ucfirst(strtolower((string)$evidence['result'])));
+        }
+        if (array_key_exists('current_value', $evidence) && !is_array($evidence['current_value'])) {
+            $value = $evidence['current_value'];
+            $items[] = 'Measured value: ' . ($value === null ? 'not available' : (is_bool($value) ? ($value ? 'yes' : 'no') : (string)$value));
+        }
         $this->flattenEvidence($evidence, '', $items);
-        if ($items === []) return '';
+        if ($items === []) return '<p><strong>Evidence:</strong> No additional measured evidence was captured for this finding.</p>';
         $html = '<p><strong>Evidence:</strong></p><ul class="metric-list">';
         foreach (array_slice($items, 0, 20) as $item) $html .= '<li>' . $this->escape($item) . '</li>';
         $html .= '</ul>';
@@ -458,19 +476,20 @@ class HtmlReportGenerator
     {
         $domains = $report['health_score_details']['domain_scores'] ?? [];
         $history = $report['history'] ?? [];
-        $html = '<p>This summary shows the health result for each area checked.</p>';
+        $html = '<p>Each domain score uses the same severity-weighted completed-check calculation as the overall score. Checks without enough evidence are excluded.</p>';
         if (!is_array($domains) || $domains === []) {
             $html .= '<p>No domain scores were calculated.</p>';
         } else {
-            $html .= '<table><thead><tr><th>Domain</th><th>Score</th><th>Findings</th><th>Penalty</th></tr></thead><tbody>';
+            $html .= '<table><thead><tr><th>Domain</th><th>Score</th><th>Passed</th><th>Failed</th><th>Not checked</th></tr></thead><tbody>';
             foreach ($domains as $domain => $details) {
                 if (!is_array($details)) {
                     continue;
                 }
                 $html .= '<tr><td>' . $this->escape((string)$domain) . '</td><td>'
-                    . $this->escape((string)($details['score'] ?? 'N/A')) . '/100</td><td>'
-                    . $this->escape((string)($details['findings'] ?? 0)) . '</td><td>'
-                    . $this->escape((string)($details['deduction'] ?? 0)) . '</td></tr>';
+                    . $this->escape($details['score'] === null ? 'N/A' : (string)$details['score'] . '/100') . '</td><td>'
+                    . $this->escape((string)($details['passed'] ?? 0)) . '</td><td>'
+                    . $this->escape((string)($details['failed'] ?? 0)) . '</td><td>'
+                    . $this->escape((string)($details['not_checked'] ?? 0)) . '</td></tr>';
             }
             $html .= '</tbody></table>';
         }
@@ -508,14 +527,65 @@ class HtmlReportGenerator
      */
     private function renderPatches(array $report): string
     {
+        $metrics = is_array($report['collectors']['patches']['metrics'] ?? null) ? $report['collectors']['patches']['metrics'] : [];
         $qpt = $report['collectors']['patches']['metrics']['quality_patches_tool'] ?? [];
         $qptStatus = is_array($qpt) ? (string)($qpt['status'] ?? 'not available') : 'not available';
         $patchEvidence = $report['rule_checks']['HP-008'] ?? [];
         $status = is_array($patchEvidence) ? (string)($patchEvidence['status'] ?? 'not_checked') : 'not_checked';
-        if ($status !== 'fail') {
-            return '<h3>Patch verification</h3><p>No missing patch is reported by this scan. A patch can only be listed as missing after a dated comparison of this Magento release with Adobe security bulletins.</p><p><strong>Verification status:</strong> ' . $this->escape($status) . '. <strong>Quality Patches Tool:</strong> ' . $this->escape($qptStatus) . '.</p>';
+        $appliedCount = isset($metrics['applied_count']) ? (string)$metrics['applied_count'] : 'Not verified';
+        $available = is_array($metrics['available_patches'] ?? null) ? $metrics['available_patches'] : [];
+        $patches = is_array($metrics['patches'] ?? null) ? $metrics['patches'] : [];
+        $applied = is_array($metrics['applied_patches'] ?? null) ? $metrics['applied_patches'] : [];
+        $configured = array_values(array_filter($patches, static fn($patch): bool => is_array($patch) && ($patch['origin'] ?? '') === 'Composer extra.patches'));
+        $notAppliedLabel = ($metrics['application_verification'] ?? '') === 'verified_from_quality_patches_tool_status'
+            ? 'Reported not applied by Quality Patches Tool' : 'Available for this Magento release, application not confirmed';
+        $html = '<h3>Patch verification</h3><p><strong>Confirmed applied patches:</strong> ' . $this->escape($appliedCount)
+            . '. <strong>' . $this->escape($notAppliedLabel) . ':</strong> ' . count($available)
+            . '. <strong>Quality Patches Tool:</strong> ' . $this->escape($qptStatus) . '.</p>';
+        if (!isset($metrics['applied_count'])) {
+            $html .= '<p>The scanner did not find reliable patch-manager application evidence, so it reports “Not verified” instead of incorrectly reporting zero applied patches.</p>';
+        } else {
+            $html .= '<p>Applied status was read from ' . $this->escape((string)($metrics['application_evidence'] ?? 'the local patch-manager record')) . '.</p>';
         }
-        return '<h3>Patch verification</h3><p>' . $this->escape((string)($patchEvidence['reason'] ?? 'A verified patch comparison reported missing patches.')) . '</p><p>Apply only the named patches after confirming compatibility in staging.</p><p><strong>Quality Patches Tool:</strong> ' . $this->escape($qptStatus) . '.</p>';
+        $html .= '<p><strong>Security bulletin comparison:</strong> ' . $this->escape($status === 'not_checked'
+            ? 'Not performed. A dated comparison for this exact Magento version must be supplied before this report can claim that required security patches are complete.'
+            : (string)($patchEvidence['reason'] ?? 'Verification result available.')) . '</p>';
+        if ($applied !== []) {
+            $html .= '<h3>Confirmed applied patches</h3><div class="table-wrap"><table><thead><tr><th>Patch</th><th>Description</th><th>Category</th><th>Evidence source</th></tr></thead><tbody>';
+            foreach ($applied as $patch) {
+                if (!is_array($patch)) continue;
+                $html .= '<tr><td>' . $this->escape((string)($patch['patch_id'] ?? '')) . '</td><td>'
+                    . $this->escape((string)($patch['description'] ?? '')) . '</td><td>'
+                    . $this->escape((string)($patch['category'] ?? '')) . '</td><td>'
+                    . $this->escape((string)($patch['origin'] ?? '')) . '</td></tr>';
+            }
+            $html .= '</tbody></table></div>';
+        }
+        if ($configured !== []) {
+            $html .= '<h3>Configured patch declarations</h3><p>A patch declaration or source file does not prove application. Match these entries with the confirmed-applied table above.</p><div class="table-wrap"><table><thead><tr><th>Patch</th><th>Package</th><th>Status</th><th>Declaration source</th></tr></thead><tbody>';
+            foreach ($configured as $patch) {
+                $html .= '<tr><td>' . $this->escape((string)($patch['patch_id'] ?? '')) . '</td><td>'
+                    . $this->escape((string)($patch['package'] ?? '')) . '</td><td>'
+                    . $this->escape((string)($patch['status'] ?? '')) . '</td><td>'
+                    . $this->escape((string)($patch['origin'] ?? '')) . '</td></tr>';
+            }
+            $html .= '</tbody></table></div>';
+        }
+        if ($available !== []) {
+            $availableHeading = ($metrics['application_verification'] ?? '') === 'verified_from_quality_patches_tool_status'
+                ? 'Patches reported as not applied by Quality Patches Tool'
+                : 'Available patches whose application was not confirmed';
+            $html .= '<h3>' . $this->escape($availableHeading) . '</h3><div class="table-wrap"><table><thead><tr><th>Patch</th><th>Description</th><th>Category</th><th>Status</th></tr></thead><tbody>';
+            foreach ($available as $patch) {
+                if (!is_array($patch)) continue;
+                $html .= '<tr><td>' . $this->escape((string)($patch['patch_id'] ?? '')) . '</td><td>'
+                    . $this->escape((string)($patch['description'] ?? '')) . '</td><td>'
+                    . $this->escape((string)($patch['category'] ?? '')) . '</td><td>'
+                    . $this->escape((string)($patch['status'] ?? '')) . '</td></tr>';
+            }
+            $html .= '</tbody></table></div>';
+        }
+        return $html;
     }
 
     /**
@@ -524,18 +594,27 @@ class HtmlReportGenerator
     private function renderCollectors(array $report): string
     {
         $collectors = is_array($report['collectors'] ?? null) ? $report['collectors'] : [];
-        $html = '<div class="table-wrap"><table><thead><tr><th>Check</th><th>Status</th><th>Message</th><th>Measured Results</th></tr></thead><tbody>';
+        $html = '<p>This section records the technical data used to produce the findings. A collection result of <strong>Collected</strong> means the scan read that data successfully; it does not mean the configuration passed its health checks.</p><div class="table-wrap"><table><thead><tr><th>Area measured</th><th>Collection result</th><th>Collection note</th><th>Key measurements</th></tr></thead><tbody>';
         foreach ($collectors as $code => $collector) {
             if (!is_array($collector)) {
                 continue;
             }
             $html .= '<tr><td>' . $this->escape($this->collectorLabel((string)$code)) . '</td><td>'
-                . $this->escape((string)($collector['status'] ?? '')) . '</td><td>'
+                . $this->escape($this->collectorStatusLabel((string)($collector['status'] ?? ''))) . '</td><td>'
                 . $this->escape((string)($collector['message'] ?? '')) . '</td><td>'
                 . $this->renderMetricList($this->summarizeMetrics($collector['metrics'] ?? [])) . '</td></tr>';
         }
 
         return $html . '</tbody></table></div>';
+    }
+
+    private function collectorStatusLabel(string $status): string
+    {
+        return [
+            'success' => 'Collected',
+            'unavailable' => 'Could not collect',
+            'not_applicable' => 'Not applicable',
+        ][$status] ?? ucfirst(str_replace('_', ' ', $status));
     }
 
     private function collectorLabel(string $code): string
@@ -838,19 +917,6 @@ class HtmlReportGenerator
     private function escape(string $value): string
     {
         return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    }
-
-    private function renderRuleChecks(array $report): string
-    {
-        $checks = array_filter($report['rule_checks'] ?? [], static fn($check): bool => is_array($check) && !str_starts_with((string)($check['reason'] ?? ''), 'Not evaluated automatically:'));
-        $count = count($checks);
-        $html = '<h3>Check coverage (' . $count . ' active checks)</h3><p>This table lists every applicable check. <strong>not_checked</strong> means the scan did not receive enough evidence to determine pass or fail; it is not a passed check and not a confirmed issue. The observation states exactly what evidence is missing. Detailed findings above contain failed checks only.</p><table><tr><th>Finding</th><th>Status</th><th>Observation</th></tr>';
-        foreach ($checks as $id => $check) {
-            $html .= '<tr><td>' . $this->escape((string)($check['title'] ?? '')) . '</td><td>'
-                . $this->escape((string)$check['status']) . '</td><td>'
-                . $this->escape((string)$check['reason']) . '</td></tr>';
-        }
-        return $html . '</table>';
     }
 
     private function styles(): string

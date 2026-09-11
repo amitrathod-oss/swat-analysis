@@ -53,6 +53,7 @@ class ComposerCollector implements CollectorInterface
             $affectedPackages = [];
             $advisoryDetails = [];
             $vulnerabilityCount = 0;
+            ksort($advisories);
             foreach ($advisories as $package => $packageAdvisories) {
                 $count = is_array($packageAdvisories) ? count($packageAdvisories) : 0;
                 $affectedPackages[(string)$package] = $count;
@@ -71,6 +72,12 @@ class ComposerCollector implements CollectorInterface
                     ];
                 }
             }
+            ksort($affectedPackages);
+            usort($advisoryDetails, static function (array $left, array $right): int {
+                return [$left['package'], $left['advisory_id']] <=> [$right['package'], $right['advisory_id']];
+            });
+            $lockFile = rtrim($workingDirectory, '/') . '/composer.lock';
+            $jsonFile = rtrim($workingDirectory, '/') . '/composer.json';
 
             return [
                 'metrics' => [
@@ -80,6 +87,12 @@ class ComposerCollector implements CollectorInterface
                     'vulnerability_count' => $vulnerabilityCount,
                     'affected_packages' => $affectedPackages,
                     'advisories' => $advisoryDetails,
+                    'audit_command' => 'composer audit --locked --format=json --no-interaction --no-ansi',
+                    'audit_basis' => 'composer.lock',
+                    'working_directory' => $workingDirectory,
+                    'composer_lock_sha256' => is_file($lockFile) ? hash_file('sha256', $lockFile) : null,
+                    'composer_json_sha256' => is_file($jsonFile) ? hash_file('sha256', $jsonFile) : null,
+                    'audit_checked_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
                     'abandoned_packages' => array_keys($abandoned),
                     'abandoned_package_count' => count($abandoned),
                 ],

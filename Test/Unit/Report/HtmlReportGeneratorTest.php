@@ -24,13 +24,14 @@ class HtmlReportGeneratorTest extends TestCase
             'summary' => ['findings_total' => 1, 'scan_error_count' => 0, 'collector_statuses' => ['success' => 1]],
             'scan_metadata' => ['score_disclaimer' => 'Custom score', 'score_algorithm' => 'Fixed deductions'],
             'health_score' => 90,
-            'health_score_details' => [],
+            'health_score_details' => ['score_explanation' => '9 of 10 completed checks passed. 2 checks without enough evidence were excluded.'],
             'severity_counts' => ['high' => 1],
             'findings' => [[
                 'rule_id' => 'TEST-001',
                 'title' => '<script>alert(1)</script>',
                 'risk_level' => 'High',
                 'finding_description' => 'The cache setting is disabled.',
+                'expected_result' => 'The cache setting is enabled.',
                 'root_cause' => 'The required configuration value is missing.',
                 'evidence' => [],
             ]],
@@ -40,9 +41,15 @@ class HtmlReportGeneratorTest extends TestCase
         $html = (new HtmlReportGenerator($filesystem, $reportDataBuilder))->generate(new ScanResult('scan-id'));
 
         self::assertStringContainsString('Executive Dashboard', $html);
+        self::assertStringContainsString('How the score was calculated:', $html);
+        self::assertStringContainsString('9 of 10 completed checks passed.', $html);
         self::assertStringContainsString('A. Findings', $html);
         self::assertStringContainsString('F. Scan Details', $html);
         self::assertStringContainsString('1. Finding Description', $html);
+        self::assertStringContainsString('Check performed:', $html);
+        self::assertStringContainsString('Result received:', $html);
+        self::assertStringContainsString('Why this is a finding:', $html);
+        self::assertStringContainsString('Evidence:', $html);
         self::assertStringContainsString('2. Expected Result', $html);
         self::assertStringContainsString('3. Site Impact', $html);
         self::assertStringContainsString('4. Recommendations', $html);
@@ -51,6 +58,7 @@ class HtmlReportGeneratorTest extends TestCase
         self::assertStringNotContainsString('Likely reason:', $html);
         self::assertStringNotContainsString('What Was Tested', $html);
         self::assertStringNotContainsString('How to Verify the Fix', $html);
+        self::assertStringNotContainsString('Check coverage', $html);
         self::assertStringNotContainsString('not Adobe', $html);
         self::assertStringContainsString('&lt;script&gt;', $html);
         self::assertStringNotContainsString('<script>alert', $html);
